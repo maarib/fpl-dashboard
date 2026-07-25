@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { teamBadgeUrl } from '../lib/images'
 
 /** Club badge from the PL CDN, falling back to the team's short name. */
-export default function TeamBadge({ team, className = '' }) {
+export default function TeamBadge({ team, className = '', size }) {
   const [failedCode, setFailedCode] = useState(null)
-  const src = teamBadgeUrl(team)
+  const src = teamBadgeUrl(team, size)
   const broken = !src || failedCode === team?.code
 
   if (broken) {

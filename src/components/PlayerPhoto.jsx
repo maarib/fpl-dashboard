@@ -5,9 +5,9 @@ import { playerPhotoUrl } from '../lib/images'
  * Player mugshot from the PL CDN, falling back to initials when the photo is
  * missing (new signings often have no asset for a week or two).
  */
-export default function PlayerPhoto({ player, className = '' }) {
+export default function PlayerPhoto({ player, className = '', size }) {
   const [failedCode, setFailedCode] = useState(null)
-  const src = playerPhotoUrl(player)
+  const src = playerPhotoUrl(player, size)
   const broken = !src || failedCode === player?.code
 
   if (broken) {
