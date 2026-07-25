@@ -1,0 +1,43 @@
+:root {
+  --purple: #37003c;
+  --purple-2: #2a002e;
+  --panel: #ffffff;
+  --panel-2: #f7f5fa;
+  --text: #1c1020;
+  --text-dim: #6b6375;
+  --border: #e6e1ec;
+  --green: #00ff87;
+  --cyan: #04f5ff;
+  --pink: #e90052;
+
+  font: 15px/1.45 system-ui, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  background: var(--panel-2);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  background: var(--panel-2);
+}
+
+h1,
+h2 {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+code {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.85em;
+  background: rgba(55, 0, 60, 0.08);
+  border-radius: 4px;
+  padding: 1px 5px;
+}

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm -v)",
+      "Bash(curl -s --max-time 30 \"https://fpl-api-proxy.maarib.workers.dev/bootstrap-static/\" -o /private/tmp/claude-501/-Users-maarib-Downloads-WorkStation-Product-Design-Projects-FPL-Dashboard-fpl-dashboard/b2cad63e-e8bc-4158-adf9-e290c69a48f5/scratchpad/boot.json -w \"%{http_code} %{size_download}\\\\n\")",
+      "Bash(npm create *)",
+      "Bash(npx --yes create-vite@latest viteapp --template react)",
+      "Bash(node -e ' *)",
+      "Bash(curl -s --max-time 30 \"https://fpl-api-proxy.maarib.workers.dev/fixtures/\" -o fx.json -w \"fixtures %{http_code} %{size_download}\\\\n\")",
+      "Bash(npm install *)",
+      "Bash(node -e \"console.log\\(JSON.stringify\\(require\\('./mockpicks.json'\\)\\)\\)\")",
+      "Bash(npm run *)"
+    ]
+  }
+}
