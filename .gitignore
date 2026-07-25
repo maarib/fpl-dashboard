@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Claude Code — per-machine tool permissions, re-derived as you work.
+# .claude/launch.json stays tracked: it's shared dev-server config.
+.claude/settings.local.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
