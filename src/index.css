@@ -10,7 +10,9 @@
   --cyan: #04f5ff;
   --pink: #e90052;
 
-  font: 15px/1.45 system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Reddit Sans', system-ui, 'Segoe UI', Roboto, sans-serif;
+
+  font: 15px/1.45 var(--font-body);
   color: var(--text);
   background: var(--panel-2);
   -webkit-font-smoothing: antialiased;
