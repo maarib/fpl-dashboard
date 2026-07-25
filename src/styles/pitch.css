@@ -1,0 +1,659 @@
+/* ==========================================================================
+   TWEAK ZONE — turf tone, card size and typography all live here.
+   Change these and the whole pitch follows; nothing below hardcodes them.
+   ========================================================================== */
+
+.pitch-stage {
+  /* --- turf tone --------------------------------------------------------- */
+  --turf-light: #1b9a4c; /* lit stripe */
+  --turf-dark: #14803e; /* shaded stripe */
+  --turf-edge: #05381c; /* vignette / stadium falloff colour */
+  --turf-stripe-height: 7.5%; /* mowing band thickness */
+  --turf-sheen: 0.1; /* centre-pitch floodlight bloom, 0 = off */
+  --turf-line: rgba(255, 255, 255, 0.4); /* pitch markings */
+  --turf-line-width: 2px;
+  --turf-vignette: 0.55; /* 0 = flat, 1 = heavy stadium falloff */
+  --turf-radius: 16px;
+
+  /* --- card size --------------------------------------------------------- */
+  --card-w: 108px; /* everything else scales off this */
+  --card-photo-h: 96px;
+  --card-photo-focus: 6%; /* vertical crop anchor; lower % = more headroom */
+  --card-radius: 10px;
+  --card-gap: 10px; /* between cards in a row */
+  --row-gap: 6px; /* between formation rows */
+
+  /* --- card typography --------------------------------------------------- */
+  --card-name-size: 12px;
+  --card-name-weight: 700;
+  --card-stat-size: 12px;
+  --card-stat-weight: 700;
+
+  /* --- card colours (inherit the dashboard theme) ------------------------ */
+  --card-name-bg: var(--purple);
+  --card-name-fg: #fff;
+  --card-stat-bg: var(--green);
+  --card-stat-fg: #06301d;
+  --card-photo-bg: linear-gradient(180deg, #f7f5fa 0%, #e6e0ee 100%);
+}
+
+/* Compact variant used by the bench strip. */
+.pitch-stage .bench-strip {
+  --card-w: 92px;
+  --card-photo-h: 70px;
+  --card-name-size: 11px;
+  --card-stat-size: 11px;
+}
+
+/* ==========================================================================
+   Turf
+   ========================================================================== */
+
+.pitch-stage {
+  position: relative;
+  border-radius: var(--turf-radius);
+  overflow: hidden;
+  box-shadow:
+    0 18px 40px rgba(10, 0, 15, 0.35),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* Mowing stripes + base colour. */
+.pitch-turf {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      var(--turf-light) 0,
+      var(--turf-light) var(--turf-stripe-height),
+      var(--turf-dark) var(--turf-stripe-height),
+      var(--turf-dark) calc(var(--turf-stripe-height) * 2)
+    );
+}
+
+/* Floodlight bloom over the centre of the pitch. */
+.pitch-turf::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    110% 70% at 50% 26%,
+    rgba(255, 255, 255, var(--turf-sheen)) 0%,
+    rgba(255, 255, 255, 0) 60%
+  );
+}
+
+/* Stadium falloff toward the edges. Kept on its own layer so
+   --turf-vignette stays a simple 0–1 dial. */
+.pitch-turf::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    125% 105% at 50% 42%,
+    rgba(0, 0, 0, 0) 34%,
+    var(--turf-edge) 100%
+  );
+  opacity: var(--turf-vignette);
+}
+
+/* Painted markings. Percentages keep them proportional at any height. */
+.pitch-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.pitch-lines > * {
+  position: absolute;
+  border: var(--turf-line-width) solid var(--turf-line);
+}
+
+.pitch-lines .m-outer {
+  inset: 1.5% 2%;
+  border-radius: 3px;
+}
+
+.pitch-lines .m-box {
+  top: calc(1.5% - var(--turf-line-width));
+  left: 50%;
+  transform: translateX(-50%);
+  width: 38%;
+  height: 15%;
+  border-top: 0;
+}
+
+.pitch-lines .m-six {
+  top: calc(1.5% - var(--turf-line-width));
+  left: 50%;
+  transform: translateX(-50%);
+  width: 17%;
+  height: 6.5%;
+  border-top: 0;
+}
+
+.pitch-lines .m-spot {
+  top: 13%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: var(--turf-line);
+  border: 0;
+}
+
+.pitch-lines .m-arc {
+  top: 15.5%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 17%;
+  height: 7%;
+  border-radius: 0 0 50% 50%;
+  border-top: 0;
+}
+
+.pitch-lines .m-halfway {
+  left: 2%;
+  right: 2%;
+  bottom: 22%;
+  height: 0;
+  border-width: 0 0 var(--turf-line-width);
+}
+
+.pitch-lines .m-circle {
+  left: 50%;
+  bottom: 22%;
+  width: 30%;
+  aspect-ratio: 2 / 1;
+  transform: translate(-50%, 50%);
+  border-radius: 50%;
+}
+
+/* ==========================================================================
+   Formation rows
+   ========================================================================== */
+
+.pitch-rows {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--row-gap);
+  padding: 22px 12px 26px;
+  min-height: 480px;
+  justify-content: space-between;
+}
+
+.pitch-row {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: var(--card-gap);
+  flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   Bench
+   ========================================================================== */
+
+.bench-strip {
+  position: relative;
+  margin-top: -1px;
+  padding: 14px 12px 16px;
+  background: linear-gradient(180deg, rgba(20, 4, 24, 0.94), var(--purple-2));
+  border-radius: 0 0 var(--turf-radius) var(--turf-radius);
+  box-shadow: 0 14px 30px rgba(10, 0, 15, 0.28);
+}
+
+.bench-strip__label {
+  display: block;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 10px;
+}
+
+.bench-strip__row {
+  display: flex;
+  justify-content: center;
+  gap: var(--card-gap);
+  flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   Player card
+   ========================================================================== */
+
+.fcard {
+  width: var(--card-w);
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  background: var(--card-name-bg);
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.34),
+    0 1px 0 rgba(255, 255, 255, 0.16) inset;
+  text-align: center;
+  position: relative;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+
+.fcard--interactive {
+  cursor: pointer;
+}
+.fcard--interactive:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.42);
+}
+
+.fcard__frame {
+  position: relative;
+  height: var(--card-photo-h);
+  background: var(--card-photo-bg);
+  overflow: hidden;
+}
+
+/* Glossy sheen across the photo. */
+.fcard__frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0) 42%
+  );
+  pointer-events: none;
+}
+
+/* Source photos are square head-and-shoulders cutouts; cover + top-anchoring
+   keeps the face in frame at any --card-photo-h. */
+.fcard__photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center var(--card-photo-focus, 8%);
+}
+
+.fcard__photo--fallback {
+  height: 100%;
+  width: 100%;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  font-weight: 800;
+  color: #a99fb5;
+  letter-spacing: 0.04em;
+}
+
+.fcard__badge {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+  z-index: 2;
+}
+
+.fcard__badge.badge--fallback {
+  width: auto;
+  min-width: 20px;
+  padding: 0 3px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 9px;
+  color: var(--purple);
+}
+
+.fcard__armband {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 800;
+  background: var(--purple);
+  color: var(--green);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+}
+.fcard__armband--vice {
+  background: #fff;
+  color: var(--purple);
+}
+
+.fcard__remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(20, 4, 24, 0.75);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: opacity 0.14s ease;
+  z-index: 3;
+}
+.fcard:hover .fcard__remove,
+.fcard__remove:focus-visible {
+  opacity: 1;
+}
+.fcard__remove:hover {
+  background: var(--pink);
+}
+
+.fcard__name {
+  background: var(--card-name-bg);
+  color: var(--card-name-fg);
+  font-size: var(--card-name-size);
+  font-weight: var(--card-name-weight);
+  padding: 4px 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fcard__stat {
+  background: var(--card-stat-bg);
+  color: var(--card-stat-fg);
+  font-size: var(--card-stat-size);
+  font-weight: var(--card-stat-weight);
+  padding: 3px 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Empty slot */
+.fcard--empty {
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+  background: rgba(8, 48, 26, 0.3);
+  backdrop-filter: blur(1px);
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: calc(var(--card-photo-h) + 46px);
+  color: #fff;
+  font: inherit;
+  padding: 0;
+}
+.fcard--empty:hover {
+  background: rgba(8, 48, 26, 0.5);
+  border-color: var(--green);
+}
+.fcard--empty .fcard__plus {
+  font-size: 22px;
+  font-weight: 300;
+  line-height: 1;
+}
+.fcard--empty .fcard__pos {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  opacity: 0.85;
+}
+
+/* ==========================================================================
+   Toolbars
+   ========================================================================== */
+
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 10px;
+  background: rgba(55, 0, 60, 0.08);
+  border: 1px solid var(--border);
+  gap: 2px;
+}
+
+.segmented__btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+  padding: 6px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.segmented__btn:hover {
+  color: var(--text);
+}
+.segmented__btn--active {
+  background: var(--purple);
+  color: #fff;
+}
+
+.pitch-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.pitch-toolbar__spacer {
+  margin-left: auto;
+}
+
+.toolbar-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-right: 2px;
+}
+
+/* Budget / counter readouts */
+.meters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.meter {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 7px 12px;
+  min-width: 92px;
+  text-align: center;
+}
+
+.meter__value {
+  display: block;
+  font-size: 17px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+.meter__label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.meter--good .meter__value {
+  color: #0b7a41;
+}
+.meter--bad .meter__value {
+  color: var(--pink);
+}
+
+/* ==========================================================================
+   Picker drawer
+   ========================================================================== */
+
+.picker-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 2, 16, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 40;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.picker {
+  width: min(420px, 100%);
+  background: var(--panel-2);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.35);
+}
+
+.picker__head {
+  padding: 16px;
+  background: var(--purple);
+  color: #fff;
+}
+.picker__head h3 {
+  margin: 0 0 10px;
+  font-size: 17px;
+}
+.picker__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+}
+.picker__close:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.picker__filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.picker__filters .input {
+  min-width: 0;
+  flex: 1;
+  padding: 7px 9px;
+  font-size: 13px;
+}
+
+.picker__list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.picker__row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 9px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: var(--panel);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  margin-bottom: 5px;
+}
+.picker__row:hover:not(:disabled) {
+  border-color: var(--purple);
+}
+.picker__row:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.picker__row .photo {
+  width: 28px;
+  height: 36px;
+  flex: none;
+}
+
+.picker__row-main {
+  flex: 1;
+  min-width: 0;
+}
+.picker__row-name {
+  display: block;
+  font-weight: 700;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.picker__row-sub {
+  display: block;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.picker__row-stats {
+  text-align: right;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+.picker__row-price {
+  display: block;
+  font-weight: 700;
+}
+.picker__row-pts {
+  display: block;
+  color: var(--text-dim);
+  font-size: 11px;
+}
+.picker__reason {
+  font-size: 10px;
+  color: var(--pink);
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .pitch-stage {
+    --card-w: 86px;
+    --card-photo-h: 64px;
+    --card-gap: 5px;
+    --card-name-size: 11px;
+    --card-stat-size: 10px;
+  }
+  .pitch-stage .bench-strip {
+    --card-w: 76px;
+    --card-photo-h: 56px;
+  }
+  .pitch-rows {
+    padding: 14px 6px 18px;
+    min-height: 400px;
+  }
+}
