@@ -1,188 +1,306 @@
 /* ==========================================================================
-   TWEAK ZONE — turf tone, card size and typography all live here.
-   Change these and the whole pitch follows; nothing below hardcodes them.
+   TWEAK ZONE — container, turf tone, card size and typography.
+   Change these and everything follows; nothing below hardcodes them.
    ========================================================================== */
 
-.pitch-stage {
+/* Declared on the section so both the 3-column grid and the stage itself can
+   read them — one tweak zone, no duplicated numbers. */
+.myteam {
+  /* --- container (spec: 928 x 1138, #28002B, 16px padding) --------------- */
+  --stage-w: 928px;
+  --stage-min-h: 1138px;
+  --stage-bg: #28002b;
+  --stage-pad: 16px;
+  --stage-radius: 14px;
+
+  /* --- player pool column ------------------------------------------------ */
+  --pool-w: 440px;
+  --layout-gap: 24px;
+
   /* --- turf tone --------------------------------------------------------- */
-  --turf-light: #1b9a4c; /* lit stripe */
-  --turf-dark: #14803e; /* shaded stripe */
-  --turf-edge: #05381c; /* vignette / stadium falloff colour */
-  --turf-stripe-height: 7.5%; /* mowing band thickness */
-  --turf-sheen: 0.1; /* centre-pitch floodlight bloom, 0 = off */
-  --turf-line: rgba(255, 255, 255, 0.4); /* pitch markings */
-  --turf-line-width: 2px;
-  --turf-vignette: 0.55; /* 0 = flat, 1 = heavy stadium falloff */
-  --turf-radius: 16px;
+  --turf-light: #05c449; /* lit mowing band */
+  --turf-dark: #04b342; /* shaded mowing band */
+  --turf-edge: #01461f; /* far-end shading */
+  --turf-sheen: 0.07; /* floodlight bloom, 0 = off */
+  --turf-line: rgba(255, 255, 255, 0.95);
+  --turf-line-width: 2.4;
+
+  /* --- perimeter boards + goal ------------------------------------------ */
+  --board-from: #2ee6f6;
+  --board-to: #4f5ff0;
+  --goal-net: rgba(255, 255, 255, 0.75);
+  --goal-frame: #ffffff;
 
   /* --- card size --------------------------------------------------------- */
-  --card-w: 108px; /* everything else scales off this */
-  --card-photo-h: 96px;
-  --card-photo-focus: 6%; /* vertical crop anchor; lower % = more headroom */
-  --card-radius: 10px;
-  --card-gap: 10px; /* between cards in a row */
-  --row-gap: 6px; /* between formation rows */
+  --card-w: 108px;
+  --card-kit-h: 74px;
+  --card-radius: 6px;
+  --card-gap: 10px;
 
   /* --- card typography --------------------------------------------------- */
-  --card-name-size: 12px;
+  --card-name-size: 13px;
   --card-name-weight: 700;
   --card-stat-size: 12px;
-  --card-stat-weight: 700;
+  --card-stat-weight: 600;
 
-  /* --- card colours (inherit the dashboard theme) ------------------------ */
-  --card-name-bg: var(--purple);
-  --card-name-fg: #fff;
-  --card-stat-bg: var(--green);
-  --card-stat-fg: #06301d;
-  --card-photo-bg: linear-gradient(180deg, #f7f5fa 0%, #e6e0ee 100%);
-}
-
-/* Compact variant used by the bench strip. */
-.pitch-stage .bench-strip {
-  --card-w: 92px;
-  --card-photo-h: 70px;
-  --card-name-size: 11px;
-  --card-stat-size: 11px;
+  /* --- card colours ------------------------------------------------------ */
+  --card-name-bg: #ffffff;
+  --card-name-fg: #37003c;
+  --card-stat-bg: #ebe9ee;
+  --card-stat-fg: #37003c;
+  --card-tile: rgba(255, 255, 255, 0.14); /* translucent pad behind the kit */
 }
 
 /* ==========================================================================
-   Turf
+   Three-column layout: pool | (stage + fixtures)
    ========================================================================== */
 
-.pitch-stage {
-  position: relative;
-  border-radius: var(--turf-radius);
-  overflow: hidden;
-  box-shadow:
-    0 18px 40px rgba(10, 0, 15, 0.35),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+.team-layout {
+  display: grid;
+  grid-template-columns: var(--pool-w) minmax(0, var(--stage-w));
+  gap: var(--layout-gap);
+  justify-content: center;
+  align-items: start;
 }
 
-/* Mowing stripes + base colour. */
-.pitch-turf {
-  position: absolute;
-  inset: 0;
-  background:
-    repeating-linear-gradient(
-      to bottom,
-      var(--turf-light) 0,
-      var(--turf-light) var(--turf-stripe-height),
-      var(--turf-dark) var(--turf-stripe-height),
-      var(--turf-dark) calc(var(--turf-stripe-height) * 2)
-    );
+/* Sticky so the pool stays in reach while the pitch and fixtures scroll. */
+.pool-col {
+  position: sticky;
+  top: 16px;
+  align-self: start;
+  min-width: 0;
 }
 
-/* Floodlight bloom over the centre of the pitch. */
-.pitch-turf::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    110% 70% at 50% 26%,
-    rgba(255, 255, 255, var(--turf-sheen)) 0%,
-    rgba(255, 255, 255, 0) 60%
-  );
-}
-
-/* Stadium falloff toward the edges. Kept on its own layer so
-   --turf-vignette stays a simple 0–1 dial. */
-.pitch-turf::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    125% 105% at 50% 42%,
-    rgba(0, 0, 0, 0) 34%,
-    var(--turf-edge) 100%
-  );
-  opacity: var(--turf-vignette);
-}
-
-/* Painted markings. Percentages keep them proportional at any height. */
-.pitch-lines {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.pitch-lines > * {
-  position: absolute;
-  border: var(--turf-line-width) solid var(--turf-line);
-}
-
-.pitch-lines .m-outer {
-  inset: 1.5% 2%;
-  border-radius: 3px;
-}
-
-.pitch-lines .m-box {
-  top: calc(1.5% - var(--turf-line-width));
-  left: 50%;
-  transform: translateX(-50%);
-  width: 38%;
-  height: 15%;
-  border-top: 0;
-}
-
-.pitch-lines .m-six {
-  top: calc(1.5% - var(--turf-line-width));
-  left: 50%;
-  transform: translateX(-50%);
-  width: 17%;
-  height: 6.5%;
-  border-top: 0;
-}
-
-.pitch-lines .m-spot {
-  top: 13%;
-  left: 50%;
-  width: 5px;
-  height: 5px;
-  margin-left: -2.5px;
-  border-radius: 50%;
-  background: var(--turf-line);
-  border: 0;
-}
-
-.pitch-lines .m-arc {
-  top: 15.5%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 17%;
-  height: 7%;
-  border-radius: 0 0 50% 50%;
-  border-top: 0;
-}
-
-.pitch-lines .m-halfway {
-  left: 2%;
-  right: 2%;
-  bottom: 22%;
-  height: 0;
-  border-width: 0 0 var(--turf-line-width);
-}
-
-.pitch-lines .m-circle {
-  left: 50%;
-  bottom: 22%;
-  width: 30%;
-  aspect-ratio: 2 / 1;
-  transform: translate(-50%, 50%);
-  border-radius: 50%;
-}
-
-/* ==========================================================================
-   Formation rows
-   ========================================================================== */
-
-.pitch-rows {
-  position: relative;
+.stage-col {
   display: flex;
   flex-direction: column;
-  gap: var(--row-gap);
-  padding: 22px 12px 26px;
-  min-height: 480px;
+  gap: 20px;
+  min-width: 0;
+}
+
+/* Below the three-column threshold the pool collapses; picking falls back to
+   the slide-over, opened by clicking an empty slot on the pitch. */
+@media (max-width: 1399px) {
+  .team-layout {
+    grid-template-columns: minmax(0, var(--stage-w));
+  }
+  .pool-col {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   Stage
+   ========================================================================== */
+
+.team-stage {
+  width: min(var(--stage-w), 100%);
+  min-height: var(--stage-min-h);
+  margin: 0 auto;
+  padding: var(--stage-pad);
+  background: var(--stage-bg);
+  border-radius: var(--stage-radius);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ==========================================================================
+   Mode switch — My XI vs Look up a team.
+   Sits on the light page background, above the dark stage.
+   ========================================================================== */
+
+.mode-switch {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 11px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  gap: 3px;
+  margin-bottom: 14px;
+}
+
+.mode-switch__btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dim);
+  padding: 9px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mode-switch__btn:hover {
+  color: var(--text);
+  background: var(--panel-2);
+}
+.mode-switch__btn--active,
+.mode-switch__btn--active:hover {
+  background: var(--purple);
+  color: var(--green);
+}
+.mode-switch__btn:focus-visible {
+  outline: 2px solid var(--purple);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Controls — Pitch/List toggle and the stat dropdown
+   ========================================================================== */
+
+.stage-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.stage-bar__spacer {
+  margin-left: auto;
+}
+
+.view-toggle {
+  display: inline-flex;
+  padding: 5px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  gap: 4px;
+}
+
+.view-toggle__btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.72);
+  padding: 9px 30px;
+  border-radius: 7px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.view-toggle__btn:hover {
+  color: #fff;
+}
+.view-toggle__btn--active {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.stat-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  height: 46px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+.stat-select__icon {
+  flex: none;
+  opacity: 0.9;
+}
+.stat-select select {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: #fff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 0 20px 0 0;
+  cursor: pointer;
+  outline: none;
+}
+.stat-select select option {
+  color: #1c1020;
+  background: #fff;
+}
+.stat-select__chev {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+/* Squad meters, restyled for the dark stage */
+.stage-meters {
+  display: flex;
+  gap: 26px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.stage-meter {
+  text-align: center;
+}
+.stage-meter__value {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 8px;
+  background: rgba(0, 255, 135, 0.18);
+  color: #00ff87;
+  font-size: 20px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.stage-meter--bad .stage-meter__value {
+  background: rgba(233, 0, 82, 0.2);
+  color: #ff6b8a;
+}
+.stage-meter__label {
+  display: block;
+  margin-top: 5px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.66);
+}
+
+.stage-note {
+  text-align: center;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+}
+
+/* ==========================================================================
+   Pitch
+   ========================================================================== */
+
+.pitch {
+  position: relative;
+  flex: 1;
+  min-height: 780px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.pitch-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Formation rows sit flat on top of the perspective turf. Absolutely inset
+   rather than height:100%, which does not resolve against the pitch's
+   flex-derived height and leaves dead turf below the bench. */
+.pitch-rows {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
   justify-content: space-between;
+  padding: var(--rows-top, 70px) 8px 12px;
 }
 
 .pitch-row {
@@ -190,6 +308,7 @@
   justify-content: center;
   align-items: flex-start;
   gap: var(--card-gap);
+  flex: none;
   flex-wrap: wrap;
 }
 
@@ -197,31 +316,44 @@
    Bench
    ========================================================================== */
 
-.bench-strip {
+/* Inset to clear the converging touchlines — at this depth the turf is still
+   narrower than the container, so a full-width panel would overhang it. */
+.bench {
   position: relative;
-  margin-top: -1px;
-  padding: 14px 12px 16px;
-  background: linear-gradient(180deg, rgba(20, 4, 24, 0.94), var(--purple-2));
-  border-radius: 0 0 var(--turf-radius) var(--turf-radius);
-  box-shadow: 0 14px 30px rgba(10, 0, 15, 0.28);
+  margin: 0 var(--bench-inset, 46px);
+  padding: 10px 10px 6px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.24);
 }
 
-.bench-strip__label {
-  display: block;
-  text-align: center;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
-  margin-bottom: 10px;
-}
-
-.bench-strip__row {
+.bench__cols {
   display: flex;
   justify-content: center;
   gap: var(--card-gap);
-  flex-wrap: wrap;
+}
+
+.bench__col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.bench__head {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
+.bench__label {
+  display: block;
+  text-align: center;
+  margin-top: 8px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
 }
 
 /* ==========================================================================
@@ -230,117 +362,103 @@
 
 .fcard {
   width: var(--card-w);
-  border-radius: var(--card-radius);
-  overflow: hidden;
-  background: var(--card-name-bg);
-  box-shadow:
-    0 6px 14px rgba(0, 0, 0, 0.34),
-    0 1px 0 rgba(255, 255, 255, 0.16) inset;
   text-align: center;
   position: relative;
-  transition: transform 0.14s ease, box-shadow 0.14s ease;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
 }
 
 .fcard--interactive {
   cursor: pointer;
 }
-.fcard--interactive:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.42);
+.fcard--interactive:hover .fcard__labels {
+  transform: translateY(-2px);
 }
 
-.fcard__frame {
+.fcard__tile {
   position: relative;
-  height: var(--card-photo-h);
-  background: var(--card-photo-bg);
-  overflow: hidden;
-}
-
-/* Glossy sheen across the photo. */
-.fcard__frame::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    160deg,
-    rgba(255, 255, 255, 0.5) 0%,
-    rgba(255, 255, 255, 0) 42%
-  );
-  pointer-events: none;
-}
-
-/* Source photos are square head-and-shoulders cutouts; cover + top-anchoring
-   keeps the face in frame at any --card-photo-h. */
-.fcard__photo {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center var(--card-photo-focus, 8%);
-}
-
-.fcard__photo--fallback {
-  height: 100%;
-  width: 100%;
+  height: var(--card-kit-h);
+  border-radius: 8px;
+  background: var(--card-tile);
   display: grid;
   place-items: center;
-  font-size: 20px;
-  font-weight: 800;
-  color: #a99fb5;
-  letter-spacing: 0.04em;
+  margin-bottom: 4px;
 }
 
-.fcard__badge {
+/* Absolutely sized rather than height:%, which does not resolve reliably for
+   a replaced element inside a grid item and lets the kit overflow the card. */
+.fcard__kit {
   position: absolute;
-  top: 4px;
-  left: 4px;
-  width: 20px;
-  height: 20px;
+  inset: 4px;
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
   object-fit: contain;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
-  z-index: 2;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.3));
 }
 
-.fcard__badge.badge--fallback {
-  width: auto;
-  min-width: 20px;
-  padding: 0 3px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.85);
-  font-size: 9px;
-  color: var(--purple);
+.fcard__kit--fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-size: 13px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.85);
 }
 
-.fcard__armband {
+/* Small status chip, top-left of the kit tile */
+.fcard__status {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: -4px;
+  left: -4px;
   width: 20px;
   height: 20px;
   border-radius: 50%;
+  background: #ebff00;
+  color: #37003c;
   display: grid;
   place-items: center;
   font-size: 10px;
   font-weight: 800;
-  background: var(--purple);
-  color: var(--green);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+}
+
+.fcard__armband {
+  position: absolute;
+  top: 16px;
+  left: -6px;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: #37003c;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1.5px solid #fff;
   z-index: 2;
 }
 .fcard__armband--vice {
   background: #fff;
-  color: var(--purple);
+  color: #37003c;
+  border-color: #37003c;
+  font-size: 9px;
 }
 
 .fcard__remove {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: -4px;
+  right: -4px;
   width: 20px;
   height: 20px;
   border: 0;
   border-radius: 50%;
-  background: rgba(20, 4, 24, 0.75);
+  background: rgba(20, 4, 24, 0.8);
   color: #fff;
   font-size: 13px;
   line-height: 1;
@@ -356,7 +474,15 @@
   opacity: 1;
 }
 .fcard__remove:hover {
-  background: var(--pink);
+  background: #e90052;
+}
+
+/* Name + stat, a single rounded block split in two */
+.fcard__labels {
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  transition: transform 0.14s ease;
 }
 
 .fcard__name {
@@ -364,7 +490,7 @@
   color: var(--card-name-fg);
   font-size: var(--card-name-size);
   font-weight: var(--card-name-weight);
-  padding: 4px 5px;
+  padding: 6px 5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -375,7 +501,7 @@
   color: var(--card-stat-fg);
   font-size: var(--card-stat-size);
   font-weight: var(--card-stat-weight);
-  padding: 3px 5px;
+  padding: 5px 5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -383,128 +509,471 @@
 }
 
 /* Empty slot */
-.fcard--empty {
-  border: 2px dashed rgba(255, 255, 255, 0.5);
-  background: rgba(8, 48, 26, 0.3);
-  backdrop-filter: blur(1px);
-  box-shadow: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  height: calc(var(--card-photo-h) + 46px);
-  color: #fff;
-  font: inherit;
-  padding: 0;
+.fcard--empty .fcard__tile {
+  border: 2px dashed rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.08);
 }
-.fcard--empty:hover {
-  background: rgba(8, 48, 26, 0.5);
-  border-color: var(--green);
+.fcard--empty:hover .fcard__tile {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: #fff;
 }
-.fcard--empty .fcard__plus {
-  font-size: 22px;
+.fcard__plus {
+  font-size: 24px;
   font-weight: 300;
   line-height: 1;
+  color: #fff;
 }
-.fcard--empty .fcard__pos {
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  opacity: 0.85;
+.fcard--empty .fcard__name {
+  background: rgba(255, 255, 255, 0.9);
 }
 
 /* ==========================================================================
-   Toolbars
+   List view
    ========================================================================== */
 
-.segmented {
-  display: inline-flex;
-  padding: 3px;
-  border-radius: 10px;
-  background: rgba(55, 0, 60, 0.08);
-  border: 1px solid var(--border);
-  gap: 2px;
+.squad-list {
+  flex: 1;
 }
 
-.segmented__btn {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-dim);
-  padding: 6px 12px;
-  border-radius: 7px;
-  cursor: pointer;
+.squad-list__group + .squad-list__group {
+  margin-top: 16px;
+}
+
+.squad-list__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 8px 8px 0 0;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.squad-list__rows {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+}
+
+.srow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+.srow:first-child {
+  border-top: 0;
+}
+.srow--empty {
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+}
+
+.srow__kit {
+  width: 30px;
+  height: 34px;
+  object-fit: contain;
+  flex: none;
+}
+
+.srow__main {
+  flex: 1;
+  min-width: 0;
+}
+.srow__name {
+  display: block;
+  font-weight: 700;
+  font-size: 14px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.segmented__btn:hover {
-  color: var(--text);
+.srow__sub {
+  display: block;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
 }
-.segmented__btn--active {
-  background: var(--purple);
+
+.srow__stat {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  flex: none;
+  min-width: 84px;
+  text-align: right;
+}
+
+.srow__action {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+.srow__action:hover {
+  background: #e90052;
+  border-color: #e90052;
+}
+
+/* ==========================================================================
+   Player pool (left column)
+   ========================================================================== */
+
+.pool {
+  background: var(--stage-bg);
+  border-radius: var(--stage-radius);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 32px);
+  overflow: hidden;
+}
+
+.pool__head {
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex: none;
+}
+
+.pool__title {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.pool__blurb {
+  margin: 4px 0 12px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.pool__field {
+  display: block;
+  margin-bottom: 10px;
+}
+.pool__label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 5px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.pool__search {
+  width: 100%;
+  font: inherit;
+  font-size: 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+.pool__search::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+.pool__search:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 1px;
+}
+
+.pool__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pool__select,
+.pool__reset {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 10px;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  cursor: pointer;
+}
+.pool__select option {
+  color: #1c1020;
+  background: #fff;
+}
+.pool__reset:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.pool__count {
+  margin: 10px 0 0;
+  padding: 6px;
+  text-align: center;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #06202b;
+  background: linear-gradient(90deg, var(--cyan), var(--green));
+}
+
+.pool__scroll {
+  overflow-y: auto;
+  padding: 6px 10px 12px;
+  flex: 1;
+}
+
+.pool__grouphead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 6px 6px;
+  font-size: 14px;
+  font-weight: 800;
+}
+.pool__grouphead > :first-child {
+  flex: 1;
+}
+.pool__col {
+  width: 54px;
+  text-align: right;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.pool__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.prow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.prow--picked {
+  background: rgba(0, 255, 135, 0.07);
+}
+
+.prow__kit {
+  width: 26px;
+  height: 30px;
+  object-fit: contain;
+  flex: none;
+}
+
+.prow__main {
+  flex: 1;
+  min-width: 0;
+}
+.prow__name {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.prow__sub {
+  display: block;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.prow__price,
+.prow__tp {
+  width: 54px;
+  text-align: right;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+.prow__tp {
+  font-weight: 700;
+}
+
+.prow__btn {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  margin-left: 4px;
+}
+.prow__btn:hover:not(:disabled) {
+  background: var(--green);
+  border-color: var(--green);
+  color: #06301d;
+}
+.prow__btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.prow__btn--remove {
+  background: rgba(233, 0, 82, 0.25);
+  border-color: rgba(233, 0, 82, 0.5);
+}
+.prow__btn--remove:hover {
+  background: var(--pink);
+  border-color: var(--pink);
   color: #fff;
 }
 
-.pitch-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-.pitch-toolbar__spacer {
-  margin-left: auto;
-}
-
-.toolbar-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  margin-right: 2px;
-}
-
-/* Budget / counter readouts */
-.meters {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.meter {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 7px 12px;
-  min-width: 92px;
+.pool__more,
+.pool__empty {
+  margin: 8px 6px 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
   text-align: center;
 }
 
-.meter__value {
-  display: block;
-  font-size: 17px;
+/* ==========================================================================
+   Gameweek fixture list (below the stage)
+   ========================================================================== */
+
+.gwfix {
+  background: var(--stage-bg);
+  border-radius: var(--stage-radius);
+  color: #fff;
+  padding: 20px 16px 8px;
+}
+
+.gwfix__head {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.gwfix__title {
+  font-size: 26px;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.15;
+  margin: 0 0 12px;
+  text-align: left;
 }
-.meter__label {
-  display: block;
-  font-size: 10px;
+
+.gwfix__nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.gwfix__arrow {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.gwfix__arrow:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.18);
+}
+.gwfix__arrow:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.gwfix__gw {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 200px;
+}
+.gwfix__gw strong {
+  font-size: 17px;
+}
+.gwfix__gw span {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.gwfix__deadline {
+  margin: 10px 0 0;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-dim);
 }
-.meter--good .meter__value {
-  color: #0b7a41;
+.gwfix__tz {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 2px;
 }
-.meter--bad .meter__value {
-  color: var(--pink);
+
+.gwfix__dayhead {
+  margin: 16px 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.gwfix__row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gwfix__team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.gwfix__team--home {
+  justify-content: flex-end;
+}
+
+.gwfix__name {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gwfix__badge {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  flex: none;
+}
+
+.gwfix__mid {
+  min-width: 74px;
+  text-align: center;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.gwfix__empty {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.55);
+  padding: 20px;
 }
 
 /* ==========================================================================
@@ -524,6 +993,7 @@
 .picker {
   width: min(420px, 100%);
   background: var(--panel-2);
+  color: var(--text);
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -534,6 +1004,7 @@
   padding: 16px;
   background: var(--purple);
   color: #fff;
+  position: relative;
 }
 .picker__head h3 {
   margin: 0 0 10px;
@@ -640,20 +1111,41 @@
   font-weight: 700;
 }
 
-@media (max-width: 640px) {
-  .pitch-stage {
-    --card-w: 86px;
-    --card-photo-h: 64px;
-    --card-gap: 5px;
-    --card-name-size: 11px;
-    --card-stat-size: 10px;
+/* ==========================================================================
+   Narrow screens — the stage is fixed-width by spec, so scale within it
+   ========================================================================== */
+
+@media (max-width: 960px) {
+  .team-stage {
+    --card-w: 92px;
+    --card-kit-h: 62px;
+    --card-gap: 6px;
+    --card-name-size: 12px;
+    --card-stat-size: 11px;
+    --stage-min-h: 0;
   }
-  .pitch-stage .bench-strip {
-    --card-w: 76px;
-    --card-photo-h: 56px;
+  .pitch {
+    min-height: 640px;
+  }
+}
+
+@media (max-width: 600px) {
+  .team-stage {
+    --card-w: 68px;
+    --card-kit-h: 46px;
+    --card-gap: 4px;
+    --card-name-size: 10px;
+    --card-stat-size: 9px;
+    --stage-pad: 8px;
+  }
+  .pitch {
+    min-height: 470px;
   }
   .pitch-rows {
-    padding: 14px 6px 18px;
-    min-height: 400px;
+    padding: 26px 4px 0;
+  }
+  .view-toggle__btn {
+    padding: 8px 18px;
+    font-size: 14px;
   }
 }

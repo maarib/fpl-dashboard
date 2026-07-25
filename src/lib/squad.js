@@ -86,6 +86,35 @@ export function rejectionReason(player, squad, playersById, slot) {
   return null
 }
 
+/** First unfilled index for a position, or -1 when that position is full. */
+export function firstEmptySlot(squad, pos) {
+  return squad[pos].findIndex((id) => id == null)
+}
+
+/**
+ * Squad-level counterpart to `rejectionReason`. The persistent pool has no
+ * slot context — clicking + drops a player into the first free slot of their
+ * position — so validation has to ask "can this player go anywhere?".
+ */
+export function addRejectionReason(player, squad, playersById) {
+  if (squadIds(squad).includes(player.id)) return 'Already picked'
+  if (firstEmptySlot(squad, player.element_type) === -1) return 'Position full'
+  if (squadCost(squad, playersById) + player.now_cost > BUDGET) return 'Over budget'
+  if ((clubCounts(squad, playersById).get(player.team) ?? 0) >= MAX_PER_CLUB) {
+    return `Max ${MAX_PER_CLUB} per club`
+  }
+  return null
+}
+
+/** Locate a player already in the squad, as { pos, index }, or null. */
+export function findPlayerSlot(squad, playerId) {
+  for (const pos of [1, 2, 3, 4]) {
+    const index = squad[pos].indexOf(playerId)
+    if (index !== -1) return { pos, index }
+  }
+  return null
+}
+
 /** Which formations the current squad could legally switch to. */
 export function availableFormations(squad) {
   const filled = (pos) => squad[pos].filter(Boolean).length

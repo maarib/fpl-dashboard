@@ -1,20 +1,15 @@
+import PitchSurface from './PitchSurface'
+
+const BENCH_HEADS = ['GKP', '1. DEF', '2. MID', '3. FWD']
+
 /**
- * The turf surface. Renders four formation rows (GK, DEF, MID, FWD) plus an
- * optional bench strip beneath. Both My XI and Look-up-a-team render into it.
+ * Turf plus the formation rows, with the bench sitting on the near end of the
+ * pitch as it does on the official view.
  */
-export default function Pitch({ rows, bench, benchLabel = 'Bench' }) {
+export default function Pitch({ rows, bench, benchLabel = 'Substitutes' }) {
   return (
-    <div className="pitch-stage">
-      <div className="pitch-turf" />
-      <div className="pitch-lines" aria-hidden="true">
-        <span className="m-outer" />
-        <span className="m-box" />
-        <span className="m-six" />
-        <span className="m-spot" />
-        <span className="m-arc" />
-        <span className="m-halfway" />
-        <span className="m-circle" />
-      </div>
+    <div className="pitch">
+      <PitchSurface />
 
       <div className="pitch-rows">
         {rows.map((row, index) => (
@@ -22,14 +17,21 @@ export default function Pitch({ rows, bench, benchLabel = 'Bench' }) {
             {row}
           </div>
         ))}
-      </div>
 
-      {bench && (
-        <div className="bench-strip">
-          <span className="bench-strip__label">{benchLabel}</span>
-          <div className="bench-strip__row">{bench}</div>
-        </div>
-      )}
+        {bench && (
+          <div className="bench">
+            <div className="bench__cols">
+              {bench.map((card, index) => (
+                <div className="bench__col" key={index}>
+                  <span className="bench__head">{BENCH_HEADS[index]}</span>
+                  {card}
+                </div>
+              ))}
+            </div>
+            <span className="bench__label">{benchLabel}</span>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

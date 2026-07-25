@@ -7,6 +7,7 @@ import {
   SQUAD_SHAPE,
   availableFormations,
   clubCounts,
+  firstEmptySlot,
   parseFormation,
   squadCost,
   squadCount,
@@ -14,15 +15,19 @@ import {
 import Pitch from './Pitch'
 import PitchCard, { EmptyCard } from './PitchCard'
 import PlayerPicker from './PlayerPicker'
+import PlayerPool from './PlayerPool'
+import GameweekFixtures from './GameweekFixtures'
+import SquadList from './SquadList'
+import StageBar from './StageBar'
 
 /** Mode A — build your own 15 under the £100m and 3-per-club constraints. */
-export default function SquadBuilder({ metric }) {
+export default function SquadBuilder({ view, setView, metric, setMetric }) {
   const { playersById, teamsById, positionsById, fixtures, currentEvent } = useFpl()
   const { formation, squad, setFormation, setSlot, clearSlot, swapSlots, reset } =
     useSquad()
 
   const [openSlot, setOpenSlot] = useState(null)
-  const [benched, setBenched] = useState(null) // { pos, index } awaiting a swap
+  const [selected, setSelected] = useState(null)
 
   const cost = squadCost(squad, playersById)
   const picked = squadCount(squad)
@@ -31,52 +36,46 @@ export default function SquadBuilder({ metric }) {
   const overCap = [...counts.values()].some((n) => n > 3)
 
   const formations = useMemo(() => availableFormations(squad), [squad])
-
-  // A formation the squad can no longer support (after removals) falls back
-  // to whatever still fits, so the pitch never renders an illegal shape.
   const activeFormation = formations.includes(formation)
     ? formation
     : (formations[0] ?? formation)
   const activeNeed = parseFormation(activeFormation)
+
+  const fromEvent = currentEvent?.id ?? 1
 
   function handlePick(player) {
     setSlot(openSlot.pos, openSlot.index, player.id)
     setOpenSlot(null)
   }
 
+  /** Pool adds have no slot context — drop into the first free one. */
+  function handlePoolAdd(player) {
+    const index = firstEmptySlot(squad, player.element_type)
+    if (index !== -1) setSlot(player.element_type, index, player.id)
+  }
+
   /**
    * Two-tap swap: select a card, then another in the same position. Selecting
-   * a different position just moves the selection there, and re-selecting the
-   * same card cancels.
+   * a different position moves the selection; re-selecting cancels.
    */
   function handleCardClick(pos, index) {
-    if (!benched || benched.pos !== pos) {
-      setBenched({ pos, index })
+    if (!selected || selected.pos !== pos) {
+      setSelected({ pos, index })
       return
     }
-    if (benched.index === index) {
-      setBenched(null)
+    if (selected.index === index) {
+      setSelected(null)
       return
     }
-    swapSlots(pos, benched.index, index)
-    setBenched(null)
+    swapSlots(pos, selected.index, index)
+    setSelected(null)
   }
 
   const renderSlot = (pos, index) => {
     const id = squad[pos][index]
+    const player = id ? playersById.get(id) : null
     const position = positionsById.get(pos)
 
-    if (!id) {
-      return (
-        <EmptyCard
-          key={`${pos}-${index}`}
-          positionLabel={position?.singular_name_short ?? ''}
-          onClick={() => setOpenSlot({ pos, index })}
-        />
-      )
-    }
-
-    const player = playersById.get(id)
     if (!player) {
       return (
         <EmptyCard
@@ -87,25 +86,20 @@ export default function SquadBuilder({ metric }) {
       )
     }
 
-    const selected = benched?.pos === pos && benched?.index === index
-
     return (
-      <div
-        key={`${pos}-${index}`}
-        style={selected ? { outline: '3px solid var(--cyan)', borderRadius: 12 } : undefined}
-      >
-        <PitchCard
-          key={player.id}
-          player={player}
-          team={teamsById.get(player.team)}
-          metric={metric}
-          fixtures={fixtures}
-          teamsById={teamsById}
-          fromEvent={currentEvent?.id ?? 1}
-          onRemove={() => clearSlot(pos, index)}
-          onSelect={() => handleCardClick(pos, index)}
-        />
-      </div>
+      <PitchCard
+        key={`${pos}-${index}-${player.id}`}
+        player={player}
+        team={teamsById.get(player.team)}
+        isGoalkeeper={pos === 1}
+        metric={metric}
+        fixtures={fixtures}
+        teamsById={teamsById}
+        fromEvent={fromEvent}
+        selected={selected?.pos === pos && selected?.index === index}
+        onRemove={() => clearSlot(pos, index)}
+        onSelect={() => handleCardClick(pos, index)}
+      />
     )
   }
 
@@ -119,44 +113,48 @@ export default function SquadBuilder({ metric }) {
     ),
   )
 
+  // Same data the pitch uses, flattened for the list view.
+  const entries = [1, 2, 3, 4].flatMap((pos) =>
+    squad[pos].map((id, index) => {
+      const player = id ? playersById.get(id) : null
+      return {
+        pos,
+        player,
+        team: player ? teamsById.get(player.team) : null,
+        isGoalkeeper: pos === 1,
+        isBench: index >= activeNeed[pos],
+        onRemove: player ? () => clearSlot(pos, index) : undefined,
+        onAdd: () => setOpenSlot({ pos, index }),
+      }
+    }),
+  )
+
   return (
     <>
-      <div className="pitch-toolbar">
-        <span className="toolbar-label">Formation</span>
-        <select
-          className="input"
-          style={{ minWidth: 110 }}
-          value={activeFormation}
-          onChange={(e) => setFormation(e.target.value)}
-        >
-          {formations.length === 0 && <option>{activeFormation}</option>}
-          {formations.map((f) => (
-            <option key={f} value={f}>
-              {f}
-            </option>
-          ))}
-        </select>
-
+      <div className="filters">
+        <label className="field">
+          <span className="field__label">Formation</span>
+          <select
+            className="input"
+            style={{ minWidth: 110 }}
+            value={activeFormation}
+            onChange={(e) => setFormation(e.target.value)}
+          >
+            {formations.length === 0 && <option>{activeFormation}</option>}
+            {formations.map((f) => (
+              <option key={f} value={f}>
+                {f}
+              </option>
+            ))}
+          </select>
+        </label>
         <button type="button" className="btn" onClick={reset}>
           Clear squad
         </button>
-
-        <div className="pitch-toolbar__spacer" />
-
-        <div className="meters">
-          <div className={`meter ${picked === 15 ? 'meter--good' : ''}`}>
-            <span className="meter__value">{picked}/15</span>
-            <span className="meter__label">Picked</span>
-          </div>
-          <div className={`meter ${bank < 0 ? 'meter--bad' : 'meter--good'}`}>
-            <span className="meter__value">{formatPrice(bank)}</span>
-            <span className="meter__label">Bank</span>
-          </div>
-          <div className="meter">
-            <span className="meter__value">{formatPrice(cost)}</span>
-            <span className="meter__label">Spent</span>
-          </div>
-        </div>
+        <p className="filters__count">
+          Click a slot to pick. Click two players in the same position to swap
+          them between the XI and the bench.
+        </p>
       </div>
 
       {overCap && (
@@ -166,12 +164,55 @@ export default function SquadBuilder({ metric }) {
         </div>
       )}
 
-      <p className="pitch-hint">
-        Click an empty slot to pick a player. Click a player, then another in the
-        same position, to swap them between the XI and the bench.
-      </p>
+      <div className="team-layout">
+        <aside className="pool-col">
+          <PlayerPool
+            squad={squad}
+            onAdd={handlePoolAdd}
+            onRemove={(slot) => clearSlot(slot.pos, slot.index)}
+          />
+        </aside>
 
-      <Pitch rows={rows} bench={bench} benchLabel="Bench" />
+        <div className="stage-col">
+          <div className="team-stage">
+            <div className="stage-meters">
+              <div className={`stage-meter ${picked === 15 ? '' : 'stage-meter--bad'}`}>
+                <span className="stage-meter__value">{picked} / 15</span>
+                <span className="stage-meter__label">Players selected</span>
+              </div>
+              <div className={`stage-meter ${bank < 0 ? 'stage-meter--bad' : ''}`}>
+                <span className="stage-meter__value">{formatPrice(bank)}</span>
+                <span className="stage-meter__label">Bank</span>
+              </div>
+              <div className="stage-meter">
+                <span className="stage-meter__value">{formatPrice(cost)}</span>
+                <span className="stage-meter__label">Spent</span>
+              </div>
+            </div>
+
+            <StageBar
+              view={view}
+              setView={setView}
+              metric={metric}
+              setMetric={setMetric}
+            />
+
+            {view === 'pitch' ? (
+              <Pitch rows={rows} bench={bench} benchLabel="Substitutes" />
+            ) : (
+              <SquadList
+                entries={entries}
+                metric={metric}
+                fixtures={fixtures}
+                teamsById={teamsById}
+                fromEvent={fromEvent}
+              />
+            )}
+          </div>
+
+          <GameweekFixtures gameweek={fromEvent} />
+        </div>
+      </div>
 
       {openSlot && (
         <PlayerPicker
