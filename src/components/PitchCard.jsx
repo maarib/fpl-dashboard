@@ -1,30 +1,15 @@
-import { usePlayerPhoto } from '../hooks/usePlayerPhoto'
-import { formatPrice, nextFixtureForTeam } from '../lib/fpl'
-import TeamBadge from './TeamBadge'
+import { useState } from 'react'
+import { teamKitUrl } from '../lib/images'
+import { statText } from '../lib/cardStat'
 
-/** The stat shown in the card's bottom bar, per the pitch-wide toggle. */
-function statText({ metric, player, fixtures, teamsById, fromEvent }) {
-  switch (metric) {
-    case 'points':
-      return `${player.total_points} pts`
-    case 'form':
-      return `Form ${player.form}`
-    case 'price':
-      return formatPrice(player.now_cost)
-    case 'fixture':
-    default: {
-      const next = nextFixtureForTeam(fixtures, player.team, fromEvent)
-      if (!next) return 'No fixture'
-      const opponent = teamsById.get(next.opponentId)
-      return `${opponent?.short_name ?? '?'} (${next.isHome ? 'H' : 'A'})`
-    }
-  }
-}
-
-/** Large photo-forward card: photo, badge accent, name bar, stat bar. */
+/**
+ * Squad card in the official pitch-view idiom: playing kit on a translucent
+ * tile, then a white name bar and a grey stat bar forming one rounded block.
+ */
 export default function PitchCard({
   player,
   team,
+  isGoalkeeper,
   metric,
   fixtures,
   teamsById,
@@ -33,43 +18,42 @@ export default function PitchCard({
   isViceCaptain,
   onRemove,
   onSelect,
+  selected,
 }) {
-  const { url: src, ready } = usePlayerPhoto(player)
+  const [kitFailed, setKitFailed] = useState(false)
+  const kit = teamKitUrl(team, isGoalkeeper)
 
-  const initials = (player.web_name ?? '?')
-    .split(/[\s-]/)
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
+  const Tag = onSelect ? 'button' : 'div'
 
   return (
-    <div
+    <Tag
+      type={onSelect ? 'button' : undefined}
       className={`fcard${onSelect ? ' fcard--interactive' : ''}`}
       onClick={onSelect}
       title={`${player.first_name} ${player.second_name} — ${team?.name ?? ''}`}
+      style={selected ? { outline: '3px solid #04f5ff', outlineOffset: 2, borderRadius: 10 } : undefined}
     >
-      <div className="fcard__frame">
-        {src && (
+      <div className="fcard__tile">
+        {kit && !kitFailed ? (
           <img
-            className="fcard__photo"
-            src={src}
+            className="fcard__kit"
+            src={kit}
             alt=""
             loading="lazy"
             decoding="async"
+            onError={() => setKitFailed(true)}
           />
-        )}
-        {ready && !src && (
-          <span className="fcard__photo--fallback" aria-hidden="true">
-            {initials}
-          </span>
+        ) : (
+          <span className="fcard__kit--fallback">{team?.short_name ?? '—'}</span>
         )}
 
-        <TeamBadge team={team} className="fcard__badge" size={100} />
+        <span className="fcard__status" aria-hidden="true">
+          ⌄
+        </span>
 
         {isCaptain && <span className="fcard__armband">C</span>}
         {isViceCaptain && (
-          <span className="fcard__armband fcard__armband--vice">V</span>
+          <span className="fcard__armband fcard__armband--vice">VC</span>
         )}
 
         {onRemove && (
@@ -87,11 +71,13 @@ export default function PitchCard({
         )}
       </div>
 
-      <div className="fcard__name">{player.web_name}</div>
-      <div className="fcard__stat">
-        {statText({ metric, player, fixtures, teamsById, fromEvent })}
+      <div className="fcard__labels">
+        <div className="fcard__name">{player.web_name}</div>
+        <div className="fcard__stat">
+          {statText({ metric, player, fixtures, teamsById, fromEvent })}
+        </div>
       </div>
-    </div>
+    </Tag>
   )
 }
 
@@ -99,8 +85,13 @@ export default function PitchCard({
 export function EmptyCard({ positionLabel, onClick }) {
   return (
     <button type="button" className="fcard fcard--empty" onClick={onClick}>
-      <span className="fcard__plus">+</span>
-      <span className="fcard__pos">{positionLabel}</span>
+      <div className="fcard__tile">
+        <span className="fcard__plus">+</span>
+      </div>
+      <div className="fcard__labels">
+        <div className="fcard__name">{positionLabel}</div>
+        <div className="fcard__stat">Add player</div>
+      </div>
     </button>
   )
 }

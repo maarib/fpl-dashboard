@@ -8,7 +8,7 @@ import './App.css'
 
 const TABS = [
   { id: 'players', label: 'Player Explorer', Component: PlayerExplorer },
-  { id: 'team', label: 'My Team', Component: MyTeam },
+  { id: 'team', label: 'My Team', Component: MyTeam, wide: true },
   { id: 'fixtures', label: 'Fixtures', Component: Fixtures },
 ]
 
@@ -35,7 +35,8 @@ function Dashboard() {
     )
   }
 
-  const { Component } = TABS.find((tab) => tab.id === activeTab)
+  const tab = TABS.find((t) => t.id === activeTab)
+  const { Component } = tab
 
   return (
     <>
@@ -65,7 +66,7 @@ function Dashboard() {
         </nav>
       </header>
 
-      <main className="shell">
+      <main className={`shell${tab.wide ? ' shell--wide' : ''}`}>
         <Component />
       </main>
     </>

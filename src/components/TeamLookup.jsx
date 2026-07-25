@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 import { fetchEntry, fetchPicks } from '../api/fpl'
 import { useFpl } from '../hooks/useFpl'
+import GameweekFixtures from './GameweekFixtures'
 import Pitch from './Pitch'
 import PitchCard from './PitchCard'
+import SquadList from './SquadList'
+import StageBar from './StageBar'
 
 const STORAGE_KEY = 'fpl-dashboard:manager-id'
 
@@ -27,7 +30,7 @@ function loadPicks(managerId, gameweek) {
 }
 
 /** Mode B — render someone else's squad from the API onto the same pitch. */
-export default function TeamLookup({ metric }) {
+export default function TeamLookup({ view, setView, metric, setMetric }) {
   const { fixtures, playersById, teamsById, events, currentEvent } = useFpl()
 
   const [managerIdInput, setManagerIdInput] = useState(
@@ -65,36 +68,52 @@ export default function TeamLookup({ metric }) {
 
   const { loading, error, data } = state
   const picks = data?.picks?.picks ?? []
-  const starters = picks.filter((p) => p.position <= 11)
-  const bench = picks
-    .filter((p) => p.position > 11)
-    .sort((a, b) => a.position - b.position)
+  const fromEvent = query?.gameweek ?? gameweek
 
-  const renderCard = (pick) => {
+  const toEntry = (pick) => {
     const player = playersById.get(pick.element)
     if (!player) return null
-    return (
-      <PitchCard
-        key={pick.element}
-        player={player}
-        team={teamsById.get(player.team)}
-        metric={metric}
-        fixtures={fixtures}
-        teamsById={teamsById}
-        fromEvent={query?.gameweek ?? gameweek}
-        isCaptain={pick.is_captain}
-        isViceCaptain={pick.is_vice_captain}
-      />
-    )
+    return {
+      pos: player.element_type,
+      player,
+      team: teamsById.get(player.team),
+      isGoalkeeper: player.element_type === 1,
+      isBench: pick.position > 11,
+      isCaptain: pick.is_captain,
+      isViceCaptain: pick.is_vice_captain,
+      order: pick.position,
+    }
   }
 
+  const entries = picks.map(toEntry).filter(Boolean)
+
+  const renderCard = (entry) => (
+    <PitchCard
+      key={entry.player.id}
+      player={entry.player}
+      team={entry.team}
+      isGoalkeeper={entry.isGoalkeeper}
+      metric={metric}
+      fixtures={fixtures}
+      teamsById={teamsById}
+      fromEvent={fromEvent}
+      isCaptain={entry.isCaptain}
+      isViceCaptain={entry.isViceCaptain}
+    />
+  )
+
   // Formation comes from whatever the manager actually fielded.
-  const rows = [1, 2, 3, 4].map((typeId) =>
-    starters
-      .filter((pick) => playersById.get(pick.element)?.element_type === typeId)
-      .sort((a, b) => a.position - b.position)
+  const rows = [1, 2, 3, 4].map((pos) =>
+    entries
+      .filter((e) => !e.isBench && e.pos === pos)
+      .sort((a, b) => a.order - b.order)
       .map(renderCard),
   )
+
+  const bench = entries
+    .filter((e) => e.isBench)
+    .sort((a, b) => a.order - b.order)
+    .map(renderCard)
 
   return (
     <>
@@ -154,23 +173,49 @@ export default function TeamLookup({ metric }) {
       )}
 
       {data && (
-        <>
-          <header className="squad-head">
-            <h2>
-              {data.entry
-                ? `${data.entry.player_first_name} ${data.entry.player_last_name}`
-                : `Manager ${query.managerId}`}
-            </h2>
-            <p>
-              {data.entry?.name ? `${data.entry.name} · ` : ''}
-              Gameweek {query.gameweek}
-              {data.picks.entry_history ? ` · ${data.picks.entry_history.points} pts` : ''}
-              {data.picks.active_chip ? ` · chip: ${data.picks.active_chip}` : ''}
-            </p>
-          </header>
+        <div className="stage-col" style={{ margin: '0 auto', maxWidth: 'var(--stage-w)' }}>
+        <div className="team-stage">
+          <div className="stage-meters">
+            <div className="stage-meter">
+              <span className="stage-meter__value">
+                {data.picks.entry_history?.points ?? '—'}
+              </span>
+              <span className="stage-meter__label">
+                Gameweek {query.gameweek} points
+              </span>
+            </div>
+            {data.picks.active_chip && (
+              <div className="stage-meter">
+                <span className="stage-meter__value">{data.picks.active_chip}</span>
+                <span className="stage-meter__label">Active chip</span>
+              </div>
+            )}
+          </div>
 
-          <Pitch rows={rows} bench={bench.map(renderCard)} benchLabel="Substitutes" />
-        </>
+          <p className="stage-note">
+            {data.entry
+              ? `${data.entry.player_first_name} ${data.entry.player_last_name}`
+              : `Manager ${query.managerId}`}
+            {data.entry?.name ? ` · ${data.entry.name}` : ''}
+          </p>
+
+          <StageBar view={view} setView={setView} metric={metric} setMetric={setMetric} />
+
+          {view === 'pitch' ? (
+            <Pitch rows={rows} bench={bench} benchLabel="Substitutes" />
+          ) : (
+            <SquadList
+              entries={entries}
+              metric={metric}
+              fixtures={fixtures}
+              teamsById={teamsById}
+              fromEvent={fromEvent}
+            />
+          )}
+        </div>
+
+        <GameweekFixtures gameweek={fromEvent} />
+        </div>
       )}
     </>
   )

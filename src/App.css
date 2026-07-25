@@ -72,6 +72,12 @@
   padding: 22px 24px 60px;
 }
 
+/* My Team runs a three-column layout (pool 440 + gap 24 + stage 928), which
+   needs more room than the reading-width default the other tabs use. */
+.shell--wide {
+  max-width: 1440px;
+}
+
 /* ---------- controls ---------- */
 
 .filters {
