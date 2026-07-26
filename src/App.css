@@ -429,12 +429,49 @@
 }
 
 .fdr__chip {
-  display: block;
-  padding: 6px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 5px;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+.fdr__opp {
+  white-space: nowrap;
+}
+
+/* The difficulty digit. Carries the same information as the fill colour so
+   the grid is readable without perceiving hue, and without needing hover —
+   `title` does not exist on touch. */
+.fdr__diff {
+  flex: none;
+  min-width: 16px;
+  padding: 0 1px;
+  border-radius: 3px;
+  /* Outlined in currentColor rather than filled: the text colour is already
+     chosen to contrast with each of the five fills, so the badge works on the
+     bright greens and the near-black red alike. */
+  box-shadow: inset 0 0 0 1px currentColor;
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+/* Screen-reader-only text. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 .fdr__chip + .fdr__chip {
   margin-top: 3px;
