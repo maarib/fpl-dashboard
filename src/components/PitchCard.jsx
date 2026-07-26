@@ -23,13 +23,26 @@ export default function PitchCard({
   const [kitFailed, setKitFailed] = useState(false)
   const kit = teamKitUrl(team, isGoalkeeper)
 
-  const Tag = onSelect ? 'button' : 'div'
 
   return (
-    <Tag
-      type={onSelect ? 'button' : undefined}
+    /* A div with a button role rather than a real <button>: the remove
+       control is a button and nesting one inside another is invalid HTML,
+       which React flags and assistive tech handles unpredictably. */
+    <div
       className={`fcard${onSelect ? ' fcard--interactive' : ''}`}
+      role={onSelect ? 'button' : undefined}
+      tabIndex={onSelect ? 0 : undefined}
       onClick={onSelect}
+      onKeyDown={
+        onSelect
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                onSelect()
+              }
+            }
+          : undefined
+      }
       title={`${player.first_name} ${player.second_name} — ${team?.name ?? ''}`}
       style={selected ? { outline: '3px solid #04f5ff', outlineOffset: 2, borderRadius: 10 } : undefined}
     >
@@ -77,7 +90,7 @@ export default function PitchCard({
           {statText({ metric, player, fixtures, teamsById, fromEvent })}
         </div>
       </div>
-    </Tag>
+    </div>
   )
 }
 
