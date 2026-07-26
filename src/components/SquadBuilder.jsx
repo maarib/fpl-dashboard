@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useFpl } from '../hooks/useFpl'
+import { useMediaQuery } from '../hooks/useMediaQuery'
 import { useSquad } from '../hooks/useSquad'
 import { formatPrice } from '../lib/fpl'
 import {
@@ -28,6 +29,43 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
 
   const [openSlot, setOpenSlot] = useState(null)
   const [selected, setSelected] = useState(null)
+
+  // Whether there is room to show the pool beside the pitch (440 + 24 + 928).
+  const canDock = useMediaQuery('(min-width: 1400px)')
+  const [docked, setDocked] = useState(true)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+
+  // The docked column is rendered whenever it is *wanted*; CSS decides whether
+  // there is room to actually show it. Keeping that decision in one place (the
+  // media query in pitch.css) means a stale JS reading can misjudge the label
+  // but can never hide the pool with no way back.
+  const poolVisible = canDock ? docked : drawerOpen
+
+  // Close the drawer if the window grows enough to dock; the pool is already
+  // on screen at that point and leaving an overlay open would double it up.
+  useEffect(() => {
+    if (canDock) setDrawerOpen(false)
+  }, [canDock])
+
+  useEffect(() => {
+    if (!drawerOpen) return
+    const onKey = (e) => e.key === 'Escape' && setDrawerOpen(false)
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [drawerOpen])
+
+  function togglePool() {
+    // Re-read rather than trusting cached state: if it were stale we could
+    // toggle the docked flag on a screen too narrow to show a docked pool,
+    // leaving the user with no pool at all — the exact bug being fixed.
+    const roomToDock = window.matchMedia('(min-width: 1400px)').matches
+    if (roomToDock) {
+      setDocked((d) => !d)
+      setDrawerOpen(false)
+    } else {
+      setDrawerOpen((o) => !o)
+    }
+  }
 
   const cost = squadCost(squad, playersById)
   const picked = squadCount(squad)
@@ -148,9 +186,23 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
             ))}
           </select>
         </label>
+        <button
+          type="button"
+          className={`btn btn--pool${poolVisible ? ' btn--pool-on' : ''}`}
+          onClick={togglePool}
+          aria-expanded={poolVisible}
+          aria-controls="player-pool"
+        >
+          <span className="btn__icon" aria-hidden="true">
+            {poolVisible ? '×' : '+'}
+          </span>
+          {poolVisible ? 'Hide players' : 'Add players'}
+        </button>
+
         <button type="button" className="btn" onClick={reset}>
           Clear squad
         </button>
+
         <p className="filters__count">
           Click a slot to pick. Click two players in the same position to swap
           them between the XI and the bench.
@@ -164,14 +216,16 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
         </div>
       )}
 
-      <div className="team-layout">
-        <aside className="pool-col">
-          <PlayerPool
-            squad={squad}
-            onAdd={handlePoolAdd}
-            onRemove={(slot) => clearSlot(slot.pos, slot.index)}
-          />
-        </aside>
+      <div className={`team-layout${docked ? ' team-layout--docked' : ''}`}>
+        {docked && (
+          <aside className="pool-col" id="player-pool">
+            <PlayerPool
+              squad={squad}
+              onAdd={handlePoolAdd}
+              onRemove={(slot) => clearSlot(slot.pos, slot.index)}
+            />
+          </aside>
+        )}
 
         <div className="stage-col">
           <div className="team-stage">
@@ -213,6 +267,37 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
           <GameweekFixtures gameweek={fromEvent} />
         </div>
       </div>
+
+      {/* Narrow screens: the same pool, as an overlay rather than a column.
+          Gated only on drawerOpen — docking already closes it — so the overlay
+          can never be suppressed by a stale viewport reading. */}
+      {drawerOpen && (
+        <div
+          className="pool-drawer"
+          onClick={(e) => e.target === e.currentTarget && setDrawerOpen(false)}
+        >
+          <aside
+            className="pool-drawer__panel"
+            id="player-pool"
+            role="dialog"
+            aria-label="Player selection"
+          >
+            <button
+              type="button"
+              className="pool-drawer__close"
+              onClick={() => setDrawerOpen(false)}
+              aria-label="Close player selection"
+            >
+              ×
+            </button>
+            <PlayerPool
+              squad={squad}
+              onAdd={handlePoolAdd}
+              onRemove={(slot) => clearSlot(slot.pos, slot.index)}
+            />
+          </aside>
+        </div>
+      )}
 
       {openSlot && (
         <PlayerPicker
