@@ -461,6 +461,76 @@
   text-align: center;
 }
 
+/* ---------- player cards (replaces the table on phones) ---------- */
+
+.pcards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.pcards__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-top: 1px solid var(--border);
+}
+.pcards__item:first-child {
+  border-top: 0;
+}
+
+.pcards__main {
+  flex: 1;
+  min-width: 0;
+}
+.pcards__name {
+  display: block;
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pcards__sub {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.badge--xs {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+}
+
+.pcards__stats {
+  flex: none;
+  text-align: right;
+}
+.pcards__price {
+  display: block;
+  font-weight: 700;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.pcards__metric {
+  display: block;
+  font-size: 12px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.input--narrow {
+  min-width: 104px;
+}
+
 /* ---------- loading skeletons ---------- */
 
 .skel {
