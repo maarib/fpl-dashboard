@@ -55,12 +55,31 @@
    Three-column layout: pool | (stage + fixtures)
    ========================================================================== */
 
+/* Single column by default; the pool is added as a column only when it is
+   actually docked. Driven by state rather than a media query, so the pool
+   never disappears without a control reflecting it. */
 .team-layout {
   display: grid;
-  grid-template-columns: var(--pool-w) minmax(0, var(--stage-w));
+  grid-template-columns: minmax(0, var(--stage-w));
   gap: var(--layout-gap);
   justify-content: center;
   align-items: start;
+}
+
+/* Docking is gated on there genuinely being room, so stale JS state can never
+   produce a two-column grid that squeezes the pitch below its fixed size. CSS
+   is the authority on whether it fits; JS only decides intent. */
+.pool-col {
+  display: none;
+}
+
+@media (min-width: 1400px) {
+  .team-layout--docked {
+    grid-template-columns: var(--pool-w) minmax(0, var(--stage-w));
+  }
+  .team-layout--docked .pool-col {
+    display: block;
+  }
 }
 
 /* Sticky so the pool stays in reach while the pitch and fixtures scroll. */
@@ -78,15 +97,79 @@
   min-width: 0;
 }
 
-/* Below the three-column threshold the pool collapses; picking falls back to
-   the slide-over, opened by clicking an empty slot on the pitch. */
-@media (max-width: 1399px) {
-  .team-layout {
-    grid-template-columns: minmax(0, var(--stage-w));
-  }
-  .pool-col {
-    display: none;
-  }
+/* Narrow screens: the pool opens as an overlay instead of a column. Same
+   component, same behaviour — only the container differs. */
+.pool-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  background: rgba(12, 2, 16, 0.55);
+  backdrop-filter: blur(2px);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.pool-drawer__panel {
+  position: relative;
+  width: min(var(--pool-w), 100%);
+  height: 100%;
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.4);
+}
+
+.pool-drawer__panel .pool {
+  max-height: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+
+.pool-drawer__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+.pool-drawer__close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* The pool toggle. Present at every width so the panel is never silently
+   absent — see issue #15. */
+.btn--pool {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.btn--pool .btn__icon {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--purple);
+  color: var(--green);
+  font-size: 13px;
+  line-height: 1;
+}
+.btn--pool-on {
+  background: var(--purple);
+  border-color: var(--purple);
+  color: #fff;
+}
+.btn--pool-on .btn__icon {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+.btn--pool-on:hover {
+  background: var(--purple-2);
 }
 
 /* ==========================================================================
