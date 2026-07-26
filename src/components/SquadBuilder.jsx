@@ -13,6 +13,7 @@ import {
   squadCost,
   squadCount,
 } from '../lib/squad'
+import { clearSharedSquad, readSharedSquad, shareUrl } from '../lib/share'
 import Pitch from './Pitch'
 import PitchCard, { EmptyCard } from './PitchCard'
 import PlayerPicker from './PlayerPicker'
@@ -24,8 +25,44 @@ import StageBar from './StageBar'
 /** Mode A — build your own 15 under the £100m and 3-per-club constraints. */
 export default function SquadBuilder({ view, setView, metric, setMetric }) {
   const { playersById, teamsById, positionsById, fixtures, currentEvent } = useFpl()
-  const { formation, squad, setFormation, setSlot, clearSlot, swapSlots, reset } =
+  const { formation, squad, setFormation, setSlot, clearSlot, swapSlots, reset, replaceAll } =
     useSquad()
+
+  // A squad arriving by link is previewed read-only, so opening someone
+  // else's link can never overwrite your own squad without you asking.
+  const [shared, setShared] = useState(() => readSharedSquad())
+  const [copied, setCopied] = useState(false)
+
+  const viewing = shared ?? { formation, squad }
+  const readOnly = Boolean(shared)
+
+  function dismissShared() {
+    clearSharedSquad()
+    setShared(null)
+  }
+
+  function importShared() {
+    // Ids come from a URL, so drop any the current bootstrap doesn't know.
+    const cleaned = { 1: [], 2: [], 3: [], 4: [] }
+    for (const pos of [1, 2, 3, 4]) {
+      cleaned[pos] = shared.squad[pos].map((id) =>
+        id && playersById.has(id) ? id : null,
+      )
+    }
+    replaceAll({ formation: shared.formation, squad: cleaned })
+    dismissShared()
+  }
+
+  async function copyShareLink() {
+    try {
+      await navigator.clipboard.writeText(shareUrl({ formation, squad }))
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Clipboard can be blocked; fall back to showing the link to copy.
+      window.prompt('Copy this link', shareUrl({ formation, squad }))
+    }
+  }
 
   const [openSlot, setOpenSlot] = useState(null)
   const [selected, setSelected] = useState(null)
@@ -67,16 +104,16 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
     }
   }
 
-  const cost = squadCost(squad, playersById)
-  const picked = squadCount(squad)
+  const cost = squadCost(viewing.squad, playersById)
+  const picked = squadCount(viewing.squad)
   const bank = BUDGET - cost
-  const counts = clubCounts(squad, playersById)
+  const counts = clubCounts(viewing.squad, playersById)
   const overCap = [...counts.values()].some((n) => n > 3)
 
-  const formations = useMemo(() => availableFormations(squad), [squad])
-  const activeFormation = formations.includes(formation)
-    ? formation
-    : (formations[0] ?? formation)
+  const formations = useMemo(() => availableFormations(viewing.squad), [viewing.squad])
+  const activeFormation = formations.includes(viewing.formation)
+    ? viewing.formation
+    : (formations[0] ?? viewing.formation)
   const activeNeed = parseFormation(activeFormation)
 
   const fromEvent = currentEvent?.id ?? 1
@@ -110,7 +147,7 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
   }
 
   const renderSlot = (pos, index) => {
-    const id = squad[pos][index]
+    const id = viewing.squad[pos][index]
     const player = id ? playersById.get(id) : null
     const position = positionsById.get(pos)
 
@@ -119,7 +156,7 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
         <EmptyCard
           key={`${pos}-${index}`}
           positionLabel={position?.singular_name_short ?? ''}
-          onClick={() => setOpenSlot({ pos, index })}
+          onClick={readOnly ? undefined : () => setOpenSlot({ pos, index })}
         />
       )
     }
@@ -134,9 +171,9 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
         fixtures={fixtures}
         teamsById={teamsById}
         fromEvent={fromEvent}
-        selected={selected?.pos === pos && selected?.index === index}
-        onRemove={() => clearSlot(pos, index)}
-        onSelect={() => handleCardClick(pos, index)}
+        selected={!readOnly && selected?.pos === pos && selected?.index === index}
+        onRemove={readOnly ? undefined : () => clearSlot(pos, index)}
+        onSelect={readOnly ? undefined : () => handleCardClick(pos, index)}
       />
     )
   }
@@ -166,6 +203,60 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
       }
     }),
   )
+
+  if (readOnly) {
+    return (
+      <>
+        <div className="notice notice--shared">
+          <div>
+            <strong>You’re viewing a shared squad.</strong>
+            <p>Your own squad is untouched — importing is up to you.</p>
+          </div>
+          <div className="notice__actions">
+            <button type="button" className="btn btn--primary" onClick={importShared}>
+              Copy to my squad
+            </button>
+            <button type="button" className="btn" onClick={dismissShared}>
+              Back to my squad
+            </button>
+          </div>
+        </div>
+
+        <div className="team-layout">
+          <div className="stage-col">
+            <div className="team-stage">
+              <div className="stage-meters">
+                <div className="stage-meter">
+                  <span className="stage-meter__value">{picked} / 15</span>
+                  <span className="stage-meter__label">Players selected</span>
+                </div>
+                <div className="stage-meter">
+                  <span className="stage-meter__value">{formatPrice(cost)}</span>
+                  <span className="stage-meter__label">Squad value</span>
+                </div>
+              </div>
+
+              <StageBar view={view} setView={setView} metric={metric} setMetric={setMetric} />
+
+              {view === 'pitch' ? (
+                <Pitch rows={rows} bench={bench} benchLabel="Substitutes" />
+              ) : (
+                <SquadList
+                  entries={entries}
+                  metric={metric}
+                  fixtures={fixtures}
+                  teamsById={teamsById}
+                  fromEvent={fromEvent}
+                />
+              )}
+            </div>
+
+            <GameweekFixtures gameweek={fromEvent} />
+          </div>
+        </div>
+      </>
+    )
+  }
 
   return (
     <>
@@ -201,6 +292,10 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
 
         <button type="button" className="btn" onClick={reset}>
           Clear squad
+        </button>
+
+        <button type="button" className="btn" onClick={copyShareLink}>
+          {copied ? 'Link copied' : 'Share squad'}
         </button>
 
         <p className="filters__count">

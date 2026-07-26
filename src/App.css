@@ -461,6 +461,25 @@
   text-align: center;
 }
 
+/* ---------- shared squad banner ---------- */
+
+.notice--shared {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  border-color: var(--accent-border, rgba(4, 245, 255, 0.45));
+  background: rgba(4, 245, 255, 0.08);
+}
+
+.notice__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 /* ---------- player cards (replaces the table on phones) ---------- */
 
 .pcards {
