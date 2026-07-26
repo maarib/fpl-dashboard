@@ -169,6 +169,17 @@ export default function TeamLookup({ view, setView, metric, setMetric }) {
               any gameweek yet — this view will fill in from GW1 onwards.
             </p>
           )}
+          {/* A 404 is a definitive answer, not a failure worth retrying. */}
+          {error.status !== 404 && (
+            <button
+              type="button"
+              className="btn btn--primary"
+              style={{ marginTop: 12 }}
+              onClick={() => setQuery((q) => (q ? { ...q } : q))}
+            >
+              Try again
+            </button>
+          )}
         </div>
       )}
 
