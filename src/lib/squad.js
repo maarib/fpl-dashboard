@@ -124,6 +124,56 @@ export function availableFormations(squad) {
   })
 }
 
+/** Ids in the starting XI for a formation. Armbands are only valid here. */
+export function startingIds(squad, formation) {
+  const need = parseFormation(formation)
+  const ids = new Set()
+  for (const pos of [1, 2, 3, 4]) {
+    for (const id of squad[pos].slice(0, need[pos])) {
+      if (id) ids.add(id)
+    }
+  }
+  return ids
+}
+
+/** Filled vs required per position, for the progress readout. */
+export function squadProgress(squad) {
+  return [1, 2, 3, 4].map((pos) => ({
+    pos,
+    filled: squad[pos].filter(Boolean).length,
+    total: SQUAD_SHAPE[pos],
+  }))
+}
+
+/**
+ * Cheapest possible cost to fill every empty slot, ignoring the club cap.
+ * Used to warn before the last pick that the remaining budget cannot finish
+ * the squad — an optimistic bound, so if this exceeds the bank the squad is
+ * definitely unfinishable rather than merely awkward.
+ */
+export function cheapestCompletion(squad, players) {
+  const owned = new Set(squadIds(squad))
+  let total = 0
+
+  for (const pos of [1, 2, 3, 4]) {
+    const missing = squad[pos].filter((id) => id == null).length
+    if (missing === 0) continue
+
+    const cheapest = players
+      .filter((p) => p.element_type === pos && !owned.has(p.id))
+      .map((p) => p.now_cost)
+      .sort((a, b) => a - b)
+      .slice(0, missing)
+
+    // Fewer candidates than slots should be impossible, but don't pretend
+    // the squad is finishable if it somehow happens.
+    if (cheapest.length < missing) return Infinity
+    total += cheapest.reduce((sum, c) => sum + c, 0)
+  }
+
+  return total
+}
+
 /** Split a position's array into starters and bench for a formation. */
 export function splitByFormation(squad, formation) {
   const need = parseFormation(formation)
