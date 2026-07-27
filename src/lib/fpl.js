@@ -1,7 +1,11 @@
 /** Helpers for shaping raw FPL API data. */
 
-/** now_cost is in tenths of a million. */
-export const formatPrice = (nowCost) => `£${(nowCost / 10).toFixed(1)}m`
+/**
+ * now_cost is in tenths of a million. The sign goes outside the currency
+ * symbol — an overspent bank should read "-£17.0m", not "£-17.0m".
+ */
+export const formatPrice = (nowCost) =>
+  `${nowCost < 0 ? '-' : ''}£${Math.abs(nowCost / 10).toFixed(1)}m`
 
 export const toNumber = (value) => {
   const n = Number.parseFloat(value)

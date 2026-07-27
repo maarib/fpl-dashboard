@@ -8,10 +8,12 @@ import {
   SQUAD_SHAPE,
   availableFormations,
   clubCounts,
+  cheapestCompletion,
   firstEmptySlot,
   parseFormation,
   squadCost,
   squadCount,
+  squadProgress,
 } from '../lib/squad'
 import { clearSharedSquad, readSharedSquad, shareUrl } from '../lib/share'
 import Pitch from './Pitch'
@@ -24,9 +26,25 @@ import StageBar from './StageBar'
 
 /** Mode A — build your own 15 under the £100m and 3-per-club constraints. */
 export default function SquadBuilder({ view, setView, metric, setMetric }) {
-  const { playersById, teamsById, positionsById, fixtures, currentEvent } = useFpl()
-  const { formation, squad, setFormation, setSlot, clearSlot, swapSlots, reset, replaceAll } =
-    useSquad()
+  const { players, playersById, teamsById, positionsById, fixtures, currentEvent } = useFpl()
+  const {
+    formation,
+    squad,
+    captain,
+    viceCaptain,
+    setFormation,
+    setSlot,
+    clearSlot,
+    swapSlots,
+    reset,
+    replaceAll,
+    setCaptain,
+    setViceCaptain,
+  } = useSquad()
+
+  // Which card's menu is open, and any pending substitution.
+  const [openMenu, setOpenMenu] = useState(null)
+  const [swapFrom, setSwapFrom] = useState(null)
 
   // A squad arriving by link is previewed read-only, so opening someone
   // else's link can never overwrite your own squad without you asking.
@@ -65,7 +83,6 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
   }
 
   const [openSlot, setOpenSlot] = useState(null)
-  const [selected, setSelected] = useState(null)
 
   // Whether there is room to show the pool beside the pitch (440 + 24 + 928).
   const canDock = useMediaQuery('(min-width: 1400px)')
@@ -118,6 +135,13 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
 
   const fromEvent = currentEvent?.id ?? 1
 
+  // #18: a bare 12/15 never says *what* is missing, nor whether the money
+  // left can actually finish the squad.
+  const progress = squadProgress(viewing.squad)
+  const needed = cheapestCompletion(viewing.squad, players)
+  const unfinishable = picked < 15 && needed > bank
+  const clubsAtCap = [...counts.entries()].filter(([, n]) => n >= 3).length
+
   function handlePick(player) {
     setSlot(openSlot.pos, openSlot.index, player.id)
     setOpenSlot(null)
@@ -130,20 +154,70 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
   }
 
   /**
-   * Two-tap swap: select a card, then another in the same position. Selecting
-   * a different position moves the selection; re-selecting cancels.
+   * A swap is only meaningful between a starter and a bench player in the
+   * same position — swapping two starters just reorders them. Restricting
+   * targets to that gives every card a clear yes/no rather than a click that
+   * silently does nothing.
    */
+  function isValidSwapTarget(pos, index) {
+    if (!swapFrom || swapFrom.pos !== pos || swapFrom.index === index) return false
+    const starterCount = activeNeed[pos]
+    const fromStarting = swapFrom.index < starterCount
+    const toStarting = index < starterCount
+    return fromStarting !== toStarting
+  }
+
   function handleCardClick(pos, index) {
-    if (!selected || selected.pos !== pos) {
-      setSelected({ pos, index })
+    // Mid-substitution a click means "put them here", not "open a menu".
+    if (swapFrom) {
+      if (isValidSwapTarget(pos, index)) swapSlots(pos, swapFrom.index, index)
+      setSwapFrom(null)
       return
     }
-    if (selected.index === index) {
-      setSelected(null)
-      return
-    }
-    swapSlots(pos, selected.index, index)
-    setSelected(null)
+    setOpenMenu({ pos, index })
+  }
+
+  /** Actions offered for one filled slot. */
+  function menuItemsFor(pos, index, player) {
+    const starterCount = activeNeed[pos]
+    const isStarter = index < starterCount
+    const partner = isStarter
+      ? squad[pos].slice(starterCount).some(Boolean)
+      : squad[pos].slice(0, starterCount).some(Boolean)
+
+    return [
+      {
+        id: 'sub',
+        label: isStarter ? 'Substitute out' : 'Bring on',
+        disabled: !partner,
+        reason: partner
+          ? undefined
+          : isStarter
+            ? 'No one on the bench for this position'
+            : 'No starter in this position to replace',
+        onSelect: () => setSwapFrom({ pos, index }),
+      },
+      {
+        id: 'captain',
+        label: captain === player.id ? 'Captain ✓' : 'Make captain',
+        disabled: !isStarter || captain === player.id,
+        reason: isStarter ? undefined : 'Only a starting player can captain',
+        onSelect: () => setCaptain(player.id),
+      },
+      {
+        id: 'vice',
+        label: viceCaptain === player.id ? 'Vice-captain ✓' : 'Make vice-captain',
+        disabled: !isStarter || viceCaptain === player.id,
+        reason: isStarter ? undefined : 'Only a starting player can be vice',
+        onSelect: () => setViceCaptain(player.id),
+      },
+      {
+        id: 'remove',
+        label: 'Remove from squad',
+        danger: true,
+        onSelect: () => clearSlot(pos, index),
+      },
+    ]
   }
 
   const renderSlot = (pos, index) => {
@@ -171,7 +245,17 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
         fixtures={fixtures}
         teamsById={teamsById}
         fromEvent={fromEvent}
-        selected={!readOnly && selected?.pos === pos && selected?.index === index}
+        isCaptain={captain === player.id}
+        isViceCaptain={viceCaptain === player.id}
+        selected={!readOnly && swapFrom?.pos === pos && swapFrom?.index === index}
+        swapPending={!readOnly && Boolean(swapFrom)}
+        isSwapTarget={!readOnly && isValidSwapTarget(pos, index)}
+        menuItems={readOnly ? undefined : menuItemsFor(pos, index, player)}
+        menuOpen={
+          !readOnly && openMenu?.pos === pos && openMenu?.index === index
+            ? { close: () => setOpenMenu(null) }
+            : null
+        }
         onRemove={readOnly ? undefined : () => clearSlot(pos, index)}
         onSelect={readOnly ? undefined : () => handleCardClick(pos, index)}
       />
@@ -328,6 +412,16 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
               <div className={`stage-meter ${picked === 15 ? '' : 'stage-meter--bad'}`}>
                 <span className="stage-meter__value">{picked} / 15</span>
                 <span className="stage-meter__label">Players selected</span>
+                <span className="stage-meter__breakdown">
+                  {progress.map(({ pos, filled, total }) => (
+                    <span
+                      key={pos}
+                      className={filled === total ? 'is-done' : undefined}
+                    >
+                      {positionsById.get(pos)?.singular_name_short} {filled}/{total}
+                    </span>
+                  ))}
+                </span>
               </div>
               <div className={`stage-meter ${bank < 0 ? 'stage-meter--bad' : ''}`}>
                 <span className="stage-meter__value">{formatPrice(bank)}</span>
@@ -338,6 +432,31 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
                 <span className="stage-meter__label">Spent</span>
               </div>
             </div>
+
+            {(unfinishable || clubsAtCap > 0) && (
+              <p className="stage-warn">
+                {unfinishable &&
+                  (bank < 0 ? (
+                    <span>
+                      You’re <strong>{formatPrice(-bank)} over budget</strong>{' '}
+                      with {15 - picked} slot{15 - picked === 1 ? '' : 's'} still
+                      to fill — sell someone before finishing the squad.
+                    </span>
+                  ) : (
+                    <span>
+                      <strong>{formatPrice(bank)} left</strong> won’t fill the
+                      remaining {15 - picked} slot{15 - picked === 1 ? '' : 's'} —
+                      the cheapest way to finish costs {formatPrice(needed)}.
+                    </span>
+                  ))}
+                {clubsAtCap > 0 && (
+                  <span>
+                    {clubsAtCap} club{clubsAtCap === 1 ? ' is' : 's are'} at the
+                    3-player limit.
+                  </span>
+                )}
+              </p>
+            )}
 
             <StageBar
               view={view}
