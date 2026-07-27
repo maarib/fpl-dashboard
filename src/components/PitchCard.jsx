@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { teamKitUrl } from '../lib/images'
 import { statText } from '../lib/cardStat'
+import CardMenu from './CardMenu'
 
 /**
  * Squad card in the official pitch-view idiom: playing kit on a translucent
@@ -19,6 +20,10 @@ export default function PitchCard({
   onRemove,
   onSelect,
   selected,
+  menuItems,
+  menuOpen,
+  isSwapTarget,
+  swapPending,
 }) {
   const [kitFailed, setKitFailed] = useState(false)
   const kit = teamKitUrl(team, isGoalkeeper)
@@ -29,7 +34,16 @@ export default function PitchCard({
        control is a button and nesting one inside another is invalid HTML,
        which React flags and assistive tech handles unpredictably. */
     <div
-      className={`fcard${onSelect ? ' fcard--interactive' : ''}`}
+      className={[
+        'fcard',
+        onSelect ? 'fcard--interactive' : '',
+        // Valid destinations are highlighted while a swap is pending, so the
+        // user is not left guessing which cards will accept the move.
+        isSwapTarget ? 'fcard--target' : '',
+        swapPending && !isSwapTarget && !selected ? 'fcard--dimmed' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
       role={onSelect ? 'button' : undefined}
       tabIndex={onSelect ? 0 : undefined}
       onClick={onSelect}
@@ -44,6 +58,8 @@ export default function PitchCard({
           : undefined
       }
       title={`${player.first_name} ${player.second_name} — ${team?.name ?? ''}`}
+      aria-haspopup={menuItems ? 'menu' : undefined}
+      aria-expanded={menuItems ? Boolean(menuOpen) : undefined}
       style={selected ? { outline: '3px solid #04f5ff', outlineOffset: 2, borderRadius: 10 } : undefined}
     >
       <div className="fcard__tile">
@@ -90,6 +106,14 @@ export default function PitchCard({
           {statText({ metric, player, fixtures, teamsById, fromEvent })}
         </div>
       </div>
+
+      {menuOpen && menuItems && (
+        <CardMenu
+          items={menuItems}
+          onClose={menuOpen.close}
+          label={`Actions for ${player.web_name}`}
+        />
+      )}
     </div>
   )
 }

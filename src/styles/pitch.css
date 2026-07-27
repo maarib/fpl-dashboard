@@ -709,6 +709,108 @@
 }
 
 /* ==========================================================================
+   Card menu, swap targeting and squad guidance
+   ========================================================================== */
+
+.cardmenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  min-width: 190px;
+  padding: 5px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+  text-align: left;
+}
+
+.cardmenu__item {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+}
+.cardmenu__item:hover:not(:disabled),
+.cardmenu__item:focus-visible {
+  background: var(--panel-2);
+  outline: none;
+}
+.cardmenu__item:disabled {
+  cursor: not-allowed;
+  color: var(--text-dim);
+}
+.cardmenu__item--danger {
+  color: var(--pink);
+}
+.cardmenu__label {
+  display: block;
+  font-weight: 600;
+}
+.cardmenu__reason {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-dim);
+  margin-top: 1px;
+}
+
+/* Valid destinations during a substitution. */
+.fcard--target .fcard__tile {
+  outline: 3px solid var(--green);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+.fcard--target {
+  cursor: copy;
+}
+.fcard--dimmed {
+  opacity: 0.45;
+}
+
+.stage-meter__breakdown {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+}
+.stage-meter__breakdown .is-done {
+  color: var(--green);
+}
+
+.stage-warn {
+  margin: 0;
+  padding: 9px 12px;
+  border-radius: 9px;
+  background: rgba(255, 193, 7, 0.14);
+  border: 1px solid rgba(255, 193, 7, 0.35);
+  color: #ffe9a8;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.stage-warn strong {
+  color: #fff;
+}
+
+.prow__reason {
+  color: #ff9db4;
+  font-weight: 600;
+}
+
+/* ==========================================================================
    Player pool (left column)
    ========================================================================== */
 

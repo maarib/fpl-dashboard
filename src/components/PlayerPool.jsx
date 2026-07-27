@@ -26,7 +26,18 @@ function PoolRow({ player, team, reason, inSquad, onAdd, onRemove }) {
         >
           {player.web_name}
         </span>
-        <span className="prow__sub">{team?.short_name}</span>
+        {/* State the reason inline. It was previously only a `title`, which
+            is invisible on touch and easy to miss — and with a full position
+            every row greys out at once, which reads as the app being broken. */}
+        <span className="prow__sub">
+          {team?.short_name}
+          {reason && !inSquad && (
+            <>
+              {' · '}
+              <span className="prow__reason">{reason}</span>
+            </>
+          )}
+        </span>
       </span>
 
       <span className="prow__price">{formatPrice(player.now_cost)}</span>
