@@ -20,6 +20,7 @@ import Pitch from './Pitch'
 import PitchCard, { EmptyCard } from './PitchCard'
 import PlayerPicker from './PlayerPicker'
 import PlayerPool from './PlayerPool'
+import PlayerDetail from './PlayerDetail'
 import GameweekFixtures from './GameweekFixtures'
 import SquadList from './SquadList'
 import StageBar from './StageBar'
@@ -45,6 +46,7 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
   // Which card's menu is open, and any pending substitution.
   const [openMenu, setOpenMenu] = useState(null)
   const [swapFrom, setSwapFrom] = useState(null)
+  const [detail, setDetail] = useState(null)
 
   // A squad arriving by link is previewed read-only, so opening someone
   // else's link can never overwrite your own squad without you asking.
@@ -186,6 +188,11 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
       : squad[pos].slice(0, starterCount).some(Boolean)
 
     return [
+      {
+        id: 'view',
+        label: 'View player',
+        onSelect: () => setDetail(player),
+      },
       {
         id: 'sub',
         label: isStarter ? 'Substitute out' : 'Bring on',
@@ -512,6 +519,8 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
           </aside>
         </div>
       )}
+
+      {detail && <PlayerDetail player={detail} onClose={() => setDetail(null)} />}
 
       {openSlot && (
         <PlayerPicker

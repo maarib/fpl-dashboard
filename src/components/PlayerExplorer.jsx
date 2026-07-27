@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import PlayerDetail from './PlayerDetail'
 import { useFpl } from '../hooks/useFpl'
 import { useMediaQuery } from '../hooks/useMediaQuery'
 import { formatPrice, toNumber } from '../lib/fpl'
@@ -85,6 +86,7 @@ export default function PlayerExplorer() {
   const [maxPrice, setMaxPrice] = useState(priceBounds.max)
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState({ key: 'total_points', dir: 'desc' })
+  const [detail, setDetail] = useState(null)
 
   const rows = useMemo(() => {
     const ctx = { teamsById, positionsById }
@@ -240,7 +242,11 @@ export default function PlayerExplorer() {
             const position = positionsById.get(player.element_type)
             const active = SORTABLE.get(sort.key)
             return (
-              <li className="pcards__item" key={player.id}>
+              <li
+                className="pcards__item pcards__item--link"
+                key={player.id}
+                onClick={() => setDetail(player)}
+              >
                 <PlayerPhoto player={player} className="photo--sm" />
                 <span className="pcards__main">
                   <span className="pcards__name">{player.web_name}</span>
@@ -317,7 +323,13 @@ export default function PlayerExplorer() {
                     <PlayerPhoto player={player} className="photo--sm" />
                   </td>
                   <td className="col-name">
-                    <span className="player-name">{player.web_name}</span>
+                    <button
+                      type="button"
+                      className="player-name player-name--link"
+                      onClick={() => setDetail(player)}
+                    >
+                      {player.web_name}
+                    </button>
                     <span className="player-sub">
                       {player.first_name} {player.second_name}
                     </span>
@@ -348,6 +360,8 @@ export default function PlayerExplorer() {
       {rows.length === 0 && (
         <p className="empty">No players match these filters.</p>
       )}
+
+      {detail && <PlayerDetail player={detail} onClose={() => setDetail(null)} />}
     </section>
   )
 }

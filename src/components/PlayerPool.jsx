@@ -3,6 +3,7 @@ import { useFpl } from '../hooks/useFpl'
 import { formatPrice, toNumber } from '../lib/fpl'
 import { teamKitUrl } from '../lib/images'
 import { addRejectionReason, findPlayerSlot } from '../lib/squad'
+import PlayerDetail from './PlayerDetail'
 
 const SORTS = [
   { id: 'points', label: 'Total points', value: (p) => p.total_points },
@@ -12,7 +13,7 @@ const SORTS = [
   { id: 'xgi', label: 'xGI', value: (p) => toNumber(p.expected_goal_involvements) },
 ]
 
-function PoolRow({ player, team, reason, inSquad, onAdd, onRemove }) {
+function PoolRow({ player, team, reason, inSquad, onAdd, onRemove, onInspect }) {
   const kit = teamKitUrl(team, player.element_type === 1, 110)
 
   return (
@@ -39,6 +40,15 @@ function PoolRow({ player, team, reason, inSquad, onAdd, onRemove }) {
           )}
         </span>
       </span>
+
+      <button
+        type="button"
+        className="prow__info"
+        aria-label={`View ${player.web_name} details`}
+        onClick={onInspect}
+      >
+        i
+      </button>
 
       <span className="prow__price">{formatPrice(player.now_cost)}</span>
       <span className="prow__tp">{player.total_points}</span>
@@ -74,6 +84,7 @@ function PoolRow({ player, team, reason, inSquad, onAdd, onRemove }) {
  * rather than slot-level.
  */
 export default function PlayerPool({ squad, onAdd, onRemove }) {
+  const [detail, setDetail] = useState(null)
   const { players, positions, teamsById, playersById } = useFpl()
 
   const [search, setSearch] = useState('')
@@ -206,6 +217,7 @@ export default function PlayerPool({ squad, onAdd, onRemove }) {
                       reason={addRejectionReason(player, squad, playersById)}
                       onAdd={() => onAdd(player)}
                       onRemove={() => onRemove(slot)}
+                      onInspect={() => setDetail(player)}
                     />
                   )
                 })}
@@ -221,6 +233,8 @@ export default function PlayerPool({ squad, onAdd, onRemove }) {
 
         {filtered.length === 0 && <p className="pool__empty">No players match.</p>}
       </div>
+
+      {detail && <PlayerDetail player={detail} onClose={() => setDetail(null)} />}
     </div>
   )
 }
