@@ -75,6 +75,21 @@ export function useSquad() {
     setState({ formation: DEFAULT_FORMATION, squad: emptySquad() })
   }, [])
 
+  /** Replace the whole squad at once — used when importing a shared link. */
+  const replaceAll = useCallback((next) => {
+    setState({
+      formation: FORMATIONS.includes(next.formation)
+        ? next.formation
+        : DEFAULT_FORMATION,
+      squad: {
+        1: [...next.squad[1]],
+        2: [...next.squad[2]],
+        3: [...next.squad[3]],
+        4: [...next.squad[4]],
+      },
+    })
+  }, [])
+
   return {
     formation: state.formation,
     squad: state.squad,
@@ -83,5 +98,6 @@ export function useSquad() {
     clearSlot,
     swapSlots,
     reset,
+    replaceAll,
   }
 }

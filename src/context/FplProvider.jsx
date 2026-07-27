@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { fetchBootstrap, fetchFixtures } from '../api/fpl'
 import { resolveCurrentEvent } from '../lib/fpl'
 import { FplContext } from './FplContext'
@@ -16,6 +16,16 @@ export function FplProvider({ children }) {
   const [bootstrap, setBootstrap] = useState(null)
   const [fixtures, setFixtures] = useState(null)
   const [error, setError] = useState(null)
+  // Bumping this re-runs the load. The caches are already cleared on failure,
+  // so a retry genuinely refetches rather than replaying the rejection.
+  const [attempt, setAttempt] = useState(0)
+
+  const retry = useCallback(() => {
+    bootstrapPromise = null
+    fixturesPromise = null
+    setError(null)
+    setAttempt((n) => n + 1)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -28,7 +38,7 @@ export function FplProvider({ children }) {
       })
       .catch((err) => {
         if (cancelled) return
-        // Let a later mount retry rather than caching the rejection forever.
+        // Let a later attempt retry rather than caching the rejection forever.
         bootstrapPromise = null
         fixturesPromise = null
         setError(err)
@@ -37,11 +47,11 @@ export function FplProvider({ children }) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [attempt])
 
   const value = useMemo(() => {
     if (!bootstrap || !fixtures) {
-      return { loading: !error, error, bootstrap: null, fixtures: null }
+      return { loading: !error, error, retry, bootstrap: null, fixtures: null }
     }
 
     const teamsById = new Map(bootstrap.teams.map((t) => [t.id, t]))
@@ -51,6 +61,7 @@ export function FplProvider({ children }) {
     return {
       loading: false,
       error: null,
+      retry,
       bootstrap,
       fixtures,
       players: bootstrap.elements,
@@ -62,7 +73,7 @@ export function FplProvider({ children }) {
       positionsById,
       playersById,
     }
-  }, [bootstrap, fixtures, error])
+  }, [bootstrap, fixtures, error, retry])
 
   return <FplContext.Provider value={value}>{children}</FplContext.Provider>
 }

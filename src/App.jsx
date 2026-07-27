@@ -4,6 +4,7 @@ import { useFpl } from './hooks/useFpl'
 import PlayerExplorer from './components/PlayerExplorer'
 import MyTeam from './components/MyTeam'
 import Fixtures from './components/Fixtures'
+import { TableSkeleton } from './components/Skeleton'
 import './App.css'
 
 const TABS = [
@@ -13,23 +14,41 @@ const TABS = [
 ]
 
 function Dashboard() {
-  const { loading, error, currentEvent } = useFpl()
+  const { loading, error, retry, currentEvent } = useFpl()
   const [activeTab, setActiveTab] = useState(TABS[0].id)
 
   if (loading) {
     return (
       <main className="shell">
-        <p className="empty">Loading FPL data…</p>
+        <TableSkeleton />
       </main>
     )
   }
 
   if (error) {
+    // Being offline and the request failing read identically otherwise, and
+    // they call for different actions from the user.
+    const offline = typeof navigator !== 'undefined' && navigator.onLine === false
+
     return (
       <main className="shell">
         <div className="notice notice--error">
-          <strong>Couldn’t load FPL data.</strong>
-          <p>{error.message}</p>
+          <strong>
+            {offline ? 'You appear to be offline.' : 'Couldn’t load FPL data.'}
+          </strong>
+          <p>
+            {offline
+              ? 'Reconnect and try again — nothing has been lost.'
+              : error.message}
+          </p>
+          <button
+            type="button"
+            className="btn btn--primary"
+            style={{ marginTop: 12 }}
+            onClick={retry}
+          >
+            Try again
+          </button>
         </div>
       </main>
     )

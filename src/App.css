@@ -429,12 +429,197 @@
 }
 
 .fdr__chip {
-  display: block;
-  padding: 6px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 5px;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+.fdr__opp {
+  white-space: nowrap;
+}
+
+/* The difficulty digit. Carries the same information as the fill colour so
+   the grid is readable without perceiving hue, and without needing hover —
+   `title` does not exist on touch. */
+.fdr__diff {
+  flex: none;
+  min-width: 16px;
+  padding: 0 1px;
+  border-radius: 3px;
+  /* Outlined in currentColor rather than filled: the text colour is already
+     chosen to contrast with each of the five fills, so the badge works on the
+     bright greens and the near-black red alike. */
+  box-shadow: inset 0 0 0 1px currentColor;
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+/* ---------- shared squad banner ---------- */
+
+.notice--shared {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  border-color: var(--accent-border, rgba(4, 245, 255, 0.45));
+  background: rgba(4, 245, 255, 0.08);
+}
+
+.notice__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ---------- player cards (replaces the table on phones) ---------- */
+
+.pcards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.pcards__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-top: 1px solid var(--border);
+}
+.pcards__item:first-child {
+  border-top: 0;
+}
+
+.pcards__main {
+  flex: 1;
+  min-width: 0;
+}
+.pcards__name {
+  display: block;
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pcards__sub {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.badge--xs {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+}
+
+.pcards__stats {
+  flex: none;
+  text-align: right;
+}
+.pcards__price {
+  display: block;
+  font-weight: 700;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.pcards__metric {
+  display: block;
+  font-size: 12px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.input--narrow {
+  min-width: 104px;
+}
+
+/* ---------- loading skeletons ---------- */
+
+.skel {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    var(--border) 25%,
+    var(--panel-2) 37%,
+    var(--border) 63%
+  );
+  background-size: 400% 100%;
+  animation: skel-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skel-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skel {
+    animation: none;
+  }
+}
+
+.skel-filters {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 14px 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.skel-table {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.skel-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+}
+.skel-row > :nth-child(2) {
+  flex: 1;
+}
+
+/* Screen-reader-only text. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 .fdr__chip + .fdr__chip {
   margin-top: 3px;

@@ -36,7 +36,9 @@ export default function Fixtures() {
             </span>
           ))}
         </span>
-        <span className="fdr__hint">Easy → hard · H = home, A = away</span>
+        <span className="fdr__hint">
+          1 = easiest, 5 = hardest · H = home, A = away
+        </span>
       </div>
 
       <div className="table-scroll">
@@ -72,7 +74,17 @@ export default function Fixtures() {
                             style={fdrStyle(match.difficulty)}
                             title={`${opponent?.name} (${match.isHome ? 'home' : 'away'}) · difficulty ${match.difficulty}`}
                           >
-                            {opponent?.short_name} ({match.isHome ? 'H' : 'A'})
+                            <span className="fdr__opp">
+                              {opponent?.short_name} ({match.isHome ? 'H' : 'A'})
+                            </span>
+                            {/* Difficulty as a digit, not just a hue. Colour
+                                alone fails WCAG 1.4.1 and the green/red scale
+                                is exactly the pair that collapses under the
+                                common forms of colour blindness. */}
+                            <span className="fdr__diff">
+                              <span className="sr-only">difficulty </span>
+                              {match.difficulty}
+                            </span>
                           </span>
                         )
                       })

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useFpl } from '../hooks/useFpl'
+import { useMediaQuery } from '../hooks/useMediaQuery'
 import { formatPrice, toNumber } from '../lib/fpl'
 import PlayerPhoto from './PlayerPhoto'
 import TeamBadge from './TeamBadge'
@@ -67,6 +68,17 @@ export default function PlayerExplorer() {
     const costs = players.map((p) => p.now_cost)
     return { min: Math.min(...costs), max: Math.max(...costs) }
   })
+
+  // £0.5m steps across the actual range, for the price selects.
+  const priceSteps = useMemo(() => {
+    const steps = []
+    for (let c = priceBounds.min; c <= priceBounds.max; c += 5) steps.push(c)
+    if (steps[steps.length - 1] !== priceBounds.max) steps.push(priceBounds.max)
+    return steps
+  }, [priceBounds])
+
+  // Below this the table is replaced by cards; see issue #19.
+  const compact = useMediaQuery('(max-width: 640px)')
 
   const [positionFilter, setPositionFilter] = useState('all')
   const [minPrice, setMinPrice] = useState(priceBounds.min)
@@ -149,39 +161,68 @@ export default function PlayerExplorer() {
           </select>
         </label>
 
-        <div className="field field--range">
-          <span className="field__label">
-            Price {formatPrice(minPrice)} – {formatPrice(maxPrice)}
-          </span>
-          <div className="range-pair">
-            <input
-              type="range"
-              aria-label="Minimum price"
-              min={priceBounds.min}
-              max={priceBounds.max}
-              step="1"
-              value={minPrice}
+        {/* Two discrete selects rather than a pair of overlaid range inputs:
+            the sliders sat on top of each other, which is fiddly with a mouse
+            and close to unusable with a thumb. */}
+        <label className="field">
+          <span className="field__label">Min price</span>
+          <select
+            className="input input--narrow"
+            value={minPrice}
+            onChange={(e) => {
+              const next = Number(e.target.value)
+              setMinPrice(next)
+              if (next > maxPrice) setMaxPrice(next)
+            }}
+          >
+            {priceSteps.map((c) => (
+              <option key={c} value={c}>
+                {formatPrice(c)}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="field">
+          <span className="field__label">Max price</span>
+          <select
+            className="input input--narrow"
+            value={maxPrice}
+            onChange={(e) => {
+              const next = Number(e.target.value)
+              setMaxPrice(next)
+              if (next < minPrice) setMinPrice(next)
+            }}
+          >
+            {priceSteps.map((c) => (
+              <option key={c} value={c}>
+                {formatPrice(c)}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {/* On phones the table becomes a card list, so sorting cannot live in
+            column headers you have to scroll sideways to reach. */}
+        {compact && (
+          <label className="field">
+            <span className="field__label">Sort by</span>
+            <select
+              className="input"
+              value={sort.key}
               onChange={(e) => {
-                const next = Number(e.target.value)
-                setMinPrice(next)
-                if (next > maxPrice) setMaxPrice(next)
+                const column = SORTABLE.get(e.target.value)
+                if (column) setSort({ key: column.key, dir: column.type === 'text' ? 'asc' : 'desc' })
               }}
-            />
-            <input
-              type="range"
-              aria-label="Maximum price"
-              min={priceBounds.min}
-              max={priceBounds.max}
-              step="1"
-              value={maxPrice}
-              onChange={(e) => {
-                const next = Number(e.target.value)
-                setMaxPrice(next)
-                if (next < minPrice) setMinPrice(next)
-              }}
-            />
-          </div>
-        </div>
+            >
+              {[...SORTABLE.values()].map((c) => (
+                <option key={c.key} value={c.key}>
+                  {c.label || 'Player'}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <button type="button" className="btn" onClick={resetFilters}>
           Reset
@@ -192,6 +233,40 @@ export default function PlayerExplorer() {
         </p>
       </div>
 
+      {compact ? (
+        <ul className="pcards">
+          {rows.map((player) => {
+            const team = teamsById.get(player.team)
+            const position = positionsById.get(player.element_type)
+            const active = SORTABLE.get(sort.key)
+            return (
+              <li className="pcards__item" key={player.id}>
+                <PlayerPhoto player={player} className="photo--sm" />
+                <span className="pcards__main">
+                  <span className="pcards__name">{player.web_name}</span>
+                  <span className="pcards__sub">
+                    <TeamBadge team={team} className="badge--xs" />
+                    {team?.short_name} ·{' '}
+                    <span className={`pos pos--${position?.singular_name_short}`}>
+                      {position?.singular_name_short}
+                    </span>
+                  </span>
+                </span>
+                <span className="pcards__stats">
+                  <span className="pcards__price">{formatPrice(player.now_cost)}</span>
+                  {/* Show whatever the list is sorted by, so the sort is
+                      legible rather than invisible. */}
+                  <span className="pcards__metric">
+                    {active && active.key !== 'name' && active.key !== 'price'
+                      ? `${active.label} ${active.value(player, { teamsById, positionsById })}`
+                      : `${player.total_points} pts`}
+                  </span>
+                </span>
+              </li>
+            )
+          })}
+        </ul>
+      ) : (
       <div className="table-scroll">
         <table className="table">
           <thead>
@@ -267,10 +342,12 @@ export default function PlayerExplorer() {
           </tbody>
         </table>
 
-        {rows.length === 0 && (
-          <p className="empty">No players match these filters.</p>
-        )}
       </div>
+      )}
+
+      {rows.length === 0 && (
+        <p className="empty">No players match these filters.</p>
+      )}
     </section>
   )
 }
