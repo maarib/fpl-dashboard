@@ -22,5 +22,8 @@ async function get(path) {
 export const fetchBootstrap = () => get('/bootstrap-static/')
 export const fetchFixtures = () => get('/fixtures/')
 export const fetchEntry = (managerId) => get(`/entry/${managerId}/`)
+
+/** Per-player detail: past seasons, upcoming fixtures, per-gameweek history. */
+export const fetchPlayerSummary = (playerId) => get(`/element-summary/${playerId}/`)
 export const fetchPicks = (managerId, gameweek) =>
   get(`/entry/${managerId}/event/${gameweek}/picks/`)
