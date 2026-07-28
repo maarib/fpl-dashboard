@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import PlayerDetail from './PlayerDetail'
+import PlayerCompare from './PlayerCompare'
 import { useFpl } from '../hooks/useFpl'
 import { useMediaQuery } from '../hooks/useMediaQuery'
 import { formatPrice, toNumber } from '../lib/fpl'
@@ -87,6 +88,24 @@ export default function PlayerExplorer() {
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState({ key: 'total_points', dir: 'desc' })
   const [detail, setDetail] = useState(null)
+  // Comparing more than four columns stops being readable before it stops
+  // being useful, so the selection is capped rather than unbounded.
+  const MAX_COMPARE = 4
+  const [compareIds, setCompareIds] = useState([])
+  const [comparing, setComparing] = useState(false)
+
+  const toggleCompare = (id) =>
+    setCompareIds((ids) =>
+      ids.includes(id)
+        ? ids.filter((x) => x !== id)
+        : ids.length >= MAX_COMPARE
+          ? ids
+          : [...ids, id],
+    )
+
+  const comparePlayers = compareIds
+    .map((id) => players.find((p) => p.id === id))
+    .filter(Boolean)
 
   const rows = useMemo(() => {
     const ctx = { teamsById, positionsById }
@@ -247,7 +266,23 @@ export default function PlayerExplorer() {
                 key={player.id}
                 onClick={() => setDetail(player)}
               >
-                <PlayerPhoto player={player} className="photo--sm" />
+                <label
+                  className="cmp-check"
+                  title="Add to comparison"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <input
+                    type="checkbox"
+                    checked={compareIds.includes(player.id)}
+                    disabled={
+                      !compareIds.includes(player.id) &&
+                      compareIds.length >= MAX_COMPARE
+                    }
+                    onChange={() => toggleCompare(player.id)}
+                    aria-label={`Compare ${player.web_name}`}
+                  />
+                  <PlayerPhoto player={player} className="photo--sm" />
+                </label>
                 <span className="pcards__main">
                   <span className="pcards__name">{player.web_name}</span>
                   <span className="pcards__sub">
@@ -320,7 +355,19 @@ export default function PlayerExplorer() {
               return (
                 <tr key={player.id}>
                   <td className="col-photo">
-                    <PlayerPhoto player={player} className="photo--sm" />
+                    <label className="cmp-check" title="Add to comparison">
+                      <input
+                        type="checkbox"
+                        checked={compareIds.includes(player.id)}
+                        disabled={
+                          !compareIds.includes(player.id) &&
+                          compareIds.length >= MAX_COMPARE
+                        }
+                        onChange={() => toggleCompare(player.id)}
+                        aria-label={`Compare ${player.web_name}`}
+                      />
+                      <PlayerPhoto player={player} className="photo--sm" />
+                    </label>
                   </td>
                   <td className="col-name">
                     <button
@@ -359,6 +406,42 @@ export default function PlayerExplorer() {
 
       {rows.length === 0 && (
         <p className="empty">No players match these filters.</p>
+      )}
+
+      {compareIds.length > 0 && (
+        <div className="cmp-bar" role="status">
+          <span className="cmp-bar__count">
+            {compareIds.length} selected
+            {compareIds.length >= MAX_COMPARE && ' (max)'}
+          </span>
+          <span className="cmp-bar__names">
+            {comparePlayers.map((p) => p.web_name).join(', ')}
+          </span>
+          <button
+            type="button"
+            className="btn btn--primary"
+            disabled={compareIds.length < 2}
+            title={compareIds.length < 2 ? 'Pick at least two players' : undefined}
+            onClick={() => setComparing(true)}
+          >
+            Compare
+          </button>
+          <button type="button" className="btn" onClick={() => setCompareIds([])}>
+            Clear
+          </button>
+        </div>
+      )}
+
+      {comparing && comparePlayers.length >= 2 && (
+        <PlayerCompare
+          players={comparePlayers}
+          onClose={() => setComparing(false)}
+          onRemove={(id) => {
+            const next = compareIds.filter((x) => x !== id)
+            setCompareIds(next)
+            if (next.length < 2) setComparing(false)
+          }}
+        />
       )}
 
       {detail && <PlayerDetail player={detail} onClose={() => setDetail(null)} />}

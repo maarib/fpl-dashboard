@@ -22,6 +22,40 @@ function load(playerId) {
   return cache.get(playerId)
 }
 
+/** Several players at once, sharing the same cache. Used by compare. */
+export function usePlayerSummaries(playerIds) {
+  const key = playerIds.join(',')
+  const [state, setState] = useState({ loading: true, byId: {} })
+
+  useEffect(() => {
+    if (playerIds.length === 0) {
+      setState({ loading: false, byId: {} })
+      return
+    }
+    let cancelled = false
+    setState({ loading: true, byId: {} })
+
+    Promise.all(
+      playerIds.map((id) =>
+        load(id)
+          .then((data) => [id, data])
+          .catch(() => [id, null]),
+      ),
+    ).then((entries) => {
+      if (!cancelled) {
+        setState({ loading: false, byId: Object.fromEntries(entries) })
+      }
+    })
+
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key])
+
+  return state
+}
+
 export function usePlayerSummary(playerId) {
   const [state, setState] = useState({ loading: true, error: null, data: null })
 
