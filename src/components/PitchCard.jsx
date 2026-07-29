@@ -60,7 +60,7 @@ export default function PitchCard({
       title={`${player.first_name} ${player.second_name} — ${team?.name ?? ''}`}
       aria-haspopup={menuItems ? 'menu' : undefined}
       aria-expanded={menuItems ? Boolean(menuOpen) : undefined}
-      style={selected ? { outline: '3px solid #04f5ff', outlineOffset: 2, borderRadius: 10 } : undefined}
+      style={selected ? { outline: '3px solid var(--focus-ring)', outlineOffset: 2, borderRadius: 10 } : undefined}
     >
       <div className="fcard__tile">
         {kit && !kitFailed ? (

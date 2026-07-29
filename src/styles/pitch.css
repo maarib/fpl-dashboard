@@ -6,30 +6,23 @@
 /* Declared on the section so both the 3-column grid and the stage itself can
    read them — one tweak zone, no duplicated numbers. */
 .myteam {
-  /* --- container (spec: 928 x 1138, #28002B, 16px padding) --------------- */
+  /* --- container (spec: 928 x 1138, var(--surface-inverse), 16px padding) --------------- */
   --stage-w: 928px;
   --stage-min-h: 1138px;
-  --stage-bg: #28002b;
   --stage-pad: 16px;
   --stage-radius: 14px;
 
   /* --- player pool column ------------------------------------------------ */
   --pool-w: 440px;
+  --rows-top: 70px; /* space above the GK row */
+  --bench-inset: 46px; /* how far the bench clears the touchlines */
   --layout-gap: 24px;
 
   /* --- turf tone --------------------------------------------------------- */
-  --turf-light: #05c449; /* lit mowing band */
-  --turf-dark: #04b342; /* shaded mowing band */
-  --turf-edge: #01461f; /* far-end shading */
   --turf-sheen: 0.07; /* floodlight bloom, 0 = off */
-  --turf-line: rgba(255, 255, 255, 0.95);
   --turf-line-width: 2.4;
 
   /* --- perimeter boards + goal ------------------------------------------ */
-  --board-from: #2ee6f6;
-  --board-to: #4f5ff0;
-  --goal-net: rgba(255, 255, 255, 0.75);
-  --goal-frame: #ffffff;
 
   /* --- card size --------------------------------------------------------- */
   --card-w: 108px;
@@ -44,10 +37,10 @@
   --card-stat-weight: 600;
 
   /* --- card colours ------------------------------------------------------ */
-  --card-name-bg: #ffffff;
-  --card-name-fg: #37003c;
-  --card-stat-bg: #ebe9ee;
-  --card-stat-fg: #37003c;
+  --card-name-bg: var(--neutral-0);
+  --card-name-fg: var(--interactive);
+  --card-stat-bg: var(--neutral-200);
+  --card-stat-fg: var(--interactive);
   --card-tile: rgba(255, 255, 255, 0.14); /* translucent pad behind the kit */
 }
 
@@ -154,14 +147,14 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--purple);
-  color: var(--green);
+  background: var(--interactive);
+  color: var(--accent);
   font-size: 13px;
   line-height: 1;
 }
 .btn--pool-on {
-  background: var(--purple);
-  border-color: var(--purple);
+  background: var(--interactive);
+  border-color: var(--interactive);
   color: #fff;
 }
 .btn--pool-on .btn__icon {
@@ -169,7 +162,7 @@
   color: #fff;
 }
 .btn--pool-on:hover {
-  background: var(--purple-2);
+  background: var(--interactive-hover);
 }
 
 /* ==========================================================================
@@ -181,7 +174,7 @@
   min-height: var(--stage-min-h);
   margin: 0 auto;
   padding: var(--stage-pad);
-  background: var(--stage-bg);
+  background: var(--surface-inverse);
   border-radius: var(--stage-radius);
   color: #fff;
   display: flex;
@@ -198,7 +191,7 @@
   display: inline-flex;
   padding: 4px;
   border-radius: 11px;
-  background: var(--panel);
+  background: var(--surface);
   border: 1px solid var(--border);
   gap: 3px;
   margin-bottom: 14px;
@@ -211,7 +204,7 @@
   font: inherit;
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-dim);
+  color: var(--text-muted);
   padding: 9px 20px;
   border-radius: 8px;
   cursor: pointer;
@@ -219,15 +212,15 @@
 }
 .mode-switch__btn:hover {
   color: var(--text);
-  background: var(--panel-2);
+  background: var(--surface-sunken);
 }
 .mode-switch__btn--active,
 .mode-switch__btn--active:hover {
-  background: var(--purple);
-  color: var(--green);
+  background: var(--interactive);
+  color: var(--accent);
 }
 .mode-switch__btn:focus-visible {
-  outline: 2px solid var(--purple);
+  outline: 2px solid var(--interactive);
   outline-offset: 2px;
 }
 
@@ -305,7 +298,7 @@
   outline: none;
 }
 .stat-select select option {
-  color: #1c1020;
+  color: var(--text);
   background: #fff;
 }
 .stat-select__chev {
@@ -331,14 +324,14 @@
   padding: 6px 16px;
   border-radius: 8px;
   background: rgba(0, 255, 135, 0.18);
-  color: #00ff87;
+  color: var(--accent);
   font-size: 20px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 .stage-meter--bad .stage-meter__value {
   background: rgba(233, 0, 82, 0.2);
-  color: #ff6b8a;
+  color: var(--status-bad);
 }
 .stage-meter__label {
   display: block;
@@ -383,7 +376,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: var(--rows-top, 70px) 8px 12px;
+  padding: var(--rows-top) 8px 12px;
 }
 
 .pitch-row {
@@ -403,7 +396,7 @@
    narrower than the container, so a full-width panel would overhang it. */
 .bench {
   position: relative;
-  margin: 0 var(--bench-inset, 46px);
+  margin: 0 var(--bench-inset);
   padding: 10px 10px 6px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.24);
@@ -500,8 +493,8 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #ebff00;
-  color: #37003c;
+  background: var(--accent-2);
+  color: var(--interactive);
   display: grid;
   place-items: center;
   font-size: 10px;
@@ -517,7 +510,7 @@
   width: 21px;
   height: 21px;
   border-radius: 50%;
-  background: #37003c;
+  background: var(--interactive);
   color: #fff;
   display: grid;
   place-items: center;
@@ -528,8 +521,8 @@
 }
 .fcard__armband--vice {
   background: #fff;
-  color: #37003c;
-  border-color: #37003c;
+  color: var(--interactive);
+  border-color: var(--interactive);
   font-size: 9px;
 }
 
@@ -557,7 +550,7 @@
   opacity: 1;
 }
 .fcard__remove:hover {
-  background: #e90052;
+  background: var(--status-bad);
 }
 
 /* Name + stat, a single rounded block split in two */
@@ -704,8 +697,8 @@
   line-height: 1;
 }
 .srow__action:hover {
-  background: #e90052;
-  border-color: #e90052;
+  background: var(--status-bad);
+  border-color: var(--status-bad);
 }
 
 /* ==========================================================================
@@ -741,15 +734,15 @@
 }
 .cardmenu__item:hover:not(:disabled),
 .cardmenu__item:focus-visible {
-  background: var(--panel-2);
+  background: var(--surface-sunken);
   outline: none;
 }
 .cardmenu__item:disabled {
   cursor: not-allowed;
-  color: var(--text-dim);
+  color: var(--text-muted);
 }
 .cardmenu__item--danger {
-  color: var(--pink);
+  color: var(--status-bad);
 }
 .cardmenu__label {
   display: block;
@@ -759,13 +752,13 @@
   display: block;
   font-size: 11px;
   font-weight: 400;
-  color: var(--text-dim);
+  color: var(--text-muted);
   margin-top: 1px;
 }
 
 /* Valid destinations during a substitution. */
 .fcard--target .fcard__tile {
-  outline: 3px solid var(--green);
+  outline: 3px solid var(--accent);
   outline-offset: 2px;
   border-radius: 10px;
 }
@@ -786,7 +779,7 @@
   color: rgba(255, 255, 255, 0.55);
 }
 .stage-meter__breakdown .is-done {
-  color: var(--green);
+  color: var(--accent);
 }
 
 .stage-warn {
@@ -795,7 +788,7 @@
   border-radius: 9px;
   background: rgba(255, 193, 7, 0.14);
   border: 1px solid rgba(255, 193, 7, 0.35);
-  color: #ffe9a8;
+  color: var(--status-warn);
   font-size: 13px;
   display: flex;
   flex-direction: column;
@@ -806,7 +799,7 @@
 }
 
 .prow__reason {
-  color: #ff9db4;
+  color: var(--status-bad);
   font-weight: 600;
 }
 
@@ -815,7 +808,7 @@
    ========================================================================== */
 
 .pool {
-  background: var(--stage-bg);
+  background: var(--surface-inverse);
   border-radius: var(--stage-radius);
   color: #fff;
   display: flex;
@@ -868,7 +861,7 @@
   color: rgba(255, 255, 255, 0.45);
 }
 .pool__search:focus-visible {
-  outline: 2px solid var(--cyan);
+  outline: 2px solid var(--accent-2);
   outline-offset: 1px;
 }
 
@@ -891,7 +884,7 @@
   cursor: pointer;
 }
 .pool__select option {
-  color: #1c1020;
+  color: var(--text);
   background: #fff;
 }
 .pool__reset:hover {
@@ -905,8 +898,8 @@
   border-radius: 6px;
   font-size: 13px;
   font-weight: 700;
-  color: #06202b;
-  background: linear-gradient(90deg, var(--cyan), var(--green));
+  color: var(--brand);
+  background: linear-gradient(90deg, var(--accent-2), var(--accent));
 }
 
 .pool__scroll {
@@ -1002,9 +995,9 @@
   margin-left: 4px;
 }
 .prow__btn:hover:not(:disabled) {
-  background: var(--green);
-  border-color: var(--green);
-  color: #06301d;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--brand);
 }
 .prow__btn:disabled {
   opacity: 0.3;
@@ -1015,8 +1008,8 @@
   border-color: rgba(233, 0, 82, 0.5);
 }
 .prow__btn--remove:hover {
-  background: var(--pink);
-  border-color: var(--pink);
+  background: var(--status-bad);
+  border-color: var(--status-bad);
   color: #fff;
 }
 
@@ -1033,7 +1026,7 @@
    ========================================================================== */
 
 .gwfix {
-  background: var(--stage-bg);
+  background: var(--surface-inverse);
   border-radius: var(--stage-radius);
   color: #fff;
   padding: 20px 16px 8px;
@@ -1177,7 +1170,7 @@
 
 .picker {
   width: min(420px, 100%);
-  background: var(--panel-2);
+  background: var(--surface-sunken);
   color: var(--text);
   height: 100%;
   display: flex;
@@ -1187,7 +1180,7 @@
 
 .picker__head {
   padding: 16px;
-  background: var(--purple);
+  background: var(--interactive);
   color: #fff;
   position: relative;
 }
@@ -1238,14 +1231,14 @@
   padding: 7px 9px;
   border: 1px solid transparent;
   border-radius: 9px;
-  background: var(--panel);
+  background: var(--surface);
   font: inherit;
   text-align: left;
   cursor: pointer;
   margin-bottom: 5px;
 }
 .picker__row:hover:not(:disabled) {
-  border-color: var(--purple);
+  border-color: var(--interactive);
 }
 .picker__row:disabled {
   opacity: 0.42;
@@ -1273,7 +1266,7 @@
 .picker__row-sub {
   display: block;
   font-size: 11px;
-  color: var(--text-dim);
+  color: var(--text-muted);
 }
 .picker__row-stats {
   text-align: right;
@@ -1287,12 +1280,12 @@
 }
 .picker__row-pts {
   display: block;
-  color: var(--text-dim);
+  color: var(--text-muted);
   font-size: 11px;
 }
 .picker__reason {
   font-size: 10px;
-  color: var(--pink);
+  color: var(--status-bad);
   font-weight: 700;
 }
 

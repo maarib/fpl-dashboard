@@ -1,20 +1,12 @@
+@import './styles/tokens.css';
+
+/* Global baseline. All colour and type values come from tokens.css — nothing
+   in this file, or any other, should carry a raw hex. */
+
 :root {
-  --purple: #37003c;
-  --purple-2: #2a002e;
-  --panel: #ffffff;
-  --panel-2: #f7f5fa;
-  --text: #1c1020;
-  --text-dim: #6b6375;
-  --border: #e6e1ec;
-  --green: #00ff87;
-  --cyan: #04f5ff;
-  --pink: #e90052;
-
-  --font-body: 'Reddit Sans', system-ui, 'Segoe UI', Roboto, sans-serif;
-
   font: 15px/1.45 var(--font-body);
   color: var(--text);
-  background: var(--panel-2);
+  background: var(--surface-sunken);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -26,7 +18,7 @@
 body {
   margin: 0;
   min-height: 100svh;
-  background: var(--panel-2);
+  background: var(--surface-sunken);
 }
 
 h1,
@@ -37,9 +29,9 @@ h2 {
 }
 
 code {
-  font-family: ui-monospace, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.85em;
-  background: rgba(55, 0, 60, 0.08);
+  background: color-mix(in srgb, var(--brand) 8%, transparent);
   border-radius: 4px;
   padding: 1px 5px;
 }
