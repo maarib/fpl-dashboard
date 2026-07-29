@@ -1,0 +1,124 @@
+/* ==========================================================================
+   DESIGN TOKENS — the single source of truth for colour and type.
+   Nothing outside this file should contain a raw hex value.
+
+   Four layers. You normally only edit LAYER 1.
+
+     1. BRAND      the handful of colours that define the product
+     2. SEMANTIC   roles derived from brand — surfaces, text, interaction
+     3. STATUS     meaning, not identity: difficulty, injury, warnings
+     4. COMPONENT  pitch and card specifics (see also styles/pitch.css)
+   ========================================================================== */
+
+:root {
+  /* ========================================================================
+     LAYER 1 — BRAND
+     Change these and the whole app follows.
+     ===================================================================== */
+
+  --brand: #0f1b2d; /* primary: header, chrome, dark surfaces */
+  --brand-dark: #0a1220; /* hovers, gradients, deeper panels */
+
+  /* The accent needs two forms. Bright accents are light colours, so one that
+     reads well ON the navy cannot also be text on a white background — every
+     candidate measured below 2.5:1 there. `--accent` is for dark surfaces,
+     `--accent-ink` is the darkened form for text on light ones. */
+  --accent: #2dd4bf; /* on dark surfaces — 9.29:1 on --brand */
+  --accent-ink: #0f766e; /* as text on light — 5.06:1 on --surface-sunken */
+
+  --accent-2: #38bdf8; /* secondary accent: selection, highlights */
+  --accent-2-ink: #0369a1; /* its text-on-light counterpart */
+
+  /* Neutrals. Tinted very slightly toward the brand so greys don't look
+     detached from it. */
+  --neutral-0: #ffffff;
+  --neutral-50: #f6f7f9;
+  --neutral-200: #e3e6ea;
+  --neutral-600: #66707e;
+  --neutral-900: #131a24;
+
+  /* ========================================================================
+     LAYER 2 — SEMANTIC
+     Roles, not colours. Components reference these, never layer 1 directly.
+     A light/dark switch is a matter of redefining this block.
+     ===================================================================== */
+
+  --surface: var(--neutral-0); /* cards, panels, table backgrounds */
+  --surface-sunken: var(--neutral-50); /* page background */
+  --surface-inverse: var(--brand); /* header, stage, pool */
+  --surface-inverse-2: var(--brand-dark); /* deeper inverse areas */
+
+  --text: var(--neutral-900);
+  --text-muted: var(--neutral-600);
+  --text-on-inverse: var(--neutral-0);
+  --text-on-inverse-muted: rgba(255, 255, 255, 0.66);
+
+  --border: var(--neutral-200);
+  --border-inverse: rgba(255, 255, 255, 0.16);
+
+  --interactive: var(--brand); /* buttons, active tabs */
+  --interactive-hover: var(--brand-dark);
+  --on-interactive: var(--accent); /* text/icons on an interactive fill */
+
+  --focus-ring: var(--accent-2);
+
+  /* ========================================================================
+     LAYER 3 — STATUS
+     Deliberately independent of brand: these encode meaning. Rebranding a
+     difficulty scale or an injury flag costs comprehension for no gain.
+     ===================================================================== */
+
+  --status-ok: #0b7a41;
+  --status-ok-bg: rgba(11, 122, 65, 0.12);
+  --status-warn: #8a5a00;
+  --status-warn-bg: rgba(255, 193, 7, 0.16);
+  --status-bad: #c2185b;
+  --status-bad-bg: rgba(194, 24, 91, 0.1);
+
+  /* Fixture difficulty, easy (1) to hard (5). Paired fg/bg, all verified at
+     or above 4.5:1 — see the contrast check in the PR for #13. */
+  --fdr-1-bg: #00e07b;
+  --fdr-1-fg: #04291b;
+  --fdr-2-bg: #a1e86b;
+  --fdr-2-fg: #213207;
+  --fdr-3-bg: #e4e4e8;
+  --fdr-3-fg: #3b3b45;
+  --fdr-4-bg: #ff5a5f;
+  --fdr-4-fg: #3d0308;
+  --fdr-5-bg: #80072d;
+  --fdr-5-fg: #ffd9e2;
+
+  /* Position pills */
+  --pos-gkp-bg: #fff3cd;
+  --pos-gkp-border: #f2dd9a;
+  --pos-def-bg: #d9f7ec;
+  --pos-def-border: #a7e8cf;
+  --pos-mid-bg: #dceeff;
+  --pos-mid-border: #a9d4f5;
+  --pos-fwd-bg: #ffe0e6;
+  --pos-fwd-border: #f5b3c1;
+
+  /* ========================================================================
+     LAYER 4 — COMPONENT
+     Pitch and card specifics. The turf stays green by design: a football
+     pitch reads as green, and recolouring it looks broken rather than
+     branded. Sizing tokens live in styles/pitch.css alongside the layout.
+     ===================================================================== */
+
+  --turf-light: #05c449;
+  --turf-dark: #04b342;
+  --turf-edge: #01461f;
+  --turf-line: rgba(255, 255, 255, 0.95);
+
+  --board-from: #2ee6f6;
+  --board-to: #4f5ff0;
+  --goal-net: rgba(255, 255, 255, 0.75);
+  --goal-frame: #ffffff;
+
+  /* ========================================================================
+     TYPOGRAPHY
+     ===================================================================== */
+
+  --font-body: 'Reddit Sans', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, Consolas, monospace;
+}
