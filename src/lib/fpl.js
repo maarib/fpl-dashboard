@@ -59,6 +59,46 @@ export function nextFixtureForTeam(fixtures, teamId, fromEvent) {
   return upcoming[0] ? fixtureFromTeamView(upcoming[0], teamId) : null
 }
 
+/**
+ * Summarise a run of fixtures for one team.
+ *
+ * Two cases need a stated rule rather than a silent one:
+ *
+ * - A **blank** gameweek is not difficulty 0. Having no fixture is bad for
+ *   points but it is not an *easy* fixture, so folding it into the average as
+ *   zero would rank a blank as the best possible week. Blanks are counted and
+ *   reported separately instead.
+ * - A **double** contributes both fixtures. Averaging by match rather than by
+ *   gameweek keeps "how hard are these games" separate from "how many games
+ *   are there", which is a different question and usually a desirable one.
+ *
+ * So: average difficulty per match, plus the match and blank counts, rather
+ * than one opaque score that conflates all three.
+ */
+export function summariseRun(cells) {
+  let matches = 0
+  let totalDifficulty = 0
+  let blanks = 0
+
+  for (const gameweek of cells) {
+    if (gameweek.length === 0) {
+      blanks += 1
+      continue
+    }
+    for (const match of gameweek) {
+      matches += 1
+      totalDifficulty += match.difficulty ?? 0
+    }
+  }
+
+  return {
+    matches,
+    blanks,
+    totalDifficulty,
+    avgDifficulty: matches > 0 ? totalDifficulty / matches : null,
+  }
+}
+
 /** Fixture difficulty colours, easy (1) through hard (5). */
 export const FDR_COLORS = {
   1: { bg: '#00e07b', fg: '#04291b' },
