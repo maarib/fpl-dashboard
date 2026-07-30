@@ -1208,6 +1208,53 @@
 .fdr__chip + .fdr__chip {
   margin-top: 3px;
 }
+.fdr__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.fdr__toggle input {
+  accent-color: var(--interactive);
+  cursor: pointer;
+}
+.fdr__toggle:has(input:disabled) {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Clubs you own, so they stand out even in the full-league view. */
+.fdr__row--owned .fdr__team {
+  box-shadow: inset 3px 0 0 var(--accent-ink);
+}
+.fdr__owned {
+  color: var(--accent-ink);
+  font-size: 9px;
+  line-height: 1;
+}
+
+.fdr__num {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.fdr__num--strong {
+  font-weight: 800;
+}
+.fdr__blanks {
+  color: var(--status-bad);
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .fdr__chip--blank {
   background: var(--surface-sunken);
   color: var(--text-muted);

@@ -1,32 +1,125 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useFpl } from '../hooks/useFpl'
-import { fdrStyle, fixtureFromTeamView, fixturesForTeamInEvent } from '../lib/fpl'
+import { useSquad } from '../hooks/useSquad'
+import {
+  fdrStyle,
+  fixtureFromTeamView,
+  fixturesForTeamInEvent,
+  summariseRun,
+} from '../lib/fpl'
+import { squadIds } from '../lib/squad'
 import TeamBadge from './TeamBadge'
 
-const WINDOW = 6
+const WINDOWS = [3, 6, 10]
+
+const SORTS = [
+  { id: 'team', label: 'Team (A–Z)' },
+  { id: 'easiest', label: 'Easiest run' },
+  { id: 'hardest', label: 'Hardest run' },
+]
 
 export default function Fixtures() {
-  const { teams, fixtures, teamsById, events, currentEvent } = useFpl()
+  const { teams, fixtures, teamsById, events, currentEvent, playersById } = useFpl()
+  const { squad } = useSquad()
+
+  const [windowSize, setWindowSize] = useState(6)
+  const [sort, setSort] = useState('team')
+  const [squadOnly, setSquadOnly] = useState(false)
 
   const gameweeks = useMemo(() => {
     const startId = currentEvent?.id ?? 1
-    return events.filter((e) => e.id >= startId && e.id < startId + WINDOW)
-  }, [events, currentEvent])
+    return events.filter((e) => e.id >= startId && e.id < startId + windowSize)
+  }, [events, currentEvent, windowSize])
 
-  const grid = useMemo(() => {
-    const sortedTeams = [...teams].sort((a, b) => a.name.localeCompare(b.name))
-    return sortedTeams.map((team) => ({
-      team,
-      cells: gameweeks.map((event) =>
+  /** Clubs represented in the saved squad — the bridge to My Team. */
+  const ownedTeamIds = useMemo(() => {
+    const ids = new Set()
+    for (const playerId of squadIds(squad)) {
+      const team = playersById.get(playerId)?.team
+      if (team != null) ids.add(team)
+    }
+    return ids
+  }, [squad, playersById])
+
+  const rows = useMemo(() => {
+    const built = teams.map((team) => {
+      const cells = gameweeks.map((event) =>
         fixturesForTeamInEvent(fixtures, team.id, event.id).map((fixture) =>
           fixtureFromTeamView(fixture, team.id),
         ),
-      ),
-    }))
-  }, [teams, fixtures, gameweeks])
+      )
+      return { team, cells, ...summariseRun(cells), owned: ownedTeamIds.has(team.id) }
+    })
+
+    const visible = squadOnly ? built.filter((r) => r.owned) : built
+
+    return [...visible].sort((a, b) => {
+      if (sort === 'team') return a.team.name.localeCompare(b.team.name)
+      // A team with no fixtures at all has no average; keep those last either
+      // way rather than letting null sort as zero and look like an easy run.
+      if (a.avgDifficulty == null) return 1
+      if (b.avgDifficulty == null) return -1
+      return sort === 'easiest'
+        ? a.avgDifficulty - b.avgDifficulty
+        : b.avgDifficulty - a.avgDifficulty
+    })
+  }, [teams, fixtures, gameweeks, sort, squadOnly, ownedTeamIds])
+
+  const ownedCount = ownedTeamIds.size
 
   return (
     <section className="fdr">
+      <div className="filters">
+        <label className="field">
+          <span className="field__label">Gameweeks</span>
+          <select
+            className="input input--narrow"
+            value={windowSize}
+            onChange={(e) => setWindowSize(Number(e.target.value))}
+          >
+            {WINDOWS.map((w) => (
+              <option key={w} value={w}>
+                Next {w}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="field">
+          <span className="field__label">Sort by</span>
+          <select
+            className="input"
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+          >
+            {SORTS.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="field">
+          <span className="field__label">Show</span>
+          <span className="fdr__toggle">
+            <input
+              type="checkbox"
+              checked={squadOnly}
+              disabled={ownedCount === 0}
+              onChange={(e) => setSquadOnly(e.target.checked)}
+            />
+            My squad’s clubs only
+          </span>
+        </label>
+
+        <p className="filters__count">
+          {ownedCount === 0
+            ? 'Build a squad in My Team to filter this grid to your clubs.'
+            : `${ownedCount} club${ownedCount === 1 ? '' : 's'} in your squad · showing ${rows.length} of ${teams.length}`}
+        </p>
+      </div>
+
       <div className="fdr__legend">
         <span>Fixture difficulty</span>
         <span className="fdr__scale">
@@ -37,7 +130,8 @@ export default function Fixtures() {
           ))}
         </span>
         <span className="fdr__hint">
-          1 = easiest, 5 = hardest · H = home, A = away
+          1 = easiest, 5 = hardest · H = home, A = away · Avg is per match, so a
+          blank lowers the match count rather than counting as an easy game
         </span>
       </div>
 
@@ -51,21 +145,29 @@ export default function Fixtures() {
                   GW{event.id}
                 </th>
               ))}
+              <th title="Fixtures in this window">Games</th>
+              <th title="Average difficulty per match">Avg</th>
             </tr>
           </thead>
           <tbody>
-            {grid.map(({ team, cells }) => (
-              <tr key={team.id}>
+            {rows.map(({ team, cells, matches, blanks, avgDifficulty, owned }) => (
+              <tr key={team.id} className={owned ? 'fdr__row--owned' : undefined}>
                 <th scope="row" className="fdr__team">
                   <TeamBadge team={team} className="badge--sm" />
                   <span>{team.short_name}</span>
+                  {owned && (
+                    <span className="fdr__owned" title="You own players from this club">
+                      ●
+                    </span>
+                  )}
                 </th>
-                {cells.map((matches, index) => (
+
+                {cells.map((matchesInGw, index) => (
                   <td key={gameweeks[index].id} className="fdr__cell">
-                    {matches.length === 0 ? (
+                    {matchesInGw.length === 0 ? (
                       <span className="fdr__chip fdr__chip--blank">BLANK</span>
                     ) : (
-                      matches.map((match, i) => {
+                      matchesInGw.map((match, i) => {
                         const opponent = teamsById.get(match.opponentId)
                         return (
                           <span
@@ -77,10 +179,6 @@ export default function Fixtures() {
                             <span className="fdr__opp">
                               {opponent?.short_name} ({match.isHome ? 'H' : 'A'})
                             </span>
-                            {/* Difficulty as a digit, not just a hue. Colour
-                                alone fails WCAG 1.4.1 and the green/red scale
-                                is exactly the pair that collapses under the
-                                common forms of colour blindness. */}
                             <span className="fdr__diff">
                               <span className="sr-only">difficulty </span>
                               {match.difficulty}
@@ -91,10 +189,27 @@ export default function Fixtures() {
                     )}
                   </td>
                 ))}
+
+                <td className="fdr__num">
+                  {matches}
+                  {blanks > 0 && (
+                    <span className="fdr__blanks" title={`${blanks} blank gameweek(s)`}>
+                      {' '}
+                      −{blanks}
+                    </span>
+                  )}
+                </td>
+                <td className="fdr__num fdr__num--strong">
+                  {avgDifficulty == null ? '—' : avgDifficulty.toFixed(2)}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
+
+        {rows.length === 0 && (
+          <p className="empty">No clubs to show. Add players in My Team first.</p>
+        )}
       </div>
     </section>
   )
