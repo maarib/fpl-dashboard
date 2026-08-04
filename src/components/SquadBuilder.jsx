@@ -403,7 +403,10 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
       )}
 
       <div className={`team-layout${docked ? ' team-layout--docked' : ''}`}>
-        {docked && (
+        {/* Not while the drawer is open: the two are never both needed, and
+            mounting both renders the whole pool twice — on exactly the narrow
+            screens least able to afford it. */}
+        {docked && !drawerOpen && (
           <aside className="pool-col" id="player-pool">
             <PlayerPool
               squad={squad}
