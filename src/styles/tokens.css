@@ -115,6 +115,17 @@
   --goal-net: rgba(255, 255, 255, 0.75);
   --goal-frame: #ffffff;
 
+  /* Backdrop behind the cut-out player photo. Deliberately a mid slate rather
+     than --brand itself: photos are players in club kits, and a navy backdrop
+     swallows the navy-and-dark kits. This sits far enough from both white and
+     black shirts to keep every player's outline readable. Bench cards use a
+     darker pair so "not playing" is visible without reading the numbers. */
+  --card-tile-top: #26374f;
+  --card-tile-bottom: #16243a;
+  --card-bench-tile-top: #1b2739;
+  --card-bench-tile-bottom: #101a2b;
+  --bench-band: rgba(8, 14, 26, 0.42);
+
   /* ========================================================================
      TYPOGRAPHY
      ===================================================================== */
