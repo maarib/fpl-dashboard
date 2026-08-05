@@ -27,12 +27,48 @@ export default function PlayerDetail({ player, onClose }) {
   const panelRef = useRef(null)
   const closeRef = useRef(null)
 
+  // Move focus in on open and put it back where it came from on close —
+  // otherwise dismissing the dialog drops focus at the top of the document
+  // and a keyboard user loses their place in the table they opened it from.
   useEffect(() => {
+    const previouslyFocused = document.activeElement
     closeRef.current?.focus()
+    return () => previouslyFocused?.focus?.()
+  }, [])
+
+  // The page behind a modal must not scroll, or dismissing it returns you
+  // somewhere other than where you were.
+  useEffect(() => {
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previous
+    }
   }, [])
 
   useEffect(() => {
-    const onKey = (e) => e.key === 'Escape' && onClose()
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        onClose()
+        return
+      }
+      // aria-modal alone does not stop Tab walking out into the page behind,
+      // so the cycle is closed by hand.
+      if (e.key !== 'Tab') return
+      const focusable = panelRef.current?.querySelectorAll(
+        'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      )
+      if (!focusable?.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
@@ -76,6 +112,10 @@ export default function PlayerDetail({ player, onClose }) {
           ×
         </button>
 
+        {/* The scroller is inside the dialog rather than being the dialog, so
+            the close button stays pinned instead of scrolling out of reach on
+            a long profile. */}
+        <div className="pd__scroll">
         <header className="pd__head">
           <img
             className="pd__photo"
@@ -272,6 +312,7 @@ export default function PlayerDetail({ player, onClose }) {
             </div>
           )}
         </section>
+        </div>
       </aside>
     </div>
   )
