@@ -227,7 +227,8 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
     ]
   }
 
-  const renderSlot = (pos, index) => {
+  /** `bench` is `{ order }` for a bench slot, or null for a starter. */
+  const renderSlot = (pos, index, bench = null) => {
     const id = viewing.squad[pos][index]
     const player = id ? playersById.get(id) : null
     const position = positionsById.get(pos)
@@ -254,6 +255,8 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
         fromEvent={fromEvent}
         isCaptain={captain === player.id}
         isViceCaptain={viceCaptain === player.id}
+        positionLabel={bench ? position?.singular_name_short : undefined}
+        benchOrder={bench?.order}
         selected={!readOnly && swapFrom?.pos === pos && swapFrom?.index === index}
         swapPending={!readOnly && Boolean(swapFrom)}
         isSwapTarget={!readOnly && isValidSwapTarget(pos, index)}
@@ -273,10 +276,18 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
     Array.from({ length: activeNeed[pos] }, (_, i) => renderSlot(pos, i)),
   )
 
-  const bench = [1, 2, 3, 4].flatMap((pos) =>
-    Array.from({ length: SQUAD_SHAPE[pos] - activeNeed[pos] }, (_, i) =>
-      renderSlot(pos, activeNeed[pos] + i),
-    ),
+  // Flattened first so each bench card knows its position in the substitution
+  // order. The keeper is always first and is not part of that order — it can
+  // only ever replace the other keeper — so it shows a pill but no number.
+  const benchSlots = [1, 2, 3, 4].flatMap((pos) =>
+    Array.from({ length: SQUAD_SHAPE[pos] - activeNeed[pos] }, (_, i) => [
+      pos,
+      activeNeed[pos] + i,
+    ]),
+  )
+
+  const bench = benchSlots.map(([pos, index], order) =>
+    renderSlot(pos, index, { order: order === 0 ? null : order }),
   )
 
   // Same data the pitch uses, flattened for the list view.

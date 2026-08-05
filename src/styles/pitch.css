@@ -14,7 +14,10 @@
 
   /* --- player pool column ------------------------------------------------ */
   --pool-w: 440px;
-  --rows-top: 70px; /* space above the GK row */
+  /* Space above the GK row. Taller photo cards leave the rows sharing what is
+     left over via space-between, so this doubles as the row-gap control:
+     raising it squeezes the gaps between rows, lowering it opens them up. */
+  --rows-top: 42px;
   --bench-inset: 46px; /* how far the bench clears the touchlines */
   --layout-gap: 24px;
 
@@ -24,10 +27,13 @@
 
   /* --- perimeter boards + goal ------------------------------------------ */
 
-  /* --- card size --------------------------------------------------------- */
-  --card-w: 108px;
-  --card-kit-h: 74px;
-  --card-radius: 6px;
+  /* --- card size ---------------------------------------------------------
+     Wider and taller than the kit-based card was: a cut-out photo needs room
+     to read at a glance, where a shirt only had to be recognisable. */
+  --card-w: 116px;
+  --card-photo-h: 88px; /* the photo tile; name and stat bars add ~48px */
+  --card-photo-headroom: 6px; /* gap above the tallest head */
+  --card-radius: 8px;
   --card-gap: 10px;
 
   /* --- card typography --------------------------------------------------- */
@@ -39,9 +45,8 @@
   /* --- card colours ------------------------------------------------------ */
   --card-name-bg: var(--neutral-0);
   --card-name-fg: var(--interactive);
-  --card-stat-bg: var(--neutral-200);
-  --card-stat-fg: var(--interactive);
-  --card-tile: rgba(255, 255, 255, 0.14); /* translucent pad behind the kit */
+  --card-stat-bg: var(--interactive);
+  --card-stat-fg: var(--neutral-0); /* 17.28:1 — measured, not assumed */
 }
 
 /* ==========================================================================
@@ -357,6 +362,8 @@
   min-height: 780px;
   border-radius: 10px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .pitch-svg {
@@ -367,15 +374,25 @@
   display: block;
 }
 
-/* Formation rows sit flat on top of the perspective turf. Absolutely inset
-   rather than height:100%, which does not resolve against the pitch's
-   flex-derived height and leaves dead turf below the bench. */
+/* Formation rows sit flat on top of the perspective turf, which is painted by
+   the absolutely-positioned SVG behind them.
+
+   In flow as a flex child rather than absolutely inset. `flex: 1` still makes
+   the rows fill the pitch, so space-between spreads them exactly as before
+   when there is room — but because they are now real content, the pitch can
+   no longer be shorter than they are. Absolutely inset, the bench overflowed
+   the turf by ~90px at narrow widths with nothing to push back against. */
 .pitch-rows {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  z-index: 1;
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  /* A floor, not a fixed gap: space-between still opens the rows further when
+     the pitch is taller than they are. Without it, rows touch once the pitch
+     is sized by its own content. */
+  gap: 10px;
   padding: var(--rows-top) 8px 12px;
 }
 
@@ -397,9 +414,9 @@
 .bench {
   position: relative;
   margin: 0 var(--bench-inset);
-  padding: 10px 10px 6px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.24);
+  padding: 14px 10px 6px;
+  border-radius: 12px;
+  background: var(--bench-band);
 }
 
 .bench__cols {
@@ -412,15 +429,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
 }
 
-.bench__head {
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
-  text-decoration: underline dotted;
-  text-underline-offset: 3px;
+/* Bench cards read as bench at a glance: a darker tile than the XI, before
+   you get as far as reading the pill or the number. */
+.bench .fcard__tile {
+  background: linear-gradient(
+    180deg,
+    var(--card-bench-tile-top) 0%,
+    var(--card-bench-tile-bottom) 100%
+  );
 }
 
 .bench__label {
@@ -450,29 +468,73 @@
 .fcard--interactive {
   cursor: pointer;
 }
-.fcard--interactive:hover .fcard__labels {
+.fcard--interactive:hover .fcard__body {
   transform: translateY(-2px);
+}
+
+/* Photo tile, name bar and stat bar as one rounded block. Clipping lives here
+   rather than on .fcard so the badges, which are siblings of the body, can
+   still overhang the card's corners. */
+.fcard__body {
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.34);
+  transition: transform 0.14s ease;
 }
 
 .fcard__tile {
   position: relative;
-  height: var(--card-kit-h);
-  border-radius: 8px;
-  background: var(--card-tile);
+  height: var(--card-photo-h);
+  background: linear-gradient(
+    180deg,
+    var(--card-tile-top) 0%,
+    var(--card-tile-bottom) 100%
+  );
   display: grid;
   place-items: center;
-  margin-bottom: 4px;
 }
 
-/* Absolutely sized rather than height:%, which does not resolve reliably for
-   a replaced element inside a grid item and lets the kit overflow the card. */
+/* Bottom-anchored so heads line up across a row regardless of how much empty
+   space each cut-out carries, and the shoulders meet the name bar the way
+   they do on the reference. Absolutely sized rather than height:100%, which
+   does not resolve reliably for a replaced element inside a grid item. */
+.fcard__photo {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--card-photo-headroom);
+  bottom: 0;
+  width: 100%;
+  height: calc(100% - var(--card-photo-headroom));
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+/* Stand-in until the photo probe resolves, and permanently for the few
+   players the CDN stocks at no size at all. */
 .fcard__kit {
   position: absolute;
-  inset: 4px;
-  width: calc(100% - 8px);
-  height: calc(100% - 8px);
+  inset: 6px;
+  width: calc(100% - 12px);
+  height: calc(100% - 12px);
   object-fit: contain;
   filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.3));
+}
+
+/* Position pill, bench cards only — on the card it labels rather than in a
+   heading above the column. */
+.fcard__pos {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--interactive); /* 9.29:1 — measured */
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  z-index: 2;
 }
 
 .fcard__kit--fallback {
@@ -553,14 +615,6 @@
   background: var(--status-bad);
 }
 
-/* Name + stat, a single rounded block split in two */
-.fcard__labels {
-  border-radius: var(--card-radius);
-  overflow: hidden;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-  transition: transform 0.14s ease;
-}
-
 .fcard__name {
   background: var(--card-name-bg);
   color: var(--card-name-fg);
@@ -584,7 +638,34 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Substitution order. Paired with the position pill rather than standing in
+   for it — the number alone does not say what the player is. */
+.fcard__order {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: var(--neutral-0);
+  color: var(--interactive);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1.5px solid var(--interactive);
+  z-index: 3;
+}
+
+/* The remove control shares that corner, so it takes over on hover. */
+.fcard:hover .fcard__order {
+  opacity: 0;
+}
+
 /* Empty slot */
+.fcard--empty .fcard__body {
+  box-shadow: none;
+}
 .fcard--empty .fcard__tile {
   border: 2px dashed rgba(255, 255, 255, 0.55);
   background: rgba(255, 255, 255, 0.08);
@@ -756,14 +837,19 @@
   margin-top: 1px;
 }
 
-/* Valid destinations during a substitution. */
-.fcard--target .fcard__tile {
+/* Valid destinations during a substitution, and the card being moved.
+   Both outline .fcard__body rather than .fcard__tile: the tile now sits
+   inside the body's overflow:hidden, which would clip the outline away. */
+.fcard--target .fcard__body {
   outline: 3px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 10px;
 }
 .fcard--target {
   cursor: copy;
+}
+.fcard--selected .fcard__body {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 .fcard--dimmed {
   opacity: 0.45;
@@ -1295,8 +1381,8 @@
 
 @media (max-width: 960px) {
   .team-stage {
-    --card-w: 92px;
-    --card-kit-h: 62px;
+    --card-w: 100px;
+    --card-photo-h: 74px;
     --card-gap: 6px;
     --card-name-size: 12px;
     --card-stat-size: 11px;
@@ -1309,8 +1395,9 @@
 
 @media (max-width: 600px) {
   .team-stage {
-    --card-w: 68px;
-    --card-kit-h: 46px;
+    --card-w: 72px;
+    --card-photo-h: 54px;
+    --card-photo-headroom: 3px;
     --card-gap: 4px;
     --card-name-size: 10px;
     --card-stat-size: 9px;

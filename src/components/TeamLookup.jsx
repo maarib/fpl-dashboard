@@ -31,7 +31,8 @@ function loadPicks(managerId, gameweek) {
 
 /** Mode B — render someone else's squad from the API onto the same pitch. */
 export default function TeamLookup({ view, setView, metric, setMetric }) {
-  const { fixtures, playersById, teamsById, events, currentEvent } = useFpl()
+  const { fixtures, playersById, teamsById, positionsById, events, currentEvent } =
+    useFpl()
 
   const [managerIdInput, setManagerIdInput] = useState(
     () => localStorage.getItem(STORAGE_KEY) ?? '',
@@ -87,6 +88,8 @@ export default function TeamLookup({ view, setView, metric, setMetric }) {
 
   const entries = picks.map(toEntry).filter(Boolean)
 
+  /* `benchOrder` is null for the bench keeper: picks 12-15 are keeper first,
+     then the three outfield substitutes in the order they come on. */
   const renderCard = (entry) => (
     <PitchCard
       key={entry.player.id}
@@ -99,6 +102,12 @@ export default function TeamLookup({ view, setView, metric, setMetric }) {
       fromEvent={fromEvent}
       isCaptain={entry.isCaptain}
       isViceCaptain={entry.isViceCaptain}
+      positionLabel={
+        entry.isBench ? positionsById.get(entry.pos)?.singular_name_short : undefined
+      }
+      benchOrder={
+        entry.isBench && entry.order > 12 ? entry.order - 12 : undefined
+      }
     />
   )
 
