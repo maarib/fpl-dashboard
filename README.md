@@ -35,6 +35,12 @@ Two modes on the same pitch:
   substitutions, captain and vice-captain. Persisted to `localStorage`.
 - **Look up a team** — render any manager's squad read-only from their entry ID.
 
+Cards are photo-forward: a cut-out player photo on a coloured tile, a white
+name bar and a coloured stat bar. Bench cards carry their own position pill and
+substitution order and sit on a darker tile, so "not playing" reads before you
+get as far as the numbers — the keeper shows a pill but no number, since it can
+only ever replace the other keeper.
+
 A **stat toggle** switches every card at once between next opponent, total
 points, form and price. A squad can be **shared by link** — fifteen ids and a
 formation fit in a URL, so it needs no backend; opening one previews it
@@ -114,9 +120,14 @@ All three key off `code`, **not** `id` — 19 of the 20 teams have `code !== id`
 Two CDN quirks worth knowing:
 
 - **Player photos are not stocked at every size.** Roughly one in six of the top
-  scorers 403 at `250x250` while existing at `110x140`. Pitch cards use kits
-  instead; the detail panel falls back a size.
-- All 20 clubs have both kit variants, so kits need no fallback.
+  scorers 403 at `250x250` while existing at `110x140`. An `onError` handler is
+  not a reliable way to catch this — with `loading="lazy"` the element can sit
+  at `complete: false` and never fire the event — so `usePlayerPhoto` probes
+  with a detached `Image()` and only renders a URL known to resolve. Results are
+  cached per player code, so each photo is probed once.
+- All 20 clubs have both kit variants, so kits need no fallback. That is why
+  the kit is what pitch cards fall back to while a photo is being probed, and
+  for the few players stocked at no size at all.
 
 ## Note on pre-season
 
