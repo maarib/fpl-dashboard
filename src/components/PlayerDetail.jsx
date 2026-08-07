@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useFpl } from '../hooks/useFpl'
 import { usePlayerSummary } from '../hooks/usePlayerSummary'
+import { useScrollLock } from '../hooks/useScrollLock'
 import { fdrStyle, formatPrice } from '../lib/fpl'
 import { playerPhotoUrl } from '../lib/images'
 import { availability, ordinal, positionRanks, priceChange, setPieces } from '../lib/player'
@@ -36,15 +37,7 @@ export default function PlayerDetail({ player, onClose }) {
     return () => previouslyFocused?.focus?.()
   }, [])
 
-  // The page behind a modal must not scroll, or dismissing it returns you
-  // somewhere other than where you were.
-  useEffect(() => {
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = previous
-    }
-  }, [])
+  useScrollLock()
 
   useEffect(() => {
     const onKey = (e) => {

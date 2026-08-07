@@ -582,6 +582,11 @@
   font-size: 13px;
 }
 
+/* Two sticky tracks cross in this table: the header row pins to the top, the
+   metric labels pin to the left. Where they cross, the header has to win, so
+   the stacking order is explicit: corner (4) over header (3) over row labels
+   (2). Left implicit, the row labels outranked the header and scrolled over
+   it instead of under. */
 .cmp__rowhead {
   position: sticky;
   left: 0;
@@ -598,12 +603,27 @@
 .cmp__player {
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 3;
   background: var(--surface);
   padding: 12px 10px;
   border-bottom: 2px solid var(--border);
   min-width: 150px;
   vertical-align: bottom;
+}
+
+/* The corner cell is in both tracks, so it pins on both axes and outranks
+   both. Sticky on `left` alone it scrolled up with the body, leaving a hole
+   in the header band that the table showed through. It carries the header's
+   white and bottom border so the band reads as one container across the full
+   width of the modal. */
+.cmp__corner {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 4;
+  background: var(--surface);
+  border-bottom: 2px solid var(--border);
+  padding: 8px 14px;
 }
 .cmp__photo {
   display: block;
