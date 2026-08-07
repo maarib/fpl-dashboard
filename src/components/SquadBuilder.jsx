@@ -20,6 +20,7 @@ import Pitch from './Pitch'
 import PitchCard, { EmptyCard } from './PitchCard'
 import PlayerPicker from './PlayerPicker'
 import PlayerPool from './PlayerPool'
+import PoolDrawer from './PoolDrawer'
 import PlayerDetail from './PlayerDetail'
 import GameweekFixtures from './GameweekFixtures'
 import SquadList from './SquadList'
@@ -102,13 +103,6 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
   useEffect(() => {
     if (canDock) setDrawerOpen(false)
   }, [canDock])
-
-  useEffect(() => {
-    if (!drawerOpen) return
-    const onKey = (e) => e.key === 'Escape' && setDrawerOpen(false)
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [drawerOpen])
 
   function togglePool() {
     // Re-read rather than trusting cached state: if it were stale we could
@@ -507,31 +501,12 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
           Gated only on drawerOpen — docking already closes it — so the overlay
           can never be suppressed by a stale viewport reading. */}
       {drawerOpen && (
-        <div
-          className="pool-drawer"
-          onClick={(e) => e.target === e.currentTarget && setDrawerOpen(false)}
-        >
-          <aside
-            className="pool-drawer__panel"
-            id="player-pool"
-            role="dialog"
-            aria-label="Player selection"
-          >
-            <button
-              type="button"
-              className="pool-drawer__close"
-              onClick={() => setDrawerOpen(false)}
-              aria-label="Close player selection"
-            >
-              ×
-            </button>
-            <PlayerPool
-              squad={squad}
-              onAdd={handlePoolAdd}
-              onRemove={(slot) => clearSlot(slot.pos, slot.index)}
-            />
-          </aside>
-        </div>
+        <PoolDrawer
+          squad={squad}
+          onAdd={handlePoolAdd}
+          onRemove={(slot) => clearSlot(slot.pos, slot.index)}
+          onClose={() => setDrawerOpen(false)}
+        />
       )}
 
       {detail && <PlayerDetail player={detail} onClose={() => setDetail(null)} />}
