@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { useFpl } from '../hooks/useFpl'
+import { useModalFocus } from '../hooks/useModalFocus'
 import { usePlayerSummary } from '../hooks/usePlayerSummary'
 import { useScrollLock } from '../hooks/useScrollLock'
 import { fdrStyle, formatPrice } from '../lib/fpl'
@@ -26,45 +27,9 @@ export default function PlayerDetail({ player, onClose }) {
   const { teamsById, positionsById, players } = useFpl()
   const { loading, error, data } = usePlayerSummary(player?.id)
   const panelRef = useRef(null)
-  const closeRef = useRef(null)
-
-  // Move focus in on open and put it back where it came from on close —
-  // otherwise dismissing the dialog drops focus at the top of the document
-  // and a keyboard user loses their place in the table they opened it from.
-  useEffect(() => {
-    const previouslyFocused = document.activeElement
-    closeRef.current?.focus()
-    return () => previouslyFocused?.focus?.()
-  }, [])
 
   useScrollLock()
-
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === 'Escape') {
-        onClose()
-        return
-      }
-      // aria-modal alone does not stop Tab walking out into the page behind,
-      // so the cycle is closed by hand.
-      if (e.key !== 'Tab') return
-      const focusable = panelRef.current?.querySelectorAll(
-        'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      )
-      if (!focusable?.length) return
-      const first = focusable[0]
-      const last = focusable[focusable.length - 1]
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault()
-        last.focus()
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault()
-        first.focus()
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  useModalFocus(panelRef, onClose)
 
   if (!player) return null
 
@@ -99,7 +64,6 @@ export default function PlayerDetail({ player, onClose }) {
           type="button"
           className="pd__close"
           onClick={onClose}
-          ref={closeRef}
           aria-label="Close player details"
         >
           ×
