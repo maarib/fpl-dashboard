@@ -23,17 +23,20 @@ const FOCUSABLE = [
  *
  * @param containerRef ref to the element with role="dialog"
  * @param onClose called on Escape
+ * @param initialFocusRef optional control to focus instead of the first one —
+ *   for a dialog that exists to be typed into, the search field is a better
+ *   landing point than its close button
  */
-export function useModalFocus(containerRef, onClose) {
+export function useModalFocus(containerRef, onClose, initialFocusRef) {
   useEffect(() => {
     const previouslyFocused = document.activeElement
     const container = containerRef.current
 
-    // The close button is first in the markup of both dialogs, so this lands
-    // on it. Falling back to the container keeps focus inside even if a
-    // dialog ever renders with nothing focusable in it.
-    const first = container?.querySelector(FOCUSABLE)
-    if (first) first.focus()
+    // Otherwise the close button, which is first in the markup of every dialog
+    // here. Falling back to the container keeps focus inside even if a dialog
+    // ever renders with nothing focusable in it.
+    const target = initialFocusRef?.current ?? container?.querySelector(FOCUSABLE)
+    if (target) target.focus()
     else container?.focus?.()
 
     return () => previouslyFocused?.focus?.()

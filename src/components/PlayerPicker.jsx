@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useFpl } from '../hooks/useFpl'
+import { useModalFocus } from '../hooks/useModalFocus'
+import { useScrollLock } from '../hooks/useScrollLock'
 import { formatPrice } from '../lib/fpl'
 import { rejectionReason } from '../lib/squad'
 import PlayerPhoto from './PlayerPhoto'
@@ -14,11 +16,13 @@ export default function PlayerPicker({ slot, squad, onPick, onClose }) {
   const [search, setSearch] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
 
-  useEffect(() => {
-    const onKey = (e) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  const panelRef = useRef(null)
+  // This dialog exists to be typed into, so focus lands on the search field
+  // rather than the close button.
+  const searchRef = useRef(null)
+
+  useScrollLock()
+  useModalFocus(panelRef, onClose, searchRef)
 
   const position = positionsById.get(slot.pos)
 
@@ -48,20 +52,28 @@ export default function PlayerPicker({ slot, squad, onPick, onClose }) {
       className="picker-backdrop"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <aside className="picker" role="dialog" aria-label={`Choose a ${position?.singular_name}`}>
+      <aside
+        className="picker"
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Choose a ${position?.singular_name}`}
+      >
         <div className="picker__head">
           <h3>Choose a {position?.singular_name}</h3>
           <button type="button" className="picker__close" onClick={onClose} aria-label="Close">
             ×
           </button>
           <div className="picker__filters">
+            {/* Focused by useModalFocus rather than autoFocus, so the two
+                cannot race for it. */}
             <input
               className="input"
               type="search"
               placeholder="Search by name"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              autoFocus
+              ref={searchRef}
             />
             <input
               className="input"
