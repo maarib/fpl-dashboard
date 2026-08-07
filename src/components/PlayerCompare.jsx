@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
+import { useRef } from 'react'
 import { useFpl } from '../hooks/useFpl'
+import { useModalFocus } from '../hooks/useModalFocus'
 import { usePlayerSummaries } from '../hooks/usePlayerSummary'
 import { useScrollLock } from '../hooks/useScrollLock'
 import { fdrStyle, formatPrice, toNumber } from '../lib/fpl'
@@ -43,13 +44,10 @@ export default function PlayerCompare({ players, onClose, onRemove }) {
   const ids = players.map((p) => p.id)
   const { loading, byId } = usePlayerSummaries(ids)
 
-  useScrollLock()
+  const dialogRef = useRef(null)
 
-  useEffect(() => {
-    const onKey = (e) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  useScrollLock()
+  useModalFocus(dialogRef, onClose)
 
   /** Index of the winning column, or null when tied or not applicable. */
   const leaderIndex = (metric) => {
@@ -68,9 +66,18 @@ export default function PlayerCompare({ players, onClose, onRemove }) {
       className="cmp-backdrop"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <section className="cmp" role="dialog" aria-modal="true" aria-label="Compare players">
+      {/* Labelled by the heading rather than a hand-written aria-label, so the
+          accessible name cannot drift from what is on screen — it said
+          "Compare players" while the heading said "Comparing 3 players". */}
+      <section
+        className="cmp"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cmp-title"
+      >
         <header className="cmp__head">
-          <h2>Comparing {players.length} players</h2>
+          <h2 id="cmp-title">Comparing {players.length} players</h2>
           <button type="button" className="cmp__close" onClick={onClose} aria-label="Close comparison">
             ×
           </button>
