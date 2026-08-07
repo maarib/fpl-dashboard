@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useFpl } from '../hooks/useFpl'
 import { usePlayerSummaries } from '../hooks/usePlayerSummary'
+import { useScrollLock } from '../hooks/useScrollLock'
 import { fdrStyle, formatPrice, toNumber } from '../lib/fpl'
 import { playerPhotoUrl } from '../lib/images'
 import { availability } from '../lib/player'
@@ -41,6 +42,8 @@ export default function PlayerCompare({ players, onClose, onRemove }) {
   const { teamsById, positionsById } = useFpl()
   const ids = players.map((p) => p.id)
   const { loading, byId } = usePlayerSummaries(ids)
+
+  useScrollLock()
 
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
@@ -84,7 +87,9 @@ export default function PlayerCompare({ players, onClose, onRemove }) {
           <table className="cmp__table">
             <thead>
               <tr>
-                <th className="cmp__rowhead" />
+                {/* Sits in both sticky tracks at once, so it gets its own
+                    class rather than reusing the row-head styles. */}
+                <th className="cmp__corner" />
                 {players.map((p) => {
                   const status = availability(p)
                   return (
