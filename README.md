@@ -94,6 +94,25 @@ raw hex. Four layers, and normally only the first is edited:
 | 2. Semantic | `--surface`, `--text`, `--interactive`, `--border` — aliases of layer 1 |
 | 3. Status | Difficulty scale, injury, warnings — meaning, not identity |
 | 4. Component | Turf, boards, goal |
+| 5. Space | `--space-*` by pixel value, plus `--gap-*` and `--pad-*` roles |
+| 6. Radius | `--radius-*`, plus `--radius-control/card/panel` roles |
+| 7. Elevation | Shadows as a height scale, `--elevation-0` … `--elevation-7` |
+| 8. z-index | Named stacking order — **never write a bare number** |
+| 9. Type | Size, weight, line-height and tracking |
+| 10. Border | Stroke widths |
+| 11. Motion | Durations and easing |
+
+**The scales were derived from the CSS, not imposed on it.** Snapping
+everything to a 4px grid would have moved roughly 165 of 296 spacing
+declarations — a redesign, not a refactor. So the space scale carries 2px
+steps where the app really uses them, and off-rhythm values (`5px`, `9px`,
+`13px`…) are marked as such in the file. Those marks are the backlog:
+normalising them is a design decision.
+
+**z-index is the layer to reach for first.** Every overlay in the app is named
+and ordered there — sticky headers, the stage, the compare bar, the pool
+drawer, modals, and portalled dropdowns at the top. Adding a surface means
+picking the name above the thing it must clear.
 
 Components reference layer 2, never layer 1 directly, so changing `--brand`
 repaints the header, stage, buttons and cards together while the turf and
