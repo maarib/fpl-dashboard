@@ -1,3 +1,4 @@
+import { CaretDown, X } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { teamKitUrl } from '../lib/images'
 import { statText } from '../lib/cardStat'
@@ -102,7 +103,7 @@ export default function PitchCard({
 
       {/* Badges sit outside the clipped body so they can overhang the card. */}
       <span className="fcard__status" aria-hidden="true">
-        ⌄
+        <CaretDown size={12} weight="bold" aria-hidden="true" />
       </span>
 
       {isCaptain && <span className="fcard__armband">C</span>}
@@ -126,7 +127,7 @@ export default function PitchCard({
             onRemove()
           }}
         >
-          ×
+          <X size={12} weight="bold" aria-hidden="true" />
         </button>
       )}
 

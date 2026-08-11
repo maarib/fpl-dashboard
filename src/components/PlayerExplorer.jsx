@@ -1,5 +1,7 @@
+import { ArrowCounterClockwise, CaretDown, CaretUp, CaretUpDown, MagnifyingGlass } from '@phosphor-icons/react'
 import { useMemo, useState } from 'react'
 import PlayerDetail from './PlayerDetail'
+import Select from './Select'
 import PlayerCompare from './PlayerCompare'
 import { useFpl } from '../hooks/useFpl'
 import { useMediaQuery } from '../hooks/useMediaQuery'
@@ -157,6 +159,8 @@ export default function PlayerExplorer() {
       <div className="filters">
         <label className="field">
           <span className="field__label">Search</span>
+          <span className="field__with-icon">
+            <MagnifyingGlass className="field__icon" size={15} aria-hidden="true" />
           <input
             type="search"
             className="input"
@@ -164,88 +168,85 @@ export default function PlayerExplorer() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          </span>
         </label>
 
-        <label className="field">
-          <span className="field__label">Position</span>
-          <select
+        <div className="field">
+          <span className="field__label" id="pe-position">
+            Position
+          </span>
+          <Select
             className="input"
+            aria-labelledby="pe-position"
             value={positionFilter}
-            onChange={(e) => setPositionFilter(e.target.value)}
-          >
-            <option value="all">All positions</option>
-            {positions.map((pos) => (
-              <option key={pos.id} value={pos.id}>
-                {pos.plural_name}
-              </option>
-            ))}
-          </select>
-        </label>
+            onChange={setPositionFilter}
+            options={[
+              { value: 'all', label: 'All positions' },
+              ...positions.map((pos) => ({ value: String(pos.id), label: pos.plural_name })),
+            ]}
+          />
+        </div>
 
         {/* Two discrete selects rather than a pair of overlaid range inputs:
             the sliders sat on top of each other, which is fiddly with a mouse
             and close to unusable with a thumb. */}
-        <label className="field">
-          <span className="field__label">Min price</span>
-          <select
+        <div className="field">
+          <span className="field__label" id="pe-min-price">
+            Min price
+          </span>
+          <Select
             className="input input--narrow"
+            aria-labelledby="pe-min-price"
             value={minPrice}
-            onChange={(e) => {
-              const next = Number(e.target.value)
+            onChange={(next) => {
               setMinPrice(next)
               if (next > maxPrice) setMaxPrice(next)
             }}
-          >
-            {priceSteps.map((c) => (
-              <option key={c} value={c}>
-                {formatPrice(c)}
-              </option>
-            ))}
-          </select>
-        </label>
+            options={priceSteps.map((c) => ({ value: c, label: formatPrice(c) }))}
+          />
+        </div>
 
-        <label className="field">
-          <span className="field__label">Max price</span>
-          <select
+        <div className="field">
+          <span className="field__label" id="pe-max-price">
+            Max price
+          </span>
+          <Select
             className="input input--narrow"
+            aria-labelledby="pe-max-price"
             value={maxPrice}
-            onChange={(e) => {
-              const next = Number(e.target.value)
+            onChange={(next) => {
               setMaxPrice(next)
               if (next < minPrice) setMinPrice(next)
             }}
-          >
-            {priceSteps.map((c) => (
-              <option key={c} value={c}>
-                {formatPrice(c)}
-              </option>
-            ))}
-          </select>
-        </label>
+            options={priceSteps.map((c) => ({ value: c, label: formatPrice(c) }))}
+          />
+        </div>
 
         {/* On phones the table becomes a card list, so sorting cannot live in
             column headers you have to scroll sideways to reach. */}
         {compact && (
-          <label className="field">
-            <span className="field__label">Sort by</span>
-            <select
+          <div className="field">
+            <span className="field__label" id="pe-sort">
+              Sort by
+            </span>
+            <Select
               className="input"
+              aria-labelledby="pe-sort"
               value={sort.key}
-              onChange={(e) => {
-                const column = SORTABLE.get(e.target.value)
+              onChange={(key) => {
+                const column = SORTABLE.get(key)
                 if (column) setSort({ key: column.key, dir: column.type === 'text' ? 'asc' : 'desc' })
               }}
-            >
-              {[...SORTABLE.values()].map((c) => (
-                <option key={c.key} value={c.key}>
-                  {c.label || 'Player'}
-                </option>
-              ))}
-            </select>
-          </label>
+              options={[...SORTABLE.values()].map((c) => ({
+                value: c.key,
+                label: c.label || 'Player',
+              }))}
+            />
+          </div>
         )}
 
         <button type="button" className="btn" onClick={resetFilters}>
+          <ArrowCounterClockwise size={14} aria-hidden="true" />
           Reset
         </button>
 
@@ -337,7 +338,15 @@ export default function PlayerExplorer() {
                       >
                         {column.label}
                         <span className="th-btn__arrow">
-                          {active ? (sort.dir === 'asc' ? '▲' : '▼') : '▹'}
+                          {active ? (
+                            sort.dir === 'asc' ? (
+                              <CaretUp size={11} weight="bold" aria-hidden="true" />
+                            ) : (
+                              <CaretDown size={11} weight="bold" aria-hidden="true" />
+                            )
+                          ) : (
+                            <CaretUpDown size={11} weight="bold" aria-hidden="true" />
+                          )}
                         </span>
                       </button>
                     ) : (

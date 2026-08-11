@@ -1,3 +1,4 @@
+import { X } from '@phosphor-icons/react'
 import { useRef } from 'react'
 import { useModalFocus } from '../hooks/useModalFocus'
 import { useScrollLock } from '../hooks/useScrollLock'
@@ -33,7 +34,7 @@ export default function PoolDrawer({ squad, onAdd, onRemove, onClose }) {
           onClick={onClose}
           aria-label="Close player selection"
         >
-          ×
+          <X size={16} weight="bold" aria-hidden="true" />
         </button>
         <PlayerPool squad={squad} onAdd={onAdd} onRemove={onRemove} />
       </aside>

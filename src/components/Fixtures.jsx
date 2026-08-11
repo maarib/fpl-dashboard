@@ -1,3 +1,4 @@
+import { Prohibit, UserCircle } from '@phosphor-icons/react'
 import { useMemo, useState } from 'react'
 import { useFpl } from '../hooks/useFpl'
 import { useSquad } from '../hooks/useSquad'
@@ -9,6 +10,7 @@ import {
 } from '../lib/fpl'
 import { squadIds } from '../lib/squad'
 import TeamBadge from './TeamBadge'
+import Select from './Select'
 
 const WINDOWS = [3, 6, 10]
 
@@ -70,35 +72,31 @@ export default function Fixtures() {
   return (
     <section className="fdr">
       <div className="filters">
-        <label className="field">
-          <span className="field__label">Gameweeks</span>
-          <select
+        <div className="field">
+          <span className="field__label" id="fdr-window">
+            Gameweeks
+          </span>
+          <Select
             className="input input--narrow"
+            aria-labelledby="fdr-window"
             value={windowSize}
-            onChange={(e) => setWindowSize(Number(e.target.value))}
-          >
-            {WINDOWS.map((w) => (
-              <option key={w} value={w}>
-                Next {w}
-              </option>
-            ))}
-          </select>
-        </label>
+            onChange={setWindowSize}
+            options={WINDOWS.map((w) => ({ value: w, label: `Next ${w}` }))}
+          />
+        </div>
 
-        <label className="field">
-          <span className="field__label">Sort by</span>
-          <select
+        <div className="field">
+          <span className="field__label" id="fdr-sort">
+            Sort by
+          </span>
+          <Select
             className="input"
+            aria-labelledby="fdr-sort"
             value={sort}
-            onChange={(e) => setSort(e.target.value)}
-          >
-            {SORTS.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-        </label>
+            onChange={setSort}
+            options={SORTS.map((s) => ({ value: s.id, label: s.label }))}
+          />
+        </div>
 
         <label className="field">
           <span className="field__label">Show</span>
@@ -157,7 +155,7 @@ export default function Fixtures() {
                   <span>{team.short_name}</span>
                   {owned && (
                     <span className="fdr__owned" title="You own players from this club">
-                      ●
+                      <UserCircle size={13} weight="fill" aria-hidden="true" />
                     </span>
                   )}
                 </th>
@@ -195,7 +193,8 @@ export default function Fixtures() {
                   {blanks > 0 && (
                     <span className="fdr__blanks" title={`${blanks} blank gameweek(s)`}>
                       {' '}
-                      −{blanks}
+                      <Prohibit size={11} weight="bold" aria-hidden="true" />
+                      {blanks}
                     </span>
                   )}
                 </td>

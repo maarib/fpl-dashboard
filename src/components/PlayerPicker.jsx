@@ -1,3 +1,4 @@
+import { X } from '@phosphor-icons/react'
 import { useMemo, useRef, useState } from 'react'
 import { useFpl } from '../hooks/useFpl'
 import { useModalFocus } from '../hooks/useModalFocus'
@@ -62,7 +63,7 @@ export default function PlayerPicker({ slot, squad, onPick, onClose }) {
         <div className="picker__head">
           <h3>Choose a {position?.singular_name}</h3>
           <button type="button" className="picker__close" onClick={onClose} aria-label="Close">
-            ×
+            <X size={16} weight="bold" aria-hidden="true" />
           </button>
           <div className="picker__filters">
             {/* Focused by useModalFocus rather than autoFocus, so the two

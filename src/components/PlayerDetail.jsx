@@ -1,3 +1,4 @@
+import { ArrowRight, TrendDown, TrendUp, X } from '@phosphor-icons/react'
 import { useRef } from 'react'
 import { useFpl } from '../hooks/useFpl'
 import { useModalFocus } from '../hooks/useModalFocus'
@@ -66,7 +67,7 @@ export default function PlayerDetail({ player, onClose }) {
           onClick={onClose}
           aria-label="Close player details"
         >
-          ×
+          <X size={18} weight="bold" aria-hidden="true" />
         </button>
 
         {/* The scroller is inside the dialog rather than being the dialog, so
@@ -96,7 +97,12 @@ export default function PlayerDetail({ player, onClose }) {
               {formatPrice(player.now_cost)}
               {change !== 0 && (
                 <span className={change > 0 ? 'pd__rise' : 'pd__fall'}>
-                  {change > 0 ? '▲' : '▼'} {formatPrice(Math.abs(change))} this season
+                  {change > 0 ? (
+                    <TrendUp size={13} weight="bold" aria-hidden="true" />
+                  ) : (
+                    <TrendDown size={13} weight="bold" aria-hidden="true" />
+                  )}{' '}
+                  {formatPrice(Math.abs(change))} this season
                 </span>
               )}
             </p>
@@ -220,7 +226,9 @@ export default function PlayerDetail({ player, onClose }) {
                       <td>{s.goals_scored}</td>
                       <td>{s.assists}</td>
                       <td>
-                        {formatPrice(s.start_cost)} → {formatPrice(s.end_cost)}
+                        {formatPrice(s.start_cost)}{' '}
+                        <ArrowRight size={12} weight="bold" aria-hidden="true" />{' '}
+                        {formatPrice(s.end_cost)}
                       </td>
                     </tr>
                   ))}

@@ -1,3 +1,4 @@
+import { Check } from '@phosphor-icons/react'
 import { useEffect, useRef } from 'react'
 
 /**
@@ -63,6 +64,9 @@ export default function CardMenu({ items, onClose, label = 'Player actions' }) {
           }}
         >
           <span className="cardmenu__label">{item.label}</span>
+          {item.selected && (
+            <Check className="cardmenu__tick" size={13} weight="bold" aria-hidden="true" />
+          )}
           {/* Say why an action is unavailable rather than just greying it
               out — a disabled control with no explanation reads as broken. */}
           {item.disabled && item.reason && (
