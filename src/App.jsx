@@ -59,30 +59,35 @@ function Dashboard() {
 
   return (
     <>
+      {/* One row rather than two stacked bands: wordmark, then navigation,
+          then the gameweek. Halves the chrome's height and removes the slab
+          of colour the page used to start under. */}
       <header className="topbar">
         <div className="topbar__inner">
           <h1 className="wordmark">
             FPL <span>Dashboard</span>
           </h1>
+
+          <nav className="tabs" aria-label="Views">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                className={`tab${tab.id === activeTab ? ' tab--active' : ''}`}
+                aria-current={tab.id === activeTab ? 'page' : undefined}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+
           {currentEvent && (
             <span className="gw-pill">
               {currentEvent.is_current ? 'Live' : 'Next'} · {currentEvent.name}
             </span>
           )}
         </div>
-        <nav className="tabs" aria-label="Views">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              className={`tab${tab.id === activeTab ? ' tab--active' : ''}`}
-              aria-current={tab.id === activeTab ? 'page' : undefined}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
       </header>
 
       <main className={`shell${tab.wide ? ' shell--wide' : ''}`}>

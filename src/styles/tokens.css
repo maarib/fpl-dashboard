@@ -59,7 +59,8 @@
 
   --surface: var(--neutral-0); /* cards, panels, table backgrounds */
   --surface-sunken: var(--neutral-50); /* page background */
-  --surface-inverse: var(--brand); /* header, stage, pool */
+  --surface-inverse: var(--brand); /* stage, pool */
+  --surface-chrome: var(--neutral-0); /* top bar — light, not a colour slab */
   --surface-inverse-2: var(--brand-dark); /* deeper inverse areas */
 
   --text: var(--neutral-900);
@@ -68,6 +69,10 @@
   --text-on-inverse-muted: rgba(255, 255, 255, 0.66);
 
   --border: var(--neutral-200);
+  /* A quieter rule for separating rows and bands, where a full border would
+     read as a box. Boundaries that identify a *control* still use --border,
+     which keeps them at the 3:1 WCAG 1.4.11 needs. */
+  --border-subtle: rgba(19, 26, 36, 0.08);
   --border-inverse: rgba(255, 255, 255, 0.16);
 
   --interactive: var(--brand); /* buttons, active tabs */

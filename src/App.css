@@ -1,69 +1,129 @@
 /* ---------- shell ---------- */
 
 .topbar {
-  background: linear-gradient(120deg, var(--interactive) 0%, var(--interactive-hover) 100%);
-  color: #fff;
-  padding: var(--space-18) var(--space-24) var(--space-0);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-floating-bar);
+  background: var(--surface-chrome);
+  color: var(--text);
+  padding: var(--space-0) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .topbar__inner {
   max-width: 1180px;
   margin: 0 auto;
+  min-height: 60px;
   display: flex;
   align-items: center;
-  gap: var(--space-14);
-  flex-wrap: wrap;
+  gap: var(--space-24);
 }
 
 .wordmark {
-  font-size: var(--font-size-6xl);
-  color: var(--accent);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--tracking-tighter);
+  color: var(--accent-ink);
+  white-space: nowrap;
 }
+
 .wordmark span {
-  color: #fff;
+  color: var(--text);
 }
 
 .gw-pill {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
+  margin-left: auto;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
   text-transform: uppercase;
   letter-spacing: var(--tracking-caps);
-  padding: var(--space-5) var(--space-10);
-  border-radius: var(--radius-pill);
-  background: rgba(4, 245, 255, 0.15);
-  color: var(--accent-2);
-  border: 1px solid rgba(4, 245, 255, 0.35);
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .tabs {
-  max-width: 1180px;
-  margin: var(--space-14) auto 0;
   display: flex;
-  gap: var(--space-4);
+  gap: var(--space-2);
   overflow-x: auto;
+  align-self: stretch;
 }
 
 .tab {
   appearance: none;
   border: 0;
   background: transparent;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-muted);
   font: inherit;
+  font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
-  padding: var(--space-10) var(--space-16);
-  border-radius: var(--radius-8) var(--radius-8) var(--space-0) var(--space-0);
+  padding: var(--space-0) var(--space-12);
   cursor: pointer;
   white-space: nowrap;
-  border-bottom: 3px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+/* The active marker is a rule under the label rather than a filled tab, so the
+   bar reads as one surface instead of a strip of boxes. */
+.tab::after {
+  content: '';
+  position: absolute;
+  left: var(--space-12);
+  right: var(--space-12);
+  bottom: -1px;
+  height: 2px;
+  background: transparent;
+  border-radius: var(--radius-pill);
 }
 .tab:hover {
   color: #fff;
   background: rgba(255, 255, 255, 0.06);
 }
 .tab--active {
-  color: var(--interactive);
-  background: var(--surface-sunken);
-  border-bottom-color: var(--accent);
+  color: var(--text);
+  font-weight: var(--font-weight-bold);
+}
+
+.tab--active::after {
+  background: var(--accent-ink);
+}
+
+/* Narrow screens: the single row cannot hold wordmark, three tabs and the
+   gameweek, and the tabs are what loses — two of the three destinations end
+   up scrolled out of sight behind the chip. Wrapping to a second row keeps
+   every destination visible, which matters more than the compact bar. */
+@media (max-width: 720px) {
+  .topbar {
+    padding: var(--space-0) var(--space-16);
+  }
+
+  .topbar__inner {
+    flex-wrap: wrap;
+    min-height: 0;
+    gap: var(--space-8) var(--space-12);
+    padding: var(--space-10) var(--space-0) var(--space-0);
+  }
+
+  .tabs {
+    order: 3;
+    width: 100%;
+    gap: var(--space-4);
+  }
+
+  .tab {
+    padding: var(--space-8) var(--space-10);
+  }
+
+  .tab::after {
+    left: var(--space-10);
+    right: var(--space-10);
+    bottom: 0;
+  }
 }
 
 .shell {
@@ -84,12 +144,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: var(--space-14);
-  padding: var(--space-14) var(--space-16);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-12);
-  margin-bottom: var(--space-16);
+  gap: var(--space-12);
+  margin-bottom: var(--space-20);
 }
 
 .field {
@@ -235,9 +291,6 @@
 
 .table-scroll {
   overflow-x: auto;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-12);
 }
 
 .table {
@@ -246,18 +299,22 @@
   font-size: var(--font-size-md);
 }
 
+/* The header used to be a navy slab, which made the table read as a boxed
+   component sitting on the page. It is now the page's own surface with a rule
+   under it — the column labels carry the structure instead of the fill. */
 .table thead th {
   position: sticky;
   top: 0;
   z-index: var(--z-raised);
-  background: var(--interactive);
-  color: #fff;
+  background: var(--surface);
+  color: var(--text-muted);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
   text-transform: uppercase;
   letter-spacing: var(--tracking-caps);
   padding: var(--space-0);
   white-space: nowrap;
+  border-bottom: 1px solid var(--border);
 }
 
 .th-btn {
@@ -275,19 +332,22 @@
   gap: var(--space-4);
 }
 .th-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-sunken);
+  color: var(--text);
 }
 .th-btn--active {
-  color: var(--accent);
+  color: var(--text);
 }
 .th-btn__arrow {
   font-size: var(--font-size-3xs);
   opacity: 0.7;
 }
 
+/* Rows are separated by a hairline and given room to breathe, rather than
+   being ruled off with the same weight as the table's old outer border. */
 .table tbody td {
-  padding: var(--space-6) var(--space-10);
-  border-top: 1px solid var(--border);
+  padding: var(--space-10);
+  border-top: 1px solid var(--border-subtle);
   text-align: center;
   vertical-align: middle;
 }
@@ -400,9 +460,20 @@
   font-weight: var(--font-weight-medium);
 }
 
+/* The FDR grid is deliberately left on the old header treatment so this
+   redesign can be reviewed on the Explorer alone before it spreads. */
 .table--fdr thead th {
   text-align: center;
   padding: var(--space-11) var(--space-10);
+  background: var(--interactive);
+  color: #fff;
+  border-bottom: 0;
+  top: 0;
+}
+
+.table--fdr .th-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 .fdr__team-head {
   text-align: left !important;
