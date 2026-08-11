@@ -1,3 +1,4 @@
+import { Plus, Trash, X } from '@phosphor-icons/react'
 import { useEffect, useMemo, useState } from 'react'
 import { useFpl } from '../hooks/useFpl'
 import { useMediaQuery } from '../hooks/useMediaQuery'
@@ -19,6 +20,7 @@ import { clearSharedSquad, readSharedSquad, shareUrl } from '../lib/share'
 import Pitch from './Pitch'
 import PitchCard, { EmptyCard } from './PitchCard'
 import PlayerPicker from './PlayerPicker'
+import Select from './Select'
 import PlayerPool from './PlayerPool'
 import PoolDrawer from './PoolDrawer'
 import PlayerDetail from './PlayerDetail'
@@ -200,14 +202,16 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
       },
       {
         id: 'captain',
-        label: captain === player.id ? 'Captain ✓' : 'Make captain',
+        label: captain === player.id ? 'Captain' : 'Make captain',
+        selected: captain === player.id,
         disabled: !isStarter || captain === player.id,
         reason: isStarter ? undefined : 'Only a starting player can captain',
         onSelect: () => setCaptain(player.id),
       },
       {
         id: 'vice',
-        label: viceCaptain === player.id ? 'Vice-captain ✓' : 'Make vice-captain',
+        label: viceCaptain === player.id ? 'Vice-captain' : 'Make vice-captain',
+        selected: viceCaptain === player.id,
         disabled: !isStarter || viceCaptain === player.id,
         reason: isStarter ? undefined : 'Only a starting player can be vice',
         onSelect: () => setViceCaptain(player.id),
@@ -357,22 +361,22 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
   return (
     <>
       <div className="filters">
-        <label className="field">
-          <span className="field__label">Formation</span>
-          <select
+        <div className="field">
+          <span className="field__label" id="sb-formation">
+            Formation
+          </span>
+          <Select
             className="input"
-            style={{ minWidth: 110 }}
+            aria-labelledby="sb-formation"
             value={activeFormation}
-            onChange={(e) => setFormation(e.target.value)}
-          >
-            {formations.length === 0 && <option>{activeFormation}</option>}
-            {formations.map((f) => (
-              <option key={f} value={f}>
-                {f}
-              </option>
-            ))}
-          </select>
-        </label>
+            onChange={setFormation}
+            options={
+              formations.length === 0
+                ? [{ value: activeFormation, label: activeFormation }]
+                : formations.map((f) => ({ value: f, label: f }))
+            }
+          />
+        </div>
         <button
           type="button"
           className={`btn btn--pool${poolVisible ? ' btn--pool-on' : ''}`}
@@ -381,12 +385,17 @@ export default function SquadBuilder({ view, setView, metric, setMetric }) {
           aria-controls="player-pool"
         >
           <span className="btn__icon" aria-hidden="true">
-            {poolVisible ? '×' : '+'}
+            {poolVisible ? (
+              <X size={14} weight="bold" aria-hidden="true" />
+            ) : (
+              <Plus size={14} weight="bold" aria-hidden="true" />
+            )}
           </span>
           {poolVisible ? 'Hide players' : 'Add players'}
         </button>
 
         <button type="button" className="btn" onClick={reset}>
+          <Trash size={14} aria-hidden="true" />
           Clear squad
         </button>
 

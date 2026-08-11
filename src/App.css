@@ -1313,3 +1313,149 @@
     margin-left: 0;
   }
 }
+
+/* ---------- custom select (ARIA listbox) ---------- */
+
+/* The trigger deliberately reuses .input's box so a Select and a text field
+   sit on the same baseline in a .field row. */
+.select__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+}
+
+.select__trigger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.select__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.select__chev {
+  flex: none;
+  color: var(--text-muted);
+  transition: transform 0.14s ease;
+}
+
+.select__trigger[aria-expanded='true'] .select__chev {
+  transform: rotate(180deg);
+}
+
+/* Portalled to the body, so it is positioned in viewport coordinates and has
+   to clear every overlay in the app — the compare backdrop at 70 is the
+   highest. */
+.select__menu {
+  position: fixed;
+  z-index: 80;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+}
+
+.select__menu:focus {
+  outline: none;
+}
+
+.select__menu:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.select__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+/* Keyboard and pointer share one highlight, driven by data-active, so there is
+   never a second "hovered" row competing with the active descendant. */
+.select__option[data-active='true'] {
+  background: var(--surface-sunken);
+}
+
+.select__option[aria-selected='true'] {
+  font-weight: 700;
+}
+
+.select__option[aria-disabled='true'] {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.select__tick {
+  flex: none;
+  color: var(--accent-ink);
+}
+
+.select__option-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- icons ---------- */
+
+/* Phosphor renders an inline <svg>; without this it sits on the text baseline
+   and pushes the line box taller than the glyph it replaced. */
+.btn svg,
+.cardmenu__item svg,
+.th-btn svg {
+  flex: none;
+  vertical-align: middle;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cardmenu__tick {
+  flex: none;
+  color: var(--accent-ink);
+}
+
+/* Search fields: the icon sits inside the input's box, so the input needs room
+   for it rather than the icon overlapping typed text. */
+.field__with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.field__icon {
+  position: absolute;
+  left: 10px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.field__with-icon .input {
+  padding-left: 32px;
+  width: 100%;
+}
+
+.fdr__owned svg,
+.fdr__blanks svg {
+  vertical-align: -2px;
+}

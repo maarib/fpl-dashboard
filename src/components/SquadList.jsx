@@ -1,3 +1,4 @@
+import { X } from '@phosphor-icons/react'
 import { teamKitUrl } from '../lib/images'
 import { statText } from '../lib/cardStat'
 
@@ -45,7 +46,7 @@ function Row({ entry, metric, fixtures, teamsById, fromEvent, onRemove, onAdd })
           aria-label={`Remove ${player.web_name}`}
           onClick={onRemove}
         >
-          ×
+          <X size={14} weight="bold" aria-hidden="true" />
         </button>
       )}
     </div>

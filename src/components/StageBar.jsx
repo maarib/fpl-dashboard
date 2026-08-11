@@ -1,3 +1,5 @@
+import { Sliders } from '@phosphor-icons/react'
+import Select from './Select'
 import { STAT_METRICS } from '../lib/squad'
 
 const VIEWS = [
@@ -27,54 +29,14 @@ export default function StageBar({ view, setView, metric, setMetric }) {
       <div className="stage-bar__spacer" />
 
       <div className="stat-select">
-        <svg
-          className="stat-select__icon"
-          width="20"
-          height="14"
-          viewBox="0 0 20 14"
-          fill="none"
-          aria-hidden="true"
-        >
-          <rect
-            x="0.7"
-            y="0.7"
-            width="18.6"
-            height="12.6"
-            rx="2"
-            stroke="currentColor"
-            strokeWidth="1.4"
-          />
-          <path d="M10 1v12" stroke="currentColor" strokeWidth="1.4" />
-          <circle cx="10" cy="7" r="2.2" stroke="currentColor" strokeWidth="1.4" />
-        </svg>
+        <Sliders className="stat-select__icon" size={16} weight="bold" aria-hidden="true" />
 
-        <select
+        <Select
           aria-label="Card stat"
           value={metric}
-          onChange={(e) => setMetric(e.target.value)}
-        >
-          {STAT_METRICS.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.label}
-            </option>
-          ))}
-        </select>
-
-        <svg
-          className="stat-select__chev"
-          width="12"
-          height="8"
-          viewBox="0 0 12 8"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M1 1.5 6 6.5l5-5"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-          />
-        </svg>
+          onChange={setMetric}
+          options={STAT_METRICS.map((m) => ({ value: m.id, label: m.label }))}
+        />
       </div>
     </div>
   )

@@ -1,3 +1,4 @@
+import { X } from '@phosphor-icons/react'
 import { useRef } from 'react'
 import { useFpl } from '../hooks/useFpl'
 import { useModalFocus } from '../hooks/useModalFocus'
@@ -79,7 +80,7 @@ export default function PlayerCompare({ players, onClose, onRemove }) {
         <header className="cmp__head">
           <h2 id="cmp-title">Comparing {players.length} players</h2>
           <button type="button" className="cmp__close" onClick={onClose} aria-label="Close comparison">
-            ×
+            <X size={18} weight="bold" aria-hidden="true" />
           </button>
         </header>
 

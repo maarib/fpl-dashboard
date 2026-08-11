@@ -1,9 +1,11 @@
+import { X } from '@phosphor-icons/react'
 import { useMemo, useState } from 'react'
 import { useFpl } from '../hooks/useFpl'
 import { formatPrice, toNumber } from '../lib/fpl'
 import { teamKitUrl } from '../lib/images'
 import { addRejectionReason, findPlayerSlot } from '../lib/squad'
 import PlayerDetail from './PlayerDetail'
+import Select from './Select'
 
 const SORTS = [
   { id: 'points', label: 'Total points', value: (p) => p.total_points },
@@ -60,7 +62,7 @@ function PoolRow({ player, team, reason, inSquad, onAdd, onRemove, onInspect }) 
           aria-label={`Remove ${player.web_name}`}
           onClick={onRemove}
         >
-          ×
+          <X size={14} weight="bold" aria-hidden="true" />
         </button>
       ) : (
         <button
@@ -147,46 +149,35 @@ export default function PlayerPool({ squad, onAdd, onRemove }) {
         </label>
 
         <div className="pool__filters">
-          <select
+          <Select
             className="pool__select"
             aria-label="Position"
             value={positionFilter}
-            onChange={(e) => setPositionFilter(e.target.value)}
-          >
-            <option value="all">All players</option>
-            {positions.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.plural_name}
-              </option>
-            ))}
-          </select>
+            onChange={setPositionFilter}
+            options={[
+              { value: 'all', label: 'All players' },
+              ...positions.map((p) => ({ value: String(p.id), label: p.plural_name })),
+            ]}
+          />
 
-          <select
+          <Select
             className="pool__select"
             aria-label="Sort by"
             value={sort}
-            onChange={(e) => setSort(e.target.value)}
-          >
-            {SORTS.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.label}
-              </option>
-            ))}
-          </select>
+            onChange={setSort}
+            options={SORTS.map((s) => ({ value: s.id, label: s.label }))}
+          />
 
-          <select
+          <Select
             className="pool__select"
             aria-label="Maximum price"
             value={maxPrice}
-            onChange={(e) => setMaxPrice(e.target.value)}
-          >
-            <option value="">Any price</option>
-            {priceSteps.map((c) => (
-              <option key={c} value={c}>
-                {formatPrice(c)}
-              </option>
-            ))}
-          </select>
+            onChange={setMaxPrice}
+            options={[
+              { value: '', label: 'Any price' },
+              ...priceSteps.map((c) => ({ value: String(c), label: formatPrice(c) })),
+            ]}
+          />
 
           <button type="button" className="pool__reset" onClick={reset}>
             Reset

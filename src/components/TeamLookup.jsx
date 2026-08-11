@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { fetchEntry, fetchPicks } from '../api/fpl'
 import { useFpl } from '../hooks/useFpl'
 import GameweekFixtures from './GameweekFixtures'
+import Select from './Select'
 import Pitch from './Pitch'
 import PitchCard from './PitchCard'
 import SquadList from './SquadList'
@@ -139,20 +140,18 @@ export default function TeamLookup({ view, setView, metric, setMetric }) {
           />
         </label>
 
-        <label className="field">
-          <span className="field__label">Gameweek</span>
-          <select
+        <div className="field">
+          <span className="field__label" id="tl-gameweek">
+            Gameweek
+          </span>
+          <Select
             className="input"
+            aria-labelledby="tl-gameweek"
             value={gameweek}
-            onChange={(e) => setGameweek(Number(e.target.value))}
-          >
-            {events.map((event) => (
-              <option key={event.id} value={event.id}>
-                {event.name}
-              </option>
-            ))}
-          </select>
-        </label>
+            onChange={setGameweek}
+            options={events.map((event) => ({ value: event.id, label: event.name }))}
+          />
+        </div>
 
         <button type="submit" className="btn btn--primary" disabled={!managerIdInput.trim()}>
           Load squad

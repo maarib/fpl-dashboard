@@ -1,3 +1,4 @@
+import { CaretLeft, CaretRight } from '@phosphor-icons/react'
 import { useMemo, useState } from 'react'
 import { useFpl } from '../hooks/useFpl'
 import TeamBadge from './TeamBadge'
@@ -66,7 +67,7 @@ export default function GameweekFixtures({ gameweek }) {
             disabled={!canPrev}
             onClick={() => setEventId((id) => id - 1)}
           >
-            ‹
+            <CaretLeft size={16} weight="bold" aria-hidden="true" />
           </button>
           <span className="gwfix__gw">
             <strong>{event?.name ?? `Gameweek ${eventId}`}</strong>
@@ -79,7 +80,7 @@ export default function GameweekFixtures({ gameweek }) {
             disabled={!canNext}
             onClick={() => setEventId((id) => id + 1)}
           >
-            ›
+            <CaretRight size={16} weight="bold" aria-hidden="true" />
           </button>
         </div>
 
