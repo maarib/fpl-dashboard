@@ -1,4 +1,3 @@
-@import './styles/tokens.css';
 
 /* Global baseline. All colour and type values come from tokens.css — nothing
    in this file, or any other, should carry a raw hex. */
