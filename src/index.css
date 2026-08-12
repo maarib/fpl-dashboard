@@ -6,7 +6,7 @@
 :root {
   font: 15px/1.45 var(--font-body);
   color: var(--text);
-  background: var(--surface-sunken);
+  background: var(--surface);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -18,7 +18,7 @@
 body {
   margin: var(--space-0);
   min-height: 100svh;
-  background: var(--surface-sunken);
+  background: var(--surface);
 }
 
 h1,

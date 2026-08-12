@@ -249,6 +249,7 @@
   --z-sticky: 2; /* sticky table headers and first columns */
   --z-sticky-cross: 3; /* a cell in two sticky tracks at once */
   --z-sticky-corner: 4; /* the corner where both tracks meet */
+  --z-sticky-band: 10; /* filter bar pinned under the top bar */
   --z-stage: 20; /* pitch furniture above the turf */
   --z-floating-bar: 30; /* the compare bar */
   --z-drawer-backdrop: 40;

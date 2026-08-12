@@ -68,6 +68,28 @@
   color: var(--text);
 }
 
+/* An inset pill rather than a full-height fill: at 61px a block of grey behind
+   the label reads as a button, which is not what a nav item is. */
+.tab::before {
+  content: '';
+  position: absolute;
+  inset: var(--space-12) var(--space-4);
+  border-radius: var(--radius-8);
+  background: transparent;
+  transition: background var(--duration-fast) var(--ease);
+  z-index: -1;
+}
+
+.tab:hover::before {
+  background: var(--surface-sunken);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -4px;
+  border-radius: var(--radius-8);
+}
+
 /* The active marker is a rule under the label rather than a filled tab, so the
    bar reads as one surface instead of a strip of boxes. */
 .tab::after {
@@ -79,17 +101,28 @@
   height: 2px;
   background: transparent;
   border-radius: var(--radius-pill);
+  transform: scaleX(0.4);
+  transition:
+    background var(--duration-fast) var(--ease),
+    transform var(--duration-fast) var(--ease);
 }
-.tab:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.06);
+/* The marker grows in from the centre, so moving along the bar reads as one
+   movement rather than two separate blinks. */
+.tab--active::after,
+.tab:hover::after {
+  transform: scaleX(1);
+}
+
+.tab:hover::after {
+  background: var(--border);
 }
 .tab--active {
   color: var(--text);
   font-weight: var(--font-weight-bold);
 }
 
-.tab--active::after {
+.tab--active::after,
+.tab--active:hover::after {
   background: var(--accent-ink);
 }
 
@@ -140,12 +173,20 @@
 
 /* ---------- controls ---------- */
 
+/* Pinned under the top bar. It has to be opaque and reach the full width of
+   the shell — including its horizontal padding, hence the negative margins —
+   or rows show through it as they scroll under. */
 .filters {
+  position: sticky;
+  top: var(--topbar-h, 61px);
+  z-index: var(--z-sticky-band);
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   gap: var(--space-12);
-  margin-bottom: var(--space-20);
+  margin: 0 calc(-1 * var(--space-24)) var(--space-4);
+  padding: var(--space-12) var(--space-24);
+  background: var(--surface);
 }
 
 .field {
@@ -289,8 +330,38 @@
 
 /* ---------- tables ---------- */
 
+/* Deliberately no overflow here at desktop widths. An ancestor with overflow
+   becomes the sticky scrollport, which would pin the table header inside this
+   box instead of to the viewport. Below 1024px the table genuinely does not
+   fit, so horizontal scrolling wins and the sticky header is given up. */
 .table-scroll {
-  overflow-x: auto;
+  overflow-x: visible;
+}
+
+@media (max-width: 1023px) {
+  .table-scroll {
+    overflow-x: auto;
+  }
+
+  .table thead th {
+    top: 0;
+  }
+}
+
+/* Below the point where the top bar wraps, the filter row wraps too — to about
+   230px, which pinned alongside a two-row bar would hold 38% of a phone screen
+   permanently. Not worth it for a row you use once and scroll past, so it goes
+   back to scrolling away.
+
+   Resetting the margins matters as much as the position: .shell drops to 12px
+   of padding at 640px, and the -24px full-bleed margin would then hang off
+   both edges and scroll the page sideways. */
+@media (max-width: 719px) {
+  .filters {
+    position: static;
+    margin: 0 0 var(--space-16);
+    padding: 0;
+  }
 }
 
 .table {
@@ -301,10 +372,13 @@
 
 /* The header used to be a navy slab, which made the table read as a boxed
    component sitting on the page. It is now the page's own surface with a rule
-   under it — the column labels carry the structure instead of the fill. */
+   under it — the column labels carry the structure instead of the fill.
+
+   It pins below the filter bar. Both offsets are measured at runtime
+   (useStickyOffsets) because both wrap and change height with the viewport. */
 .table thead th {
   position: sticky;
-  top: 0;
+  top: calc(var(--topbar-h, 61px) + var(--filters-h, 61px));
   z-index: var(--z-raised);
   background: var(--surface);
   color: var(--text-muted);
@@ -466,14 +540,14 @@
   text-align: center;
   padding: var(--space-11) var(--space-10);
   background: var(--interactive);
-  color: #fff;
+  color: var(--text-on-inverse);
   border-bottom: 0;
-  top: 0;
+  top: var(--topbar-h, 61px);
 }
 
 .table--fdr .th-btn:hover {
   background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  color: var(--text-on-inverse);
 }
 .fdr__team-head {
   text-align: left !important;
@@ -1378,7 +1452,7 @@
     padding: var(--space-16) var(--space-12) var(--space-48);
   }
   .topbar {
-    padding: var(--space-14) var(--space-12) var(--space-0);
+    padding: var(--space-0) var(--space-12);
   }
   .filters__count {
     margin-left: var(--space-0);

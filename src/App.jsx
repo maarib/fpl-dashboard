@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useStickyOffsets } from './hooks/useStickyOffsets'
 import { FplProvider } from './context/FplProvider'
 import { useFpl } from './hooks/useFpl'
 import PlayerExplorer from './components/PlayerExplorer'
@@ -16,6 +17,9 @@ const TABS = [
 function Dashboard() {
   const { loading, error, retry, currentEvent } = useFpl()
   const [activeTab, setActiveTab] = useState(TABS[0].id)
+
+  // Above the loading and error returns: hooks have to run on every render.
+  useStickyOffsets()
 
   if (loading) {
     return (
