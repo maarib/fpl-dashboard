@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FPL Dashboard — nav + Player Explorer</title>
+
+    <!--
+      A static copy of the two surfaces being redesigned, using the real class
+      names and the real stylesheets from the React app.
+
+      Edit tokens.css first: most of the visual language lives there, and a
+      change to a token carries across the whole app rather than one screen.
+      app.css is where the layout and component rules live.
+
+      Anything you change in these two files can be applied back to the React
+      app as-is — the markup below is what React renders.
+    -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Reddit+Sans:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="tokens.css" />
+    <link rel="stylesheet" href="base.css" />
+    <link rel="stylesheet" href="app.css" />
+
+    <style>
+      /* Export-only: the React app sets these at runtime by measuring the bars,
+         because both wrap and change height. Static values here so the sticky
+         behaviour still works when you open the file directly. */
+      :root {
+        --topbar-h: 61px;
+        --filters-h: 85px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- ==================== TOP NAVIGATION ==================== -->
+    <header class="topbar">
+      <div class="topbar__inner">
+        <h1 class="wordmark">FPL <span>Dashboard</span></h1>
+
+        <nav class="tabs" aria-label="Views">
+          <button type="button" class="tab tab--active" aria-current="page">Player Explorer</button>
+          <button type="button" class="tab">My Team</button>
+          <button type="button" class="tab">Fixtures</button>
+        </nav>
+
+        <div class="gw">
+          <span class="gw__label">Next · Gameweek 1</span>
+          <time class="gw__deadline" datetime="2026-08-21T17:30:00Z">Deadline Fri 21 Aug, 18:30</time>
+        </div>
+      </div>
+    </header>
+
+    <main class="shell">
+      <section class="explorer">
+        <!-- ==================== FILTER BAR (sticky) ==================== -->
+        <div class="filters">
+          <label class="field">
+            <span class="field__label">Search</span>
+            <span class="field__with-icon">
+              <svg class="field__icon" width="15" height="15" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true">
+                <path d="M232.49,215.51,185,168a92.12,92.12,0,1,0-17,17l47.53,47.54a12,12,0,0,0,17-17ZM44,112a68,68,0,1,1,68,68A68.07,68.07,0,0,1,44,112Z"/>
+              </svg>
+              <input class="input" type="search" placeholder="Player name" />
+            </span>
+          </label>
+
+          <div class="field">
+            <span class="field__label" id="pe-position">Position</span>
+            <button type="button" class="select__trigger input" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="pe-position">
+              <span class="select__value">All positions</span>
+              <svg class="select__chev" width="14" height="14" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true">
+                <path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="field">
+            <span class="field__label" id="pe-min-price">Min price</span>
+            <button type="button" class="select__trigger input input--narrow" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="pe-min-price">
+              <span class="select__value">£4.0m</span>
+              <svg class="select__chev" width="14" height="14" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true">
+                <path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="field">
+            <span class="field__label" id="pe-max-price">Max price</span>
+            <button type="button" class="select__trigger input input--narrow" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="pe-max-price">
+              <span class="select__value">£15.5m</span>
+              <svg class="select__chev" width="14" height="14" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true">
+                <path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"/>
+              </svg>
+            </button>
+          </div>
+
+          <button type="button" class="btn">
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true">
+              <path d="M228,128a100,100,0,0,1-98.66,100H128a99.39,99.39,0,0,1-68.62-27.29,12,12,0,0,1,16.48-17.45,76,76,0,1,0-1.57-109c-.13.13-.25.25-.39.37L54.89,92H72a12,12,0,0,1,0,24H24a12,12,0,0,1-12-12V56a12,12,0,0,1,24,0V76.72L57.48,57.06A100,100,0,0,1,228,128Z"/>
+            </svg>
+            Reset
+          </button>
+
+          <p class="filters__count">577 of 577 players</p>
+        </div>
+
+        <!-- ==================== TABLE ==================== -->
+        <div class="table-scroll">
+          <table class="table">
+            <thead>
+              <tr>
+                <th class="col-photo"></th>
+                <th style="text-align: left">
+                  <button type="button" class="th-btn">
+                    Player
+                    <span class="th-btn__arrow">
+                      <svg width="11" height="11" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true">
+                        <path d="M184.49,167.51a12,12,0,0,1,0,17l-48,48a12,12,0,0,1-17,0l-48-48a12,12,0,0,1,17-17L128,207l39.51-39.52A12,12,0,0,1,184.49,167.51Zm-96-79L128,49l39.51,39.52a12,12,0,0,0,17-17l-48-48a12,12,0,0,0-17,0l-48,48a12,12,0,0,0,17,17Z"/>
+                      </svg>
+                    </span>
+                  </button>
+                </th>
+                <th><button type="button" class="th-btn">Team</button></th>
+                <th><button type="button" class="th-btn">Pos</button></th>
+                <th><button type="button" class="th-btn">Price</button></th>
+                <th><button type="button" class="th-btn">Form</button></th>
+                <th><button type="button" class="th-btn">Selected</button></th>
+                <th aria-sort="descending">
+                  <button type="button" class="th-btn th-btn--active">
+                    Pts
+                    <span class="th-btn__arrow">
+                      <svg width="11" height="11" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true">
+                        <path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"/>
+                      </svg>
+                    </span>
+                  </button>
+                </th>
+                <th><button type="button" class="th-btn">DefCon</button></th>
+                <th><button type="button" class="th-btn">xGI</button></th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <!-- row template: duplicate as needed -->
+              <tr>
+                <td class="col-photo">
+                  <label class="cmp-check">
+                    <input type="checkbox" aria-label="Compare Haaland" />
+                    <img class="photo photo--sm" alt="" src="https://resources.premierleague.com/premierleague/photos/players/110x140/p223094.png" />
+                  </label>
+                </td>
+                <td class="col-name">
+                  <button type="button" class="player-name player-name--link">Haaland</button>
+                  <span class="player-sub">Erling Haaland</span>
+                </td>
+                <td><img class="badge badge--sm" alt="Man City" src="https://resources.premierleague.com/premierleague/badges/50/t43.png" /></td>
+                <td><span class="pos pos--FWD">FWD</span></td>
+                <td class="num">£15.5m</td>
+                <td class="num">0.0</td>
+                <td class="num">73.7%</td>
+                <td class="num num--strong">239</td>
+                <td class="num">104</td>
+                <td class="num">28.17</td>
+              </tr>
+
+              <tr>
+                <td class="col-photo">
+                  <label class="cmp-check">
+                    <input type="checkbox" aria-label="Compare B.Fernandes" />
+                    <img class="photo photo--sm" alt="" src="https://resources.premierleague.com/premierleague/photos/players/110x140/p141746.png" />
+                  </label>
+                </td>
+                <td class="col-name">
+                  <button type="button" class="player-name player-name--link">B.Fernandes</button>
+                  <span class="player-sub">Bruno Borges Fernandes</span>
+                </td>
+                <td><img class="badge badge--sm" alt="Man Utd" src="https://resources.premierleague.com/premierleague/badges/50/t1.png" /></td>
+                <td><span class="pos pos--MID">MID</span></td>
+                <td class="num">£12.0m</td>
+                <td class="num">0.0</td>
+                <td class="num">48.3%</td>
+                <td class="num num--strong">235</td>
+                <td class="num">287</td>
+                <td class="num">23.07</td>
+              </tr>
+
+              <tr>
+                <td class="col-photo">
+                  <label class="cmp-check">
+                    <input type="checkbox" aria-label="Compare Gabriel" />
+                    <img class="photo photo--sm" alt="" src="https://resources.premierleague.com/premierleague/photos/players/110x140/p226597.png" />
+                  </label>
+                </td>
+                <td class="col-name">
+                  <button type="button" class="player-name player-name--link">Gabriel</button>
+                  <span class="player-sub">Gabriel dos Santos Magalhães</span>
+                </td>
+                <td><img class="badge badge--sm" alt="Arsenal" src="https://resources.premierleague.com/premierleague/badges/50/t3.png" /></td>
+                <td><span class="pos pos--DEF">DEF</span></td>
+                <td class="num">£8.0m</td>
+                <td class="num">0.0</td>
+                <td class="num">26.7%</td>
+                <td class="num num--strong">209</td>
+                <td class="num">277</td>
+                <td class="num">4.69</td>
+              </tr>
+
+              <tr>
+                <td class="col-photo">
+                  <label class="cmp-check">
+                    <input type="checkbox" aria-label="Compare Semenyo" />
+                    <img class="photo photo--sm" alt="" src="https://resources.premierleague.com/premierleague/photos/players/110x140/p437730.png" />
+                  </label>
+                </td>
+                <td class="col-name">
+                  <button type="button" class="player-name player-name--link">Semenyo</button>
+                  <span class="player-sub">Antoine Semenyo</span>
+                </td>
+                <td><img class="badge badge--sm" alt="Bournemouth" src="https://resources.premierleague.com/premierleague/badges/50/t91.png" /></td>
+                <td><span class="pos pos--MID">MID</span></td>
+                <td class="num">£8.5m</td>
+                <td class="num">0.0</td>
+                <td class="num">26.1%</td>
+                <td class="num num--strong">202</td>
+                <td class="num">236</td>
+                <td class="num">14.21</td>
+              </tr>
+
+              <tr>
+                <td class="col-photo">
+                  <label class="cmp-check">
+                    <input type="checkbox" aria-label="Compare Gibbs-White" />
+                    <img class="photo photo--sm" alt="" src="https://resources.premierleague.com/premierleague/photos/players/110x140/p222531.png" />
+                  </label>
+                </td>
+                <td class="col-name">
+                  <button type="button" class="player-name player-name--link">Gibbs-White</button>
+                  <span class="player-sub">Morgan Gibbs-White</span>
+                </td>
+                <td><img class="badge badge--sm" alt="Nott'm Forest" src="https://resources.premierleague.com/premierleague/badges/50/t17.png" /></td>
+                <td><span class="pos pos--MID">MID</span></td>
+                <td class="num">£8.0m</td>
+                <td class="num">0.0</td>
+                <td class="num">11.6%</td>
+                <td class="num num--strong">188</td>
+                <td class="num">178</td>
+                <td class="num">13.72</td>
+              </tr>
+
+              <tr>
+                <td class="col-photo">
+                  <label class="cmp-check">
+                    <input type="checkbox" aria-label="Compare Rice" />
+                    <img class="photo photo--sm" alt="" src="https://resources.premierleague.com/premierleague/photos/players/110x140/p204480.png" />
+                  </label>
+                </td>
+                <td class="col-name">
+                  <button type="button" class="player-name player-name--link">Rice</button>
+                  <span class="player-sub">Declan Rice</span>
+                </td>
+                <td><img class="badge badge--sm" alt="Arsenal" src="https://resources.premierleague.com/premierleague/badges/50/t3.png" /></td>
+                <td><span class="pos pos--MID">MID</span></td>
+                <td class="num">£7.5m</td>
+                <td class="num">0.0</td>
+                <td class="num">22.0%</td>
+                <td class="num num--strong">184</td>
+                <td class="num">376</td>
+                <td class="num">10.47</td>
+              </tr>
+
+              <tr>
+                <td class="col-photo">
+                  <label class="cmp-check">
+                    <input type="checkbox" aria-label="Compare Virgil" />
+                    <img class="photo photo--sm" alt="" src="https://resources.premierleague.com/premierleague/photos/players/110x140/p97032.png" />
+                  </label>
+                </td>
+                <td class="col-name">
+                  <button type="button" class="player-name player-name--link">Virgil</button>
+                  <span class="player-sub">Virgil van Dijk</span>
+                </td>
+                <td><img class="badge badge--sm" alt="Liverpool" src="https://resources.premierleague.com/premierleague/badges/50/t14.png" /></td>
+                <td><span class="pos pos--DEF">DEF</span></td>
+                <td class="num">£6.5m</td>
+                <td class="num">0.0</td>
+                <td class="num">16.6%</td>
+                <td class="num num--strong">175</td>
+                <td class="num">352</td>
+                <td class="num">5.21</td>
+              </tr>
+
+              <tr>
+                <td class="col-photo">
+                  <label class="cmp-check">
+                    <input type="checkbox" aria-label="Compare Tarkowski" />
+                    <img class="photo photo--sm" alt="" src="https://resources.premierleague.com/premierleague/photos/players/110x140/p17761.png" />
+                  </label>
+                </td>
+                <td class="col-name">
+                  <button type="button" class="player-name player-name--link">Tarkowski</button>
+                  <span class="player-sub">James Tarkowski</span>
+                </td>
+                <td><img class="badge badge--sm" alt="Everton" src="https://resources.premierleague.com/premierleague/badges/50/t11.png" /></td>
+                <td><span class="pos pos--DEF">DEF</span></td>
+                <td class="num">£6.0m</td>
+                <td class="num">0.0</td>
+                <td class="num">9.8%</td>
+                <td class="num num--strong">170</td>
+                <td class="num">376</td>
+                <td class="num">4.63</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

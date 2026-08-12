@@ -1,0 +1,1623 @@
+/* ---------- shell ---------- */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-floating-bar);
+  background: var(--surface-chrome);
+  color: var(--text);
+  padding: var(--space-0) var(--space-24);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.topbar__inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-24);
+}
+
+.wordmark {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--tracking-tighter);
+  color: var(--accent-ink);
+  white-space: nowrap;
+}
+
+.wordmark span {
+  color: var(--text);
+}
+
+/* The gameweek is the most time-sensitive thing in the bar, so it carries the
+   deadline rather than just a name. Two lines of quiet type instead of a
+   bordered pill — it is status, not a control. */
+.gw {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+  line-height: var(--line-height-none);
+  white-space: nowrap;
+}
+
+.gw__label {
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  color: var(--text-muted);
+}
+
+.gw__deadline {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text);
+}
+
+.tabs {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  align-self: stretch;
+}
+
+.tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--space-0) var(--space-12);
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+/* An inset pill rather than a full-height fill: at 61px a block of grey behind
+   the label reads as a button, which is not what a nav item is. */
+.tab::before {
+  content: '';
+  position: absolute;
+  inset: var(--space-12) var(--space-4);
+  border-radius: var(--radius-8);
+  background: transparent;
+  transition: background var(--duration-fast) var(--ease);
+  z-index: -1;
+}
+
+.tab:hover::before {
+  background: var(--surface-sunken);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -4px;
+  border-radius: var(--radius-8);
+}
+
+/* The active marker is a rule under the label rather than a filled tab, so the
+   bar reads as one surface instead of a strip of boxes. */
+.tab::after {
+  content: '';
+  position: absolute;
+  left: var(--space-12);
+  right: var(--space-12);
+  bottom: -1px;
+  height: 2px;
+  background: transparent;
+  border-radius: var(--radius-pill);
+  transform: scaleX(0.4);
+  transition:
+    background var(--duration-fast) var(--ease),
+    transform var(--duration-fast) var(--ease);
+}
+/* The marker grows in from the centre, so moving along the bar reads as one
+   movement rather than two separate blinks. */
+.tab--active::after,
+.tab:hover::after {
+  transform: scaleX(1);
+}
+
+.tab:hover::after {
+  background: var(--border);
+}
+.tab--active {
+  color: var(--text);
+  font-weight: var(--font-weight-bold);
+}
+
+.tab--active::after,
+.tab--active:hover::after {
+  background: var(--accent-ink);
+}
+
+/* Narrow screens: the single row cannot hold wordmark, three tabs and the
+   gameweek, and the tabs are what loses — two of the three destinations end
+   up scrolled out of sight behind the chip. Wrapping to a second row keeps
+   every destination visible, which matters more than the compact bar. */
+@media (max-width: 720px) {
+  .topbar {
+    padding: var(--space-0) var(--space-16);
+  }
+
+  .topbar__inner {
+    flex-wrap: wrap;
+    min-height: 0;
+    gap: var(--space-8) var(--space-12);
+    padding: var(--space-10) var(--space-0) var(--space-0);
+  }
+
+  .tabs {
+    order: 3;
+    width: 100%;
+    gap: var(--space-4);
+  }
+
+  .tab {
+    padding: var(--space-8) var(--space-10);
+  }
+
+  .tab::after {
+    left: var(--space-10);
+    right: var(--space-10);
+    bottom: 0;
+  }
+}
+
+.shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: var(--space-22) var(--space-24) var(--space-60);
+}
+
+/* My Team runs a three-column layout (pool 440 + gap 24 + stage 928), which
+   needs more room than the reading-width default the other tabs use. */
+.shell--wide {
+  max-width: 1440px;
+}
+
+/* ---------- controls ---------- */
+
+/* Pinned under the top bar. It has to be opaque and reach the full width of
+   the shell — including its horizontal padding, hence the negative margins —
+   or rows show through it as they scroll under. */
+.filters {
+  position: sticky;
+  top: var(--topbar-h, 61px);
+  z-index: var(--z-sticky-band);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-12);
+  margin: 0 calc(-1 * var(--space-24)) var(--space-4);
+  padding: var(--space-12) var(--space-24);
+  background: var(--surface);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.field__label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps-loose);
+  color: var(--text-muted);
+}
+
+.input {
+  font: inherit;
+  padding: var(--space-8) var(--space-10);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-8);
+  background: #fff;
+  color: var(--text);
+  min-width: 170px;
+}
+.input:focus-visible {
+  outline: 2px solid var(--interactive);
+  outline-offset: 1px;
+}
+
+.field--range .range-pair {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.range-pair input[type='range'] {
+  width: 190px;
+  accent-color: var(--interactive);
+}
+
+.btn {
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  padding: var(--space-9) var(--space-16);
+  border-radius: var(--radius-8);
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+}
+.btn:hover {
+  background: var(--surface-sunken);
+}
+.btn--primary {
+  background: var(--interactive);
+  border-color: var(--interactive);
+  color: var(--accent);
+}
+.btn--primary:hover {
+  background: var(--interactive-hover);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.filters__count {
+  margin: 0 0 var(--space-4) auto;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  max-width: 320px;
+}
+
+.empty {
+  padding: var(--space-40) var(--space-16);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.notice {
+  padding: var(--space-14) var(--space-16);
+  border-radius: var(--radius-12);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.notice p {
+  margin: var(--space-6) var(--space-0) var(--space-0);
+  color: var(--text-muted);
+  font-size: var(--font-size-md);
+}
+.notice--error {
+  border-color: rgba(233, 0, 82, 0.35);
+  background: rgba(233, 0, 82, 0.05);
+}
+
+/* ---------- images ---------- */
+
+.photo {
+  display: block;
+  width: 34px;
+  height: 43px;
+  object-fit: contain;
+}
+.photo--fallback {
+  display: grid;
+  place-items: center;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-6);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-muted);
+}
+.photo--sm {
+  width: 30px;
+  height: 38px;
+}
+.photo--card {
+  width: 46px;
+  height: 58px;
+  margin: 0 auto;
+}
+
+.badge {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+.badge--fallback {
+  display: inline-grid;
+  place-items: center;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-muted);
+}
+.badge--sm {
+  width: 20px;
+  height: 20px;
+}
+
+/* ---------- tables ---------- */
+
+/* Deliberately no overflow here at desktop widths. An ancestor with overflow
+   becomes the sticky scrollport, which would pin the table header inside this
+   box instead of to the viewport. Below 1024px the table genuinely does not
+   fit, so horizontal scrolling wins and the sticky header is given up. */
+.table-scroll {
+  overflow-x: visible;
+}
+
+@media (max-width: 1023px) {
+  .table-scroll {
+    overflow-x: auto;
+  }
+
+  .table thead th {
+    top: 0;
+  }
+}
+
+/* Below the point where the top bar wraps, the filter row wraps too — to about
+   230px, which pinned alongside a two-row bar would hold 38% of a phone screen
+   permanently. Not worth it for a row you use once and scroll past, so it goes
+   back to scrolling away.
+
+   Resetting the margins matters as much as the position: .shell drops to 12px
+   of padding at 640px, and the -24px full-bleed margin would then hang off
+   both edges and scroll the page sideways. */
+@media (max-width: 719px) {
+  .filters {
+    position: static;
+    margin: 0 0 var(--space-16);
+    padding: 0;
+  }
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-md);
+}
+
+/* The header used to be a navy slab, which made the table read as a boxed
+   component sitting on the page. It is now the page's own surface with a rule
+   under it — the column labels carry the structure instead of the fill.
+
+   It pins below the filter bar. Both offsets are measured at runtime
+   (useStickyOffsets) because both wrap and change height with the viewport. */
+.table thead th {
+  position: sticky;
+  top: calc(var(--topbar-h, 61px) + var(--filters-h, 61px));
+  z-index: var(--z-raised);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  padding: var(--space-0);
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+
+.th-btn {
+  width: 100%;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: var(--space-11) var(--space-10);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+}
+.th-btn:hover {
+  background: var(--surface-sunken);
+  color: var(--text);
+}
+.th-btn--active {
+  color: var(--text);
+}
+.th-btn__arrow {
+  font-size: var(--font-size-3xs);
+  opacity: 0.7;
+}
+
+/* Rows are separated by a hairline and given room to breathe, rather than
+   being ruled off with the same weight as the table's old outer border. */
+.table tbody td {
+  padding: var(--space-10);
+  border-top: 1px solid var(--border-subtle);
+  text-align: center;
+  vertical-align: middle;
+}
+.table tbody tr:hover {
+  background: var(--surface-sunken);
+}
+
+.col-photo {
+  width: 46px;
+  padding-left: var(--space-12) !important;
+}
+.col-name {
+  text-align: left !important;
+  min-width: 160px;
+}
+.player-name {
+  display: block;
+  font-weight: var(--font-weight-semibold);
+}
+.player-sub {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+.num--strong {
+  font-weight: var(--font-weight-bold);
+}
+
+.pos {
+  display: inline-block;
+  min-width: 38px;
+  padding: var(--space-2) var(--space-6);
+  border-radius: var(--radius-5);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+}
+.pos--GKP {
+  background: var(--pos-gkp-bg);
+  border-color: var(--pos-gkp-border);
+}
+.pos--DEF {
+  background: var(--pos-def-bg);
+  border-color: var(--pos-def-border);
+}
+.pos--MID {
+  background: var(--pos-mid-bg);
+  border-color: var(--pos-mid-border);
+}
+.pos--FWD {
+  background: var(--pos-fwd-bg);
+  border-color: var(--pos-fwd-border);
+}
+
+/* ---------- squad header (pitch styles live in styles/pitch.css) ---------- */
+
+.squad-head {
+  margin: var(--space-4) var(--space-0) var(--space-14);
+}
+.squad-head h2 {
+  font-size: var(--font-size-4xl);
+}
+.squad-head p {
+  margin: var(--space-3) var(--space-0) var(--space-0);
+  color: var(--text-muted);
+  font-size: var(--font-size-base);
+}
+
+.pitch-hint {
+  margin: var(--space-0) var(--space-0) var(--space-10);
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+/* ---------- FDR grid ---------- */
+
+.fdr__legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  flex-wrap: wrap;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-muted);
+  margin-bottom: var(--space-12);
+}
+.fdr__scale {
+  display: inline-flex;
+  gap: var(--space-3);
+}
+.fdr__swatch {
+  width: 24px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-5);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+}
+.fdr__hint {
+  font-weight: var(--font-weight-medium);
+}
+
+/* The FDR grid is deliberately left on the old header treatment so this
+   redesign can be reviewed on the Explorer alone before it spreads. */
+.table--fdr thead th {
+  text-align: center;
+  padding: var(--space-11) var(--space-10);
+  background: var(--interactive);
+  color: var(--text-on-inverse);
+  border-bottom: 0;
+  top: var(--topbar-h, 61px);
+}
+
+.table--fdr .th-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-on-inverse);
+}
+.fdr__team-head {
+  text-align: left !important;
+  padding-left: var(--space-12) !important;
+}
+
+.fdr__team {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-6) var(--space-12);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  text-align: left;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky;
+  left: 0;
+}
+
+.fdr__cell {
+  padding: var(--space-4) !important;
+  min-width: 92px;
+}
+
+.fdr__chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  padding: var(--space-6) var(--space-5);
+  border-radius: var(--radius-6);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.fdr__opp {
+  white-space: nowrap;
+}
+
+/* The difficulty digit. Carries the same information as the fill colour so
+   the grid is readable without perceiving hue, and without needing hover —
+   `title` does not exist on touch. */
+.fdr__diff {
+  flex: none;
+  min-width: 16px;
+  padding: var(--space-0) var(--space-1);
+  border-radius: var(--radius-3);
+  /* Outlined in currentColor rather than filled: the text colour is already
+     chosen to contrast with each of the five fills, so the badge works on the
+     bright greens and the near-black red alike. */
+  box-shadow: var(--ring-current);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-normal);
+  text-align: center;
+}
+
+/* ---------- compare players ---------- */
+
+.cmp-check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-6);
+  cursor: pointer;
+}
+.cmp-check input {
+  accent-color: var(--interactive);
+  cursor: pointer;
+}
+.cmp-check input:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.cmp-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: var(--z-floating-bar);
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  flex-wrap: wrap;
+  margin-top: var(--space-12);
+  padding: var(--space-11) var(--space-16);
+  border-radius: var(--radius-12);
+  background: var(--interactive);
+  color: #fff;
+  box-shadow: var(--elevation-3);
+}
+.cmp-bar__count {
+  font-weight: var(--font-weight-extrabold);
+  font-size: var(--font-size-md);
+  white-space: nowrap;
+}
+.cmp-bar__names {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-size-base);
+  color: rgba(255, 255, 255, 0.72);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cmp-bar .btn {
+  padding: var(--space-7) var(--space-14);
+  font-size: var(--font-size-base);
+}
+
+.cmp-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal-elevated);
+  background: rgba(12, 2, 16, 0.6);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-20);
+}
+
+.cmp {
+  width: min(1000px, 100%);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-14);
+  overflow: hidden;
+  box-shadow: var(--elevation-6);
+}
+
+.cmp__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-14) var(--space-18);
+  background: var(--interactive);
+  color: #fff;
+}
+.cmp__head h2 {
+  font-size: var(--font-size-2xl);
+  margin: var(--space-0);
+}
+.cmp__close {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--radius-circle);
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: var(--font-size-3xl);
+  line-height: var(--line-height-none);
+  cursor: pointer;
+}
+.cmp__close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.cmp__note {
+  margin: var(--space-0);
+  padding: var(--space-9) var(--space-18);
+  background: rgba(255, 170, 0, 0.12);
+  border-bottom: 1px solid var(--border);
+  font-size: var(--font-size-base);
+  color: var(--status-warn);
+}
+
+.cmp__scroll {
+  overflow: auto;
+  flex: 1;
+}
+
+.cmp__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-base);
+}
+
+/* Two sticky tracks cross in this table: the header row pins to the top, the
+   metric labels pin to the left. Where they cross, the header has to win, so
+   the stacking order is explicit: corner (4) over header (3) over row labels
+   (2). Left implicit, the row labels outranked the header and scrolled over
+   it instead of under. */
+.cmp__rowhead {
+  position: sticky;
+  left: 0;
+  z-index: var(--z-sticky);
+  background: var(--surface-sunken);
+  text-align: left;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-muted);
+  padding: var(--space-8) var(--space-14);
+  white-space: nowrap;
+  border-top: 1px solid var(--border);
+}
+
+.cmp__player {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky-cross);
+  background: var(--surface);
+  padding: var(--space-12) var(--space-10);
+  border-bottom: 2px solid var(--border);
+  min-width: 150px;
+  vertical-align: bottom;
+}
+
+/* The corner cell is in both tracks, so it pins on both axes and outranks
+   both. Sticky on `left` alone it scrolled up with the body, leaving a hole
+   in the header band that the table showed through. It carries the header's
+   white and bottom border so the band reads as one container across the full
+   width of the modal. */
+.cmp__corner {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: var(--z-sticky-corner);
+  background: var(--surface);
+  border-bottom: 2px solid var(--border);
+  padding: var(--space-8) var(--space-14);
+}
+.cmp__photo {
+  display: block;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto var(--space-4);
+  object-fit: cover;
+  object-position: center 10%;
+  border-radius: var(--radius-8);
+  background: var(--surface-sunken);
+}
+.cmp__name {
+  display: block;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-extrabold);
+}
+.cmp__sub {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-muted);
+}
+.cmp__badge {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+.cmp__flag {
+  display: inline-block;
+  margin-top: var(--space-4);
+  padding: var(--space-1) var(--space-7);
+  border-radius: var(--radius-pill);
+  background: rgba(233, 0, 82, 0.12);
+  color: var(--status-bad);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+}
+.cmp__drop {
+  display: block;
+  margin: var(--space-6) auto 0;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--font-size-xs);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.cmp__drop:hover {
+  color: var(--status-bad);
+}
+
+.cmp__table td {
+  padding: var(--space-8) var(--space-10);
+  text-align: center;
+  border-top: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The leader in a row, so the comparison reads at a glance. */
+.cmp__win {
+  background: rgba(0, 255, 135, 0.14);
+  font-weight: var(--font-weight-extrabold);
+}
+
+.cmp__fix {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.cmp__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-5);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+}
+.cmp__diff {
+  min-width: 12px;
+  border-radius: var(--radius-2);
+  box-shadow: var(--ring-current);
+  font-size: var(--font-size-3xs);
+  line-height: var(--line-height-snug);
+  text-align: center;
+}
+.cmp__muted {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+@media (max-width: 640px) {
+  .cmp-backdrop {
+    padding: var(--space-0);
+  }
+  .cmp {
+    border-radius: 0;
+    height: 100%;
+    max-height: 100%;
+  }
+  .cmp__player {
+    min-width: 118px;
+  }
+}
+
+/* ---------- player detail modal ---------- */
+
+.pd-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  background: rgba(12, 2, 16, 0.6);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-24);
+}
+
+/* Hugs its content up to a cap, then scrolls inside. Overflow is hidden here
+   and owned by .pd__scroll so the close button, positioned against this box,
+   cannot scroll away with the content. */
+.pd {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(720px, 100%);
+  max-height: 100%;
+  overflow: hidden;
+  background: var(--surface-sunken);
+  color: var(--text);
+  border-radius: var(--radius-14);
+  box-shadow: var(--elevation-7);
+}
+
+.pd__scroll {
+  overflow-y: auto;
+  padding: var(--space-20) var(--space-20) var(--space-28);
+}
+
+.pd__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: var(--z-raised);
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--radius-circle);
+  background: rgba(55, 0, 60, 0.1);
+  color: var(--text);
+  font-size: var(--font-size-3xl);
+  line-height: var(--line-height-none);
+  cursor: pointer;
+}
+.pd__close:hover {
+  background: rgba(55, 0, 60, 0.2);
+}
+
+/* On a phone the dialog is effectively the screen, so the inset that reads as
+   "modal" on a desktop just wastes width the tables need. */
+@media (max-width: 560px) {
+  .pd-backdrop {
+    padding: var(--space-10);
+  }
+}
+
+.pd__head {
+  display: flex;
+  gap: var(--space-14);
+  align-items: flex-start;
+  padding-right: var(--space-40);
+  margin-bottom: var(--space-16);
+}
+
+.pd__photo {
+  width: 84px;
+  height: 84px;
+  flex: none;
+  border-radius: var(--radius-10);
+  object-fit: cover;
+  object-position: center 10%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.pd__ident {
+  min-width: 0;
+}
+.pd__name {
+  font-size: var(--font-size-5xl);
+  margin: var(--space-0);
+}
+.pd__full,
+.pd__meta,
+.pd__price {
+  margin: var(--space-3) var(--space-0) var(--space-0);
+  font-size: var(--font-size-base);
+  color: var(--text-muted);
+}
+.pd__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+}
+.pd__badge {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+.pd__price {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--text);
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+}
+.pd__rise,
+.pd__fall {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+.pd__rise {
+  color: var(--status-ok);
+}
+.pd__fall {
+  color: var(--status-bad);
+}
+
+.pd-alert {
+  padding: var(--space-11) var(--space-13);
+  border-radius: var(--radius-10);
+  margin-bottom: var(--space-16);
+  border: 1px solid;
+}
+.pd-alert p {
+  margin: var(--space-4) var(--space-0) var(--space-0);
+  font-size: var(--font-size-base);
+}
+.pd-alert--bad {
+  background: rgba(233, 0, 82, 0.08);
+  border-color: rgba(233, 0, 82, 0.4);
+  color: var(--status-bad);
+}
+.pd-alert--warn {
+  background: rgba(255, 170, 0, 0.1);
+  border-color: rgba(255, 170, 0, 0.45);
+  color: var(--status-warn);
+}
+
+.pd-section {
+  margin-bottom: var(--space-20);
+}
+.pd-section h3 {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--tracking-caps-looser);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: var(--space-0) var(--space-0) var(--space-9);
+}
+.pd-section__note {
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.pd-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-8);
+}
+.pd-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-9);
+  padding: var(--space-9) var(--space-8);
+  text-align: center;
+}
+.pd-stat__value {
+  display: block;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  font-variant-numeric: tabular-nums;
+}
+.pd-stat__label {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+.pd-stat__sub {
+  display: block;
+  font-size: var(--font-size-2xs);
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+.pd-ranks,
+.pd-duties {
+  list-style: none;
+  margin: var(--space-0);
+  padding: var(--space-0);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-9);
+  overflow: hidden;
+}
+.pd-ranks li,
+.pd-duties li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-8) var(--space-12);
+  font-size: var(--font-size-base);
+  border-top: 1px solid var(--border);
+}
+.pd-ranks li:first-child,
+.pd-duties li:first-child {
+  border-top: 0;
+}
+.pd-ranks .is-strong strong {
+  color: var(--status-ok);
+}
+.pd-ranks strong,
+.pd-duties strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.pd-fix {
+  display: flex;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+.pd-fix__item {
+  flex: 1 1 74px;
+  text-align: center;
+}
+.pd-fix__gw {
+  display: block;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-muted);
+  margin-bottom: var(--space-3);
+}
+.pd-fix__opp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-7) var(--space-4);
+  border-radius: var(--radius-7);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+.pd-fix__diff {
+  min-width: 15px;
+  border-radius: var(--radius-3);
+  box-shadow: var(--ring-current);
+  font-size: var(--font-size-2xs);
+  line-height: var(--line-height-relaxed);
+}
+
+.pd-table-wrap {
+  overflow-x: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-9);
+}
+.pd-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+.pd-table th {
+  text-align: right;
+  padding: var(--space-7) var(--space-9);
+  font-size: var(--font-size-2xs);
+  letter-spacing: var(--tracking-caps-wide);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--surface-sunken);
+  white-space: nowrap;
+}
+.pd-table th:first-child,
+.pd-table td:first-child {
+  text-align: left;
+}
+.pd-table td {
+  padding: var(--space-7) var(--space-9);
+  text-align: right;
+  border-top: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.pd-table .is-strong {
+  font-weight: var(--font-weight-extrabold);
+}
+
+.pd-muted {
+  margin: var(--space-0);
+  font-size: var(--font-size-base);
+  color: var(--text-muted);
+}
+
+/* Entry points into the panel */
+.player-name--link {
+  border: 0;
+  background: none;
+  padding: var(--space-0);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  color: var(--interactive);
+  cursor: pointer;
+  text-align: left;
+}
+.player-name--link:hover {
+  text-decoration: underline;
+}
+
+.pcards__item--link {
+  cursor: pointer;
+}
+.pcards__item--link:hover {
+  background: var(--surface-sunken);
+}
+
+.prow__info {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-circle);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: var(--font-size-xs);
+  font-style: italic;
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-none);
+  cursor: pointer;
+}
+.prow__info:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .pd {
+    width: 100%;
+    padding: var(--space-18) var(--space-14) var(--space-40);
+  }
+  .pd-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ---------- shared squad banner ---------- */
+
+.notice--shared {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-16);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-16);
+  border-color: var(--accent-2);
+  background: rgba(4, 245, 255, 0.08);
+}
+
+.notice__actions {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+}
+
+/* ---------- player cards (replaces the table on phones) ---------- */
+
+.pcards {
+  list-style: none;
+  margin: var(--space-0);
+  padding: var(--space-0);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-12);
+  overflow: hidden;
+}
+
+.pcards__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  padding: var(--space-9) var(--space-12);
+  border-top: 1px solid var(--border);
+}
+.pcards__item:first-child {
+  border-top: 0;
+}
+
+.pcards__main {
+  flex: 1;
+  min-width: 0;
+}
+.pcards__name {
+  display: block;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-md);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pcards__sub {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+.badge--xs {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+}
+
+.pcards__stats {
+  flex: none;
+  text-align: right;
+}
+.pcards__price {
+  display: block;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-md);
+  font-variant-numeric: tabular-nums;
+}
+.pcards__metric {
+  display: block;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.input--narrow {
+  min-width: 104px;
+}
+
+/* ---------- loading skeletons ---------- */
+
+.skel {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    var(--border) 25%,
+    var(--surface-sunken) 37%,
+    var(--border) 63%
+  );
+  background-size: 400% 100%;
+  animation: skel-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skel-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skel {
+    animation: none;
+  }
+}
+
+.skel-filters {
+  display: flex;
+  gap: var(--space-14);
+  flex-wrap: wrap;
+  align-items: center;
+  padding: var(--space-14) var(--space-16);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-12);
+  margin-bottom: var(--space-16);
+}
+
+.skel-table {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-12);
+  overflow: hidden;
+}
+
+.skel-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+  padding: var(--space-10) var(--space-12);
+  border-top: 1px solid var(--border);
+}
+.skel-row > :nth-child(2) {
+  flex: 1;
+}
+
+/* Screen-reader-only text. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: var(--space-0);
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.fdr__chip + .fdr__chip {
+  margin-top: var(--space-3);
+}
+.fdr__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-7);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--space-8) var(--space-10);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-8);
+  background: var(--surface);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.fdr__toggle input {
+  accent-color: var(--interactive);
+  cursor: pointer;
+}
+.fdr__toggle:has(input:disabled) {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Clubs you own, so they stand out even in the full-league view. */
+.fdr__row--owned .fdr__team {
+  box-shadow: inset 3px 0 0 var(--accent-ink);
+}
+.fdr__owned {
+  color: var(--accent-ink);
+  font-size: var(--font-size-3xs);
+  line-height: var(--line-height-none);
+}
+
+.fdr__num {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--font-size-base);
+  white-space: nowrap;
+}
+.fdr__num--strong {
+  font-weight: var(--font-weight-extrabold);
+}
+.fdr__blanks {
+  color: var(--status-bad);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+}
+
+.fdr__chip--blank {
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  font-weight: var(--font-weight-semibold);
+}
+
+@media (max-width: 640px) {
+  .shell {
+    padding: var(--space-16) var(--space-12) var(--space-48);
+  }
+  .topbar {
+    padding: var(--space-0) var(--space-12);
+  }
+  .filters__count {
+    margin-left: var(--space-0);
+  }
+}
+
+/* ---------- custom select (ARIA listbox) ---------- */
+
+/* The trigger deliberately reuses .input's box so a Select and a text field
+   sit on the same baseline in a .field row. */
+.select__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+}
+
+.select__trigger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.select__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.select__chev {
+  flex: none;
+  color: var(--text-muted);
+  transition: transform 0.14s ease;
+}
+
+.select__trigger[aria-expanded='true'] .select__chev {
+  transform: rotate(180deg);
+}
+
+/* Portalled to the body, so it is positioned in viewport coordinates and has
+   to clear every overlay in the app — the compare backdrop at 70 is the
+   highest. */
+.select__menu {
+  position: fixed;
+  z-index: var(--z-popover);
+  margin: var(--space-0);
+  padding: var(--space-4);
+  list-style: none;
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-10);
+  box-shadow: var(--elevation-4);
+}
+
+.select__menu:focus {
+  outline: none;
+}
+
+.select__menu:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.select__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-10);
+  border-radius: var(--radius-7);
+  font-size: var(--font-size-base);
+  color: var(--text);
+  cursor: pointer;
+}
+
+/* Keyboard and pointer share one highlight, driven by data-active, so there is
+   never a second "hovered" row competing with the active descendant. */
+.select__option[data-active='true'] {
+  background: var(--surface-sunken);
+}
+
+.select__option[aria-selected='true'] {
+  font-weight: var(--font-weight-bold);
+}
+
+.select__option[aria-disabled='true'] {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.select__tick {
+  flex: none;
+  color: var(--accent-ink);
+}
+
+.select__option-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- icons ---------- */
+
+/* Phosphor renders an inline <svg>; without this it sits on the text baseline
+   and pushes the line box taller than the glyph it replaced. */
+.btn svg,
+.cardmenu__item svg,
+.th-btn svg {
+  flex: none;
+  vertical-align: middle;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.cardmenu__tick {
+  flex: none;
+  color: var(--accent-ink);
+}
+
+/* Search fields: the icon sits inside the input's box, so the input needs room
+   for it rather than the icon overlapping typed text. */
+.field__with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.field__icon {
+  position: absolute;
+  left: 10px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.field__with-icon .input {
+  padding-left: var(--space-32);
+  width: 100%;
+}
+
+.fdr__owned svg,
+.fdr__blanks svg {
+  vertical-align: -2px;
+}

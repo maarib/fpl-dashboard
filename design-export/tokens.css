@@ -1,0 +1,319 @@
+/* ==========================================================================
+   DESIGN TOKENS — the single source of truth for colour and type.
+   Nothing outside this file should contain a raw hex value.
+
+   Four layers. You normally only edit LAYER 1.
+
+     1. BRAND      the handful of colours that define the product
+     2. SEMANTIC   roles derived from brand — surfaces, text, interaction
+     3. STATUS     meaning, not identity: difficulty, injury, warnings
+     4. COMPONENT  pitch and card specifics (see also styles/pitch.css)
+     5. SPACE      spacing rhythm and layout gaps
+     6. RADIUS     corner rounding
+     7. ELEVATION  shadows, as a height scale
+     8. Z-INDEX    named stacking order — never write a bare number
+     9. TYPE       family, size, weight, line-height, tracking
+    10. BORDER     stroke widths
+    11. MOTION     durations and easing
+
+   A note on the scales: they were derived from the values the CSS already
+   used, not imposed on top of it. Snapping everything to a 4px grid would
+   have moved roughly 165 of 296 spacing declarations, which is a redesign,
+   not a refactor. So the space scale carries 2px steps where the app really
+   uses them, and OFF-RHYTHM values are marked. Those marks are the backlog:
+   normalising them is a design decision, not a mechanical one.
+   ========================================================================== */
+
+:root {
+  /* ========================================================================
+     LAYER 1 — BRAND
+     Change these and the whole app follows.
+     ===================================================================== */
+
+  --brand: #0f1b2d; /* primary: header, chrome, dark surfaces */
+  --brand-dark: #0a1220; /* hovers, gradients, deeper panels */
+
+  /* The accent needs two forms. Bright accents are light colours, so one that
+     reads well ON the navy cannot also be text on a white background — every
+     candidate measured below 2.5:1 there. `--accent` is for dark surfaces,
+     `--accent-ink` is the darkened form for text on light ones. */
+  --accent: #2dd4bf; /* on dark surfaces — 9.29:1 on --brand */
+  --accent-ink: #0f766e; /* as text on light — 5.06:1 on --surface-sunken */
+
+  --accent-2: #38bdf8; /* secondary accent: selection, highlights */
+  --accent-2-ink: #0369a1; /* its text-on-light counterpart */
+
+  /* Neutrals. Tinted very slightly toward the brand so greys don't look
+     detached from it. */
+  --neutral-0: #ffffff;
+  --neutral-50: #f6f7f9;
+  --neutral-200: #e3e6ea;
+  --neutral-600: #66707e;
+  --neutral-900: #131a24;
+
+  /* ========================================================================
+     LAYER 2 — SEMANTIC
+     Roles, not colours. Components reference these, never layer 1 directly.
+     A light/dark switch is a matter of redefining this block.
+     ===================================================================== */
+
+  --surface: var(--neutral-0); /* cards, panels, table backgrounds */
+  --surface-sunken: var(--neutral-50); /* page background */
+  --surface-inverse: var(--brand); /* stage, pool */
+  --surface-chrome: var(--neutral-0); /* top bar — light, not a colour slab */
+  --surface-inverse-2: var(--brand-dark); /* deeper inverse areas */
+
+  --text: var(--neutral-900);
+  --text-muted: var(--neutral-600);
+  --text-on-inverse: var(--neutral-0);
+  --text-on-inverse-muted: rgba(255, 255, 255, 0.66);
+
+  --border: var(--neutral-200);
+  /* A quieter rule for separating rows and bands, where a full border would
+     read as a box. Boundaries that identify a *control* still use --border,
+     which keeps them at the 3:1 WCAG 1.4.11 needs. */
+  --border-subtle: rgba(19, 26, 36, 0.08);
+  --border-inverse: rgba(255, 255, 255, 0.16);
+
+  --interactive: var(--brand); /* buttons, active tabs */
+  --interactive-hover: var(--brand-dark);
+  --on-interactive: var(--accent); /* text/icons on an interactive fill */
+
+  --focus-ring: var(--accent-2);
+
+  /* ========================================================================
+     LAYER 3 — STATUS
+     Deliberately independent of brand: these encode meaning. Rebranding a
+     difficulty scale or an injury flag costs comprehension for no gain.
+     ===================================================================== */
+
+  --status-ok: #0b7a41;
+  --status-ok-bg: rgba(11, 122, 65, 0.12);
+  --status-warn: #8a5a00;
+  --status-warn-bg: rgba(255, 193, 7, 0.16);
+  --status-bad: #c2185b;
+  --status-bad-bg: rgba(194, 24, 91, 0.1);
+
+  /* Fixture difficulty, easy (1) to hard (5). Paired fg/bg, all verified at
+     or above 4.5:1 — see the contrast check in the PR for #13. */
+  --fdr-1-bg: #00e07b;
+  --fdr-1-fg: #04291b;
+  --fdr-2-bg: #a1e86b;
+  --fdr-2-fg: #213207;
+  --fdr-3-bg: #e4e4e8;
+  --fdr-3-fg: #3b3b45;
+  --fdr-4-bg: #ff5a5f;
+  --fdr-4-fg: #3d0308;
+  --fdr-5-bg: #80072d;
+  --fdr-5-fg: #ffd9e2;
+
+  /* Position pills */
+  --pos-gkp-bg: #fff3cd;
+  --pos-gkp-border: #f2dd9a;
+  --pos-def-bg: #d9f7ec;
+  --pos-def-border: #a7e8cf;
+  --pos-mid-bg: #dceeff;
+  --pos-mid-border: #a9d4f5;
+  --pos-fwd-bg: #ffe0e6;
+  --pos-fwd-border: #f5b3c1;
+
+  /* ========================================================================
+     LAYER 4 — COMPONENT
+     Pitch and card specifics. The turf stays green by design: a football
+     pitch reads as green, and recolouring it looks broken rather than
+     branded. Sizing tokens live in styles/pitch.css alongside the layout.
+     ===================================================================== */
+
+  --turf-light: #05c449;
+  --turf-dark: #04b342;
+  --turf-edge: #01461f;
+  --turf-line: rgba(255, 255, 255, 0.95);
+
+  --board-from: #2ee6f6;
+  --board-to: #4f5ff0;
+  --goal-net: rgba(255, 255, 255, 0.75);
+  --goal-frame: #ffffff;
+
+  /* Backdrop behind the cut-out player photo. Deliberately a mid slate rather
+     than --brand itself: photos are players in club kits, and a navy backdrop
+     swallows the navy-and-dark kits. This sits far enough from both white and
+     black shirts to keep every player's outline readable. Bench cards use a
+     darker pair so "not playing" is visible without reading the numbers. */
+  --card-tile-top: #26374f;
+  --card-tile-bottom: #16243a;
+  --card-bench-tile-top: #1b2739;
+  --card-bench-tile-bottom: #101a2b;
+  --bench-band: rgba(8, 14, 26, 0.42);
+
+  /* ========================================================================
+     TYPOGRAPHY
+     ===================================================================== */
+
+  --font-body: 'Reddit Sans', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, Consolas, monospace;
+
+  /* ========================================================================
+     LAYER 5 — SPACE
+     Named by pixel value, so --space-8 is 8px and there is nothing to learn.
+     The 4px steps are the rhythm; the rest exist because the app uses them.
+     ===================================================================== */
+
+  --space-0: 0;
+  --space-1: 1px; /* off-rhythm: hairline nudges */
+  --space-2: 2px;
+  --space-3: 3px; /* off-rhythm */
+  --space-4: 4px;
+  --space-5: 5px; /* off-rhythm — 16 uses, the most common odd value */
+  --space-6: 6px;
+  --space-7: 7px; /* off-rhythm */
+  --space-8: 8px;
+  --space-9: 9px; /* off-rhythm */
+  --space-10: 10px;
+  --space-11: 11px; /* off-rhythm */
+  --space-12: 12px;
+  --space-13: 13px; /* off-rhythm */
+  --space-14: 14px;
+  --space-16: 16px;
+  --space-18: 18px;
+  --space-20: 20px;
+  --space-22: 22px;
+  --space-24: 24px;
+  --space-26: 26px;
+  --space-28: 28px;
+  --space-30: 30px;
+  --space-32: 32px;
+  --space-40: 40px;
+  --space-48: 48px;
+  --space-60: 60px;
+
+  /* Roles, so a layout can say what it means rather than how big it is. */
+  --gap-tight: var(--space-4);
+  --gap: var(--space-8);
+  --gap-loose: var(--space-16);
+  --pad-control: var(--space-8) var(--space-10); /* buttons, inputs, options */
+  --pad-panel: var(--space-16);
+  --pad-section: var(--space-20);
+
+  /* ========================================================================
+     LAYER 6 — RADIUS
+     ===================================================================== */
+
+  --radius-0: 0;
+  --radius-2: 2px;
+  --radius-3: 3px;
+  --radius-4: 4px;
+  --radius-5: 5px;
+  --radius-6: 6px;
+  --radius-7: 7px;
+  --radius-8: 8px;
+  --radius-9: 9px;
+  --radius-10: 10px;
+  --radius-11: 11px;
+  --radius-12: 12px;
+  --radius-14: 14px;
+  --radius-pill: 999px;
+  --radius-circle: 50%;
+
+  /* Roles */
+  --radius-control: var(--radius-8); /* inputs, buttons */
+  --radius-card: var(--radius-12);
+  --radius-panel: var(--radius-14);
+
+  /* ========================================================================
+     LAYER 7 — ELEVATION
+     A height scale, not a list of shadows. Higher number = further off the
+     page. The dark values are deliberate: most of these sit on the navy
+     stage, where a soft black shadow is the only thing that reads.
+     ===================================================================== */
+
+  --elevation-0: none;
+  --elevation-1: 0 1px 3px rgba(0, 0, 0, 0.3); /* resting card on turf */
+  --elevation-2: 0 2px 6px rgba(0, 0, 0, 0.34); /* lifted card */
+  --elevation-3: 0 8px 24px rgba(0, 0, 0, 0.28); /* menus */
+  --elevation-4: 0 12px 32px rgba(0, 0, 0, 0.18); /* popovers on light */
+  --elevation-5: 0 10px 28px rgba(0, 0, 0, 0.4); /* raised panel */
+  --elevation-6: 0 20px 60px rgba(0, 0, 0, 0.45); /* modal */
+  --elevation-7: 0 24px 60px rgba(0, 0, 0, 0.45); /* tallest modal */
+  --elevation-drawer: -10px 0 40px rgba(0, 0, 0, 0.4); /* casts sideways */
+  --elevation-drawer-soft: -10px 0 40px rgba(0, 0, 0, 0.35);
+  --ring-current: inset 0 0 0 1px currentColor; /* selection ring */
+
+  /* ========================================================================
+     LAYER 8 — Z-INDEX
+     The whole point of this layer: never write a bare z-index again. Adding a
+     surface means picking the name above the thing it must clear, and the
+     order below is the answer to "what covers what".
+     ===================================================================== */
+
+  --z-raised: 1; /* lifted out of normal flow */
+  --z-sticky: 2; /* sticky table headers and first columns */
+  --z-sticky-cross: 3; /* a cell in two sticky tracks at once */
+  --z-sticky-corner: 4; /* the corner where both tracks meet */
+  --z-sticky-band: 10; /* filter bar pinned under the top bar */
+  --z-stage: 20; /* pitch furniture above the turf */
+  --z-floating-bar: 30; /* the compare bar */
+  --z-drawer-backdrop: 40;
+  --z-drawer: 45;
+  --z-modal: 60;
+  --z-modal-elevated: 70; /* a modal that may open above another */
+  --z-popover: 80; /* portalled dropdowns — must clear everything */
+
+  /* ========================================================================
+     LAYER 9 — TYPE
+     Sizes are named by role. The app leans on 11–14px, so those carry the
+     descriptive names and the extremes are labelled by size.
+     ===================================================================== */
+
+  --font-size-3xs: 9px; /* pitch card micro-labels */
+  --font-size-2xs: 10px; /* badges, pills */
+  --font-size-xs: 11px; /* uppercase field labels */
+  --font-size-sm: 12px; /* dense table text */
+  --font-size-base: 13px; /* body default in this app */
+  --font-size-md: 14px; /* comfortable body */
+  --font-size-lg: 15px;
+  --font-size-xl: 16px;
+  --font-size-2xl: 17px;
+  --font-size-3xl: 18px;
+  --font-size-4xl: 20px;
+  --font-size-5xl: 22px;
+  --font-size-6xl: 24px;
+  --font-size-7xl: 26px;
+
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  --line-height-none: 1; /* icons, badges, single-line numerals */
+  --line-height-tight: 1.2;
+  --line-height-snug: 1.4;
+  --line-height-normal: 1.45;
+  --line-height-relaxed: 1.5;
+
+  /* Tracking is only ever applied to uppercase labels here, which is a rule
+     worth encoding rather than repeating as a magic em value. */
+  --tracking-tighter: -0.02em; /* large headings */
+  --tracking-tight: 0;
+  --tracking-wide: 0.02em;
+  --tracking-caps: 0.06em; /* uppercase labels — the common case */
+  --tracking-caps-loose: 0.07em;
+  --tracking-caps-looser: 0.08em;
+  --tracking-caps-wide: 0.05em;
+
+  /* ========================================================================
+     LAYER 10 — BORDER
+     ===================================================================== */
+
+  --border-width: 1px;
+  --border-width-thick: 2px;
+
+  /* ========================================================================
+     LAYER 11 — MOTION
+     ===================================================================== */
+
+  --duration-fast: 0.14s;
+  --duration-base: 0.2s;
+  --ease: ease;
+}
