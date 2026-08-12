@@ -14,6 +14,24 @@ const TABS = [
   { id: 'fixtures', label: 'Fixtures', Component: Fixtures },
 ]
 
+/**
+ * "Fri 21 Aug, 18:30" in the reader's own timezone — the API sends UTC, and a
+ * deadline shown in the wrong zone is worse than no deadline at all.
+ */
+function formatDeadline(iso) {
+  if (!iso) return null
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return null
+
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
+
 function Dashboard() {
   const { loading, error, retry, currentEvent } = useFpl()
   const [activeTab, setActiveTab] = useState(TABS[0].id)
@@ -61,6 +79,10 @@ function Dashboard() {
   const tab = TABS.find((t) => t.id === activeTab)
   const { Component } = tab
 
+  // The gameweek name alone does not say how long you have, which is the part
+  // that actually decides whether you need to act now.
+  const deadline = formatDeadline(currentEvent?.deadline_time)
+
   return (
     <>
       {/* One row rather than two stacked bands: wordmark, then navigation,
@@ -87,9 +109,16 @@ function Dashboard() {
           </nav>
 
           {currentEvent && (
-            <span className="gw-pill">
-              {currentEvent.is_current ? 'Live' : 'Next'} · {currentEvent.name}
-            </span>
+            <div className="gw">
+              <span className="gw__label">
+                {currentEvent.is_current ? 'Live' : 'Next'} · {currentEvent.name}
+              </span>
+              {deadline && (
+                <time className="gw__deadline" dateTime={currentEvent.deadline_time}>
+                  {currentEvent.is_current ? 'In progress' : `Deadline ${deadline}`}
+                </time>
+              )}
+            </div>
           )}
         </div>
       </header>
