@@ -106,17 +106,71 @@ export default function PitchSurface() {
         fill="url(#boardGrad)"
       />
 
-      {/* Goal: posts and netting, straddling the far edge */}
+      {/* Goal: a frame with depth, standing on the far goal line.
+          The mouth is the near rectangle on the line (y=0); the net recedes
+          up and back to a smaller rectangle, so it reads as a box rather than
+          a flat hatch. The four struts connect the two. */}
       <g>
-        <rect
-          x="418"
-          y={-BANNER_H + 6}
-          width="164"
-          height={BANNER_H - 6}
-          fill="url(#netPattern)"
-          stroke="var(--goal-frame)"
-          strokeWidth="3.5"
-        />
+        {(() => {
+          // The goal is ~40% of the six-yard box width (7.32m in an 18.32m
+          // box), so it must sit clearly narrower than the box, centred on it.
+          const MOUTH_L = 452
+          const MOUTH_R = 548
+          const MOUTH_TOP = -36 // crossbar height above the line
+          const DEPTH = 18 // how far the net sits back
+          const TAPER = 8 // perspective narrowing of the back frame
+          const backL = MOUTH_L + TAPER
+          const backR = MOUTH_R - TAPER
+          const backBottom = -DEPTH
+          const backTop = MOUTH_TOP - DEPTH * 0.5
+          return (
+            <>
+              {/* Net: the receding faces, filled with mesh */}
+              <polygon
+                points={`${MOUTH_L},0 ${MOUTH_R},0 ${backR},${backBottom} ${backL},${backBottom}`}
+                fill="url(#netPattern)"
+                opacity="0.9"
+              />
+              <polygon
+                points={`${MOUTH_L},0 ${MOUTH_L},${MOUTH_TOP} ${backL},${backTop} ${backL},${backBottom}`}
+                fill="url(#netPattern)"
+              />
+              <polygon
+                points={`${MOUTH_R},0 ${MOUTH_R},${MOUTH_TOP} ${backR},${backTop} ${backR},${backBottom}`}
+                fill="url(#netPattern)"
+              />
+              <polygon
+                points={`${MOUTH_L},${MOUTH_TOP} ${MOUTH_R},${MOUTH_TOP} ${backR},${backTop} ${backL},${backTop}`}
+                fill="url(#netPattern)"
+                opacity="0.85"
+              />
+              {/* Back frame, dimmer since it is further away */}
+              <polygon
+                points={`${backL},${backBottom} ${backR},${backBottom} ${backR},${backTop} ${backL},${backTop}`}
+                fill="none"
+                stroke="var(--goal-frame)"
+                strokeOpacity="0.5"
+                strokeWidth="2"
+              />
+              {/* Depth struts from the mouth to the back frame */}
+              <g stroke="var(--goal-frame)" strokeOpacity="0.5" strokeWidth="2">
+                <line x1={MOUTH_L} y1="0" x2={backL} y2={backBottom} />
+                <line x1={MOUTH_R} y1="0" x2={backR} y2={backBottom} />
+                <line x1={MOUTH_L} y1={MOUTH_TOP} x2={backL} y2={backTop} />
+                <line x1={MOUTH_R} y1={MOUTH_TOP} x2={backR} y2={backTop} />
+              </g>
+              {/* Front frame: posts and crossbar, the brightest part */}
+              <path
+                d={`M ${MOUTH_L} 0 L ${MOUTH_L} ${MOUTH_TOP} L ${MOUTH_R} ${MOUTH_TOP} L ${MOUTH_R} 0`}
+                fill="none"
+                stroke="var(--goal-frame)"
+                strokeWidth="4"
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+            </>
+          )
+        })()}
       </g>
 
       {/* Turf: mowing bands */}
