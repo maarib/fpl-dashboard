@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Player Explorer — v2 direction</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Reddit+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        /* carried from tokens.css */
+        --ink: #131a24;
+        --muted: #6b7480;
+        --faint: #99a1ad;
+        --surface: #ffffff;
+        --sunken: #eef1f6;
+        --line: rgba(19, 26, 36, 0.06);
+
+        /* NEW — the bluish-gray canvas the UI pieces float on */
+        --app-bg: #e6eaf1;
+
+        /* club colours (mock set) */
+        --mun: #da291c;
+        --mci: #6cabdd;
+        --ars: #ef0107;
+        --che: #034694;
+        --hul: #f5a12d;
+
+        --sh-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 6px 20px rgba(16, 24, 40, 0.05);
+        --sh-soft: 0 1px 2px rgba(16, 24, 40, 0.05);
+
+        --radius: 16px;
+        --radius-lg: 22px;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { margin: 0; }
+      body {
+        font-family: 'Reddit Sans', system-ui, sans-serif;
+        background: var(--app-bg);
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+      }
+      .app { display: grid; grid-template-columns: 248px 1fr; min-height: 100vh; }
+
+      /* ---------------- sidebar (Claude-app inspired) ---------------- */
+      .side {
+        position: sticky; top: 0; height: 100vh;
+        padding: 20px 14px;
+        display: flex; flex-direction: column; gap: 4px;
+      }
+      .brand {
+        display: flex; align-items: center; gap: 9px;
+        padding: 6px 10px 18px;
+        font-weight: 800; font-size: 18px; letter-spacing: -0.02em;
+      }
+      .brand .dot { width: 22px; height: 22px; border-radius: 7px;
+        background: linear-gradient(135deg, #0f1b2d, #24425f); }
+      .brand .dot::after { content: ''; }
+      .navitem {
+        display: flex; align-items: center; gap: 11px;
+        padding: 9px 11px; border-radius: 11px;
+        color: var(--muted); font-weight: 600; font-size: 14px;
+        cursor: pointer; user-select: none;
+      }
+      .navitem svg { width: 18px; height: 18px; flex: none; }
+      .navitem:hover { background: rgba(19, 26, 36, 0.04); color: var(--ink); }
+      .navitem.active { background: var(--surface); color: var(--ink); box-shadow: var(--sh-soft); font-weight: 700; }
+      .navitem.active svg { color: #0f766e; }
+      .side .spacer { flex: 1; }
+      .gwcard {
+        background: var(--surface); border-radius: 14px; padding: 12px 13px;
+        box-shadow: var(--sh-soft);
+      }
+      .gwcard .k { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+      .gwcard .v { font-weight: 800; font-size: 15px; margin-top: 3px; letter-spacing: -0.01em; }
+      .gwcard .live { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; font-size: 12px; font-weight: 600; color: #0f766e; }
+      .gwcard .live .pulse { width: 7px; height: 7px; border-radius: 50%; background: #10b981; }
+
+      /* ---------------- main ---------------- */
+      .main { padding: 26px 30px 60px; max-width: 900px; }
+      .pagehead { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 18px; }
+      .pagehead h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+      .pagehead .sub { color: var(--muted); font-size: 13px; font-weight: 500; margin-top: 3px; }
+
+      /* filters — surface piece, no borders */
+      .filters {
+        display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+        background: var(--surface); border-radius: var(--radius); padding: 10px;
+        box-shadow: var(--sh-soft); margin-bottom: 22px;
+      }
+      .search { flex: 1; min-width: 180px; display: flex; align-items: center; gap: 8px;
+        background: var(--sunken); border-radius: 11px; padding: 9px 12px; color: var(--muted); }
+      .search input { border: 0; background: transparent; outline: none; font: inherit; color: var(--ink); width: 100%; }
+      .search svg { width: 15px; height: 15px; flex: none; }
+      .chip {
+        display: inline-flex; align-items: center; gap: 7px;
+        background: var(--sunken); border-radius: 11px; padding: 9px 12px;
+        font-size: 13px; font-weight: 600; color: var(--ink); cursor: pointer;
+      }
+      .chip .cap { color: var(--muted); font-weight: 600; }
+      .chip svg { width: 13px; height: 13px; color: var(--muted); }
+
+      /* ---------------- featured hero (FIFA-mobile energy) ---------------- */
+      .hero {
+        position: relative; overflow: hidden;
+        border-radius: var(--radius-lg); margin-bottom: 22px;
+        min-height: 168px; display: flex; align-items: stretch;
+        box-shadow: var(--sh-card);
+        --c: var(--mun);
+        background:
+          radial-gradient(120% 140% at 88% 30%, color-mix(in srgb, var(--c) 55%, #0b1320) 0%, #0b1320 62%);
+      }
+      .hero .body { position: relative; z-index: 2; padding: 20px 22px; color: #fff; display: flex; flex-direction: column; justify-content: space-between; }
+      .hero .tag { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.7); }
+      .hero .name { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.02; margin-top: 6px; }
+      .hero .meta { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; color: rgba(255,255,255,0.82); font-weight: 600; }
+      .hero .meta .postag { padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+      .hero .statline { display: flex; gap: 26px; margin-top: 16px; }
+      .hero .stat .n { font-size: 22px; font-weight: 800; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+      .hero .stat .l { font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-top: 1px; }
+      .hero .ptsbig { position: absolute; right: 168px; top: 50%; transform: translateY(-50%); z-index: 2; text-align: right; }
+      .hero .ptsbig .n { font-size: 74px; font-weight: 800; line-height: 0.82; letter-spacing: -0.04em; color: #fff; font-variant-numeric: tabular-nums; }
+      .hero .ptsbig .l { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.65); }
+      .hero .photo { position: absolute; right: 6px; bottom: 0; z-index: 1; height: 190px; width: auto; filter: drop-shadow(0 8px 14px rgba(0,0,0,0.35)); }
+      .hero .photo.fallback { right: 40px; bottom: 14px; height: 150px; width: 150px; border-radius: 50%;
+        background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--c) 70%, #fff) 0%, var(--c) 70%); }
+
+      /* ---------------- ranked list ---------------- */
+      .listhead { display: flex; align-items: center; justify-content: space-between; margin: 0 6px 10px; }
+      .listhead .t { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+      .list { display: flex; flex-direction: column; gap: 9px; }
+      .prow {
+        position: relative; display: flex; align-items: center; gap: 14px;
+        background: var(--surface); border-radius: var(--radius); padding: 12px 16px 12px 14px;
+        box-shadow: var(--sh-card); cursor: pointer; transition: transform 0.12s ease, box-shadow 0.12s ease;
+      }
+      .prow:hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(16,24,40,0.05), 0 10px 26px rgba(16,24,40,0.08); }
+      .prow::before { content: ''; position: absolute; left: 0; top: 12px; bottom: 12px; width: 4px; border-radius: 0 4px 4px 0; background: var(--c); }
+      .prow .rank { width: 18px; text-align: center; font-size: 13px; font-weight: 700; color: var(--faint); font-variant-numeric: tabular-nums; }
+      .avatar { position: relative; width: 52px; height: 52px; border-radius: 50%; flex: none; overflow: hidden;
+        background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--c) 42%, #fff) 0%, color-mix(in srgb, var(--c) 78%, #0b1320) 100%); }
+      .avatar img { position: absolute; inset: 0; width: 100%; height: 118%; object-fit: cover; object-position: top center; }
+      .avatar .mono { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 17px; }
+      .who { min-width: 0; }
+      .who .nm { font-weight: 700; font-size: 15px; letter-spacing: -0.01em; }
+      .who .mt { display: flex; align-items: center; gap: 7px; margin-top: 3px; font-size: 12px; color: var(--muted); font-weight: 600; }
+      .crest { width: 15px; height: 15px; border-radius: 4px; flex: none; display: grid; place-items: center; color: #fff; font-size: 8px; font-weight: 800; }
+      .postag { padding: 1px 7px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: 0.03em; }
+      .p-gkp { background: var(--pos-gkp, #fff3cd); color: #8a5a00; }
+      .p-def { background: #d9f7ec; color: #04785a; }
+      .p-mid { background: #dceeff; color: #1d4ed8; }
+      .p-fwd { background: #ffe0e6; color: #be123c; }
+      .spacer { flex: 1; }
+      .price { text-align: right; font-weight: 700; font-size: 14px; letter-spacing: -0.01em; }
+      .price .l { display: block; font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); margin-top: 1px; }
+      .form { text-align: right; min-width: 44px; }
+      .form .n { font-weight: 700; font-size: 14px; color: #04785a; }
+      .form .l { display: block; font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); margin-top: 1px; }
+      .pts { text-align: right; min-width: 58px; padding-left: 6px; }
+      .pts .n { font-size: 28px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+      .pts .l { display: block; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-top: 2px; }
+      .cbadge { position: absolute; top: 9px; left: 30px; width: 16px; height: 16px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 9px; font-weight: 800; display: grid; place-items: center; z-index: 3; }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <!-- ===== SIDEBAR ===== -->
+      <aside class="side">
+        <div class="brand"><span class="dot"></span> FPL</div>
+
+        <div class="navitem active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          Player Explorer
+        </div>
+        <div class="navitem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7l4-3 4 2 4-2 4 3-3 3v9H7v-9L4 7z"/></svg>
+          My Team
+        </div>
+        <div class="navitem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+          Fixtures
+        </div>
+
+        <div class="spacer"></div>
+        <div class="gwcard">
+          <div class="k">Next deadline</div>
+          <div class="v">Sat 30 Aug, 11:00</div>
+          <div class="live"><span class="pulse"></span> Gameweek 2 · Live</div>
+        </div>
+      </aside>
+
+      <!-- ===== MAIN ===== -->
+      <main class="main">
+        <div class="pagehead">
+          <div>
+            <h1>Player Explorer</h1>
+            <div class="sub">629 players · sorted by total points</div>
+          </div>
+        </div>
+
+        <div class="filters">
+          <label class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+            <input placeholder="Search players" />
+          </label>
+          <span class="chip"><span class="cap">Position</span> All <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></span>
+          <span class="chip"><span class="cap">Price</span> £4.0–15.5m <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></span>
+          <span class="chip"><span class="cap">Sort</span> Points <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></span>
+        </div>
+
+        <!-- FEATURED -->
+        <div class="hero" style="--c: var(--mun)">
+          <div class="body">
+            <div class="tag">◆ Top scorer · Gameweek 2</div>
+            <div>
+              <div class="name">Bruno Fernandes</div>
+              <div class="meta">
+                <span class="postag p-mid">MID</span> Manchester United · £12.0m
+              </div>
+            </div>
+            <div class="statline">
+              <div class="stat"><div class="n">8.4</div><div class="l">Form</div></div>
+              <div class="stat"><div class="n">48.3%</div><div class="l">Owned</div></div>
+              <div class="stat"><div class="n">23.1</div><div class="l">xGI</div></div>
+            </div>
+          </div>
+          <div class="ptsbig"><div class="n">25</div><div class="l">Pts</div></div>
+          <img class="photo" src="https://resources.premierleague.com/premierleague/photos/players/250x250/p141746.png" alt="" onerror="this.classList.add('fallback'); this.removeAttribute('src');" />
+        </div>
+
+        <div class="listhead"><span class="t">Ranked</span><span class="t">Pts</span></div>
+
+        <!-- ROWS -->
+        <div class="list">
+          <div class="prow" style="--c: var(--mci)">
+            <span class="rank">2</span>
+            <div class="avatar"><span class="mono">C</span><img src="https://resources.premierleague.com/premierleague/photos/players/110x140/p000000.png" alt="" onerror="this.remove()"/></div>
+            <div class="who">
+              <div class="nm">Cherki</div>
+              <div class="mt"><span class="crest" style="background:var(--mci)">MCI</span> Man City <span class="postag p-mid">MID</span></div>
+            </div>
+            <span class="spacer"></span>
+            <div class="form"><span class="n">7.2</span><span class="l">Form</span></div>
+            <div class="price">£7.7m<span class="l">Price</span></div>
+            <div class="pts"><span class="n">22</span><span class="l">Pts</span></div>
+          </div>
+
+          <div class="prow" style="--c: var(--ars)">
+            <span class="rank">3</span>
+            <div class="avatar"><span class="mono">C</span></div>
+            <div class="who">
+              <div class="nm">Calafiori</div>
+              <div class="mt"><span class="crest" style="background:var(--ars)">ARS</span> Arsenal <span class="postag p-def">DEF</span></div>
+            </div>
+            <span class="spacer"></span>
+            <div class="form"><span class="n">6.8</span><span class="l">Form</span></div>
+            <div class="price">£5.6m<span class="l">Price</span></div>
+            <div class="pts"><span class="n">20</span><span class="l">Pts</span></div>
+          </div>
+
+          <div class="prow" style="--c: var(--ars)">
+            <span class="rank">4</span>
+            <div class="avatar"><span class="mono">S</span><img src="https://resources.premierleague.com/premierleague/photos/players/110x140/p223340.png" alt="" onerror="this.remove()"/></div>
+            <div class="who">
+              <div class="nm">Saka</div>
+              <div class="mt"><span class="crest" style="background:var(--ars)">ARS</span> Arsenal <span class="postag p-mid">MID</span></div>
+            </div>
+            <span class="spacer"></span>
+            <div class="form"><span class="n">7.0</span><span class="l">Form</span></div>
+            <div class="price">£9.5m<span class="l">Price</span></div>
+            <div class="pts"><span class="n">20</span><span class="l">Pts</span></div>
+          </div>
+
+          <div class="prow" style="--c: var(--che)">
+            <span class="rank">5</span>
+            <div class="avatar"><span class="mono">P</span><img src="https://resources.premierleague.com/premierleague/photos/players/110x140/p244851.png" alt="" onerror="this.remove()"/></div>
+            <div class="who">
+              <div class="nm">Palmer</div>
+              <div class="mt"><span class="crest" style="background:var(--che)">CHE</span> Chelsea <span class="postag p-mid">MID</span></div>
+            </div>
+            <span class="spacer"></span>
+            <div class="form"><span class="n">6.4</span><span class="l">Form</span></div>
+            <div class="price">£9.6m<span class="l">Price</span></div>
+            <div class="pts"><span class="n">20</span><span class="l">Pts</span></div>
+          </div>
+
+          <div class="prow" style="--c: var(--che)">
+            <span class="rank">6</span>
+            <div class="avatar"><span class="mono">J</span><img src="https://resources.premierleague.com/premierleague/photos/players/110x140/p475168.png" alt="" onerror="this.remove()"/></div>
+            <div class="who">
+              <div class="nm">João Pedro</div>
+              <div class="mt"><span class="crest" style="background:var(--che)">CHE</span> Chelsea <span class="postag p-fwd">FWD</span></div>
+            </div>
+            <span class="spacer"></span>
+            <div class="form"><span class="n">6.1</span><span class="l">Form</span></div>
+            <div class="price">£7.7m<span class="l">Price</span></div>
+            <div class="pts"><span class="n">20</span><span class="l">Pts</span></div>
+          </div>
+
+          <div class="prow" style="--c: var(--hul)">
+            <span class="rank">7</span>
+            <div class="avatar"><span class="mono">A</span></div>
+            <div class="who">
+              <div class="nm">Ajayi</div>
+              <div class="mt"><span class="crest" style="background:var(--hul)">HUL</span> Hull City <span class="postag p-def">DEF</span></div>
+            </div>
+            <span class="spacer"></span>
+            <div class="form"><span class="n">6.0</span><span class="l">Form</span></div>
+            <div class="price">£4.1m<span class="l">Price</span></div>
+            <div class="pts"><span class="n">20</span><span class="l">Pts</span></div>
+          </div>
+
+          <div class="prow" style="--c: var(--hul)">
+            <span class="rank">8</span>
+            <div class="avatar"><span class="mono">T</span></div>
+            <div class="who">
+              <div class="nm">Tzolakis</div>
+              <div class="mt"><span class="crest" style="background:var(--hul)">HUL</span> Hull City <span class="postag p-gkp">GKP</span></div>
+            </div>
+            <span class="spacer"></span>
+            <div class="form"><span class="n">5.4</span><span class="l">Form</span></div>
+            <div class="price">£4.5m<span class="l">Price</span></div>
+            <div class="pts"><span class="n">20</span><span class="l">Pts</span></div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
