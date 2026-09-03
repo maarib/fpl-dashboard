@@ -91,6 +91,9 @@ function Dashboard() {
       <header className="topbar">
         <div className="topbar__inner">
           <h1 className="wordmark">
+            <svg className="wordmark__spark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 0l2.4 7.2L21.6 4.8 16.8 12l4.8 7.2-7.2-2.4L12 24l-2.4-7.2L2.4 19.2 7.2 12 2.4 4.8l7.2 2.4z" />
+            </svg>
             FPL <span>Dashboard</span>
           </h1>
 
