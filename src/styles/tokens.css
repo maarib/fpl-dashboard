@@ -140,8 +140,11 @@
   --turf-edge: #01461f;
   --turf-line: rgba(255, 255, 255, 0.95);
 
-  --board-from: #2ee6f6;
-  --board-to: #4f5ff0;
+  /* Perimeter boards: a calm, desaturated slate rather than bright cyan/blue,
+     so the pitch scene sits quietly under the cream chrome. Kept dark enough
+     that the white goal net still reads against it. */
+  --board-from: #46586b;
+  --board-to: #364554;
   --goal-net: rgba(255, 255, 255, 0.75);
   --goal-frame: #ffffff;
 

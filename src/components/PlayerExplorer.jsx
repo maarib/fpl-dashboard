@@ -232,7 +232,7 @@ export default function PlayerExplorer() {
         <span>{sort.short || 'Pts'}</span>
       </div>
 
-      <ul className="prows">
+      <ul className="xrows">
         {listRows.map((player, i) => {
           const team = teamsById.get(player.team)
           const position = positionsById.get(player.element_type)
@@ -241,7 +241,7 @@ export default function PlayerExplorer() {
           return (
             <li key={player.id}>
               <div
-                className="prow"
+                className="xrow"
                 style={{ '--c': color }}
                 role="button"
                 tabIndex={0}
@@ -253,9 +253,9 @@ export default function PlayerExplorer() {
                   }
                 }}
               >
-                <span className="prow__rank">{featured ? i + 2 : i + 1}</span>
+                <span className="xrow__rank">{featured ? i + 2 : i + 1}</span>
                 <label
-                  className={`prow__pick${selected ? ' is-on' : ''}`}
+                  className={`xrow__pick${selected ? ' is-on' : ''}`}
                   title="Add to comparison"
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -268,11 +268,11 @@ export default function PlayerExplorer() {
                   />
                   <Avatar player={player} color={color} />
                 </label>
-                <span className="prow__who">
-                  <span className="prow__name">{player.web_name}</span>
-                  <span className="prow__meta">
-                    <span className="prow__club">
-                      <span className="prow__dot" style={{ background: color }} />
+                <span className="xrow__who">
+                  <span className="xrow__name">{player.web_name}</span>
+                  <span className="xrow__meta">
+                    <span className="xrow__club">
+                      <span className="xrow__dot" style={{ background: color }} />
                       {team?.short_name}
                     </span>
                     <span className={`pos pos--${position?.singular_name_short}`}>
@@ -280,16 +280,16 @@ export default function PlayerExplorer() {
                     </span>
                   </span>
                 </span>
-                <span className="prow__spacer" />
-                <span className="prow__metric">
+                <span className="xrow__spacer" />
+                <span className="xrow__metric">
                   <span className="n">{player.form}</span>
                   <span className="l">Form</span>
                 </span>
-                <span className="prow__metric prow__metric--hide-sm">
+                <span className="xrow__metric xrow__metric--hide-sm">
                   <span className="n">{formatPrice(player.now_cost)}</span>
                   <span className="l">Price</span>
                 </span>
-                <span className="prow__pts">
+                <span className="xrow__pts">
                   <span className="n">{renderBig(player)}</span>
                   <span className="l">{bigStat.short || 'Pts'}</span>
                 </span>

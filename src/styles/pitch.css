@@ -1414,3 +1414,77 @@
     font-size: var(--font-size-md);
   }
 }
+
+/* ==========================================================================
+   v1.1 REDESIGN — light stage & pool (no dark themes)
+
+   The stage, its controls, the List view and the player pool were all built
+   for a dark surface. The foundation flipped those surfaces to light, so their
+   white text and borders are remapped to ink here. The pitch turf and the
+   player cards standing on it are deliberately left alone — that is a green
+   broadcast scene, content rather than UI chrome.
+   ========================================================================== */
+
+.team-stage {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-subtle);
+}
+
+/* Pitch / List toggle */
+.view-toggle { background: var(--surface-sunken); border-color: var(--border-subtle); }
+.view-toggle__btn { color: var(--text-muted); }
+.view-toggle__btn:hover { color: var(--text); }
+.view-toggle__btn--active { background: var(--surface); color: var(--text); box-shadow: var(--elevation-1); }
+
+/* Stat selector */
+.stat-select { background: var(--surface-sunken); border-color: var(--border-subtle); color: var(--text); }
+.stat-select select { color: var(--text); }
+
+/* Squad meters — calm ink numbers, muted labels, no loud tinted pills */
+.stage-meter__value { background: transparent; color: var(--text); padding: var(--space-0); }
+.stage-meter--bad .stage-meter__value { background: transparent; color: var(--status-bad); }
+.stage-meter__label,
+.stage-note { color: var(--text-muted); }
+
+/* List view of the squad */
+.squad-list__head { background: var(--surface-sunken); color: var(--text-muted); }
+.squad-list__rows { background: transparent; border: 1px solid var(--border-subtle); }
+.srow { border-top-color: var(--border-subtle); }
+.srow--empty,
+.srow__sub { color: var(--text-muted); }
+.srow__action { border-color: var(--border); color: var(--text-muted); }
+
+/* Player pool */
+.pool { background: var(--surface); color: var(--text); }
+.pool-drawer { background: rgba(31, 30, 28, 0.35); }
+.pool-drawer__panel { background: var(--surface); }
+.pool-drawer__close { background: rgba(31, 30, 28, 0.06); color: var(--text); }
+.pool-drawer__close:hover { background: rgba(31, 30, 28, 0.12); }
+.pool__blurb,
+.pool__col,
+.pool__empty,
+.pool__more,
+.pool__label { color: var(--text-muted); }
+.pool__search,
+.pool__select,
+.pool__reset { background: var(--surface-sunken); color: var(--text); border: 1px solid var(--border-subtle); }
+.pool__search::placeholder { color: var(--text-muted); }
+.pool__count { background: var(--surface-sunken); color: var(--text); }
+.pool__grouphead { color: var(--text-muted); }
+.prow { border-bottom-color: var(--border-subtle); }
+.prow--picked { background: var(--status-ok-bg); }
+.prow__sub { color: var(--text-muted); }
+.prow__btn { border-color: var(--border); background: var(--surface-sunken); color: var(--text-muted); }
+.prow__btn:hover:not(:disabled) { background: var(--interactive); border-color: var(--interactive); color: var(--on-interactive); }
+
+/* Fixtures panel below the pitch (GameweekFixtures) — same dark→light flip */
+.gwfix { background: var(--surface); color: var(--text); border: 1px solid var(--border-subtle); }
+.gwfix__arrow { border-color: var(--border); background: var(--surface-sunken); color: var(--text); }
+.gwfix__gw span,
+.gwfix__tz,
+.gwfix__empty { color: var(--text-muted); }
+.gwfix__row { border-top-color: var(--border-subtle); }
+.gwfix__mid { border-color: var(--border-subtle); }
+.stage-meter__breakdown { color: var(--text-muted); }
+.stage-meter__breakdown .is-done { color: var(--status-ok); }

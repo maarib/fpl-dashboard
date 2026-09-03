@@ -551,20 +551,18 @@
   font-weight: var(--font-weight-medium);
 }
 
-/* The FDR grid is deliberately left on the old header treatment so this
-   redesign can be reviewed on the Explorer alone before it spreads. */
 .table--fdr thead th {
   text-align: center;
   padding: var(--space-11) var(--space-10);
-  background: var(--interactive);
-  color: var(--text-on-inverse);
-  border-bottom: 0;
+  background: var(--surface);
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
   top: var(--topbar-h, 61px);
 }
 
 .table--fdr .th-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-on-inverse);
+  background: rgba(31, 30, 28, 0.04);
+  color: var(--text);
 }
 .fdr__team-head {
   text-align: left !important;
@@ -1219,7 +1217,7 @@
   background: var(--surface-sunken);
 }
 
-.prow__info {
+.xrow__info {
   flex: none;
   width: 20px;
   height: 20px;
@@ -1233,7 +1231,7 @@
   line-height: var(--line-height-none);
   cursor: pointer;
 }
-.prow__info:hover {
+.xrow__info:hover {
   background: rgba(255, 255, 255, 0.2);
   color: #fff;
 }
@@ -1718,18 +1716,18 @@
 }
 
 /* Ranked list — flat, hairline rows, no cards */
-.prows { list-style: none; margin: 0; padding: 0; }
-.prow {
+.xrows { list-style: none; margin: 0; padding: 0; }
+.xrow {
   display: flex; align-items: center; gap: var(--space-14);
   padding: var(--space-12) var(--space-10);
   border-radius: var(--radius-md, 12px);
   border-bottom: 1px solid var(--border-subtle);
   cursor: pointer;
 }
-.prows li:last-child .prow { border-bottom: 0; }
-.prow:hover { background: rgba(31, 30, 28, 0.035); border-bottom-color: transparent; }
-.prow:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
-.prow__rank { width: var(--space-16); text-align: center; font-size: var(--font-size-base); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.xrows li:last-child .xrow { border-bottom: 0; }
+.xrow:hover { background: rgba(31, 30, 28, 0.035); border-bottom-color: transparent; }
+.xrow:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.xrow__rank { width: var(--space-16); text-align: center; font-size: var(--font-size-base); color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
 .pavatar {
   position: relative; width: 46px; height: 46px; border-radius: 50%; flex: none; overflow: hidden;
@@ -1739,31 +1737,31 @@
 .pavatar__mono { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-size: var(--font-size-xl); }
 
 /* Compare pick — checkbox overlaid on the avatar */
-.prow__pick { position: relative; cursor: pointer; flex: none; display: block; }
-.prow__pick input { position: absolute; top: -4px; left: -4px; width: 16px; height: 16px; margin: 0; opacity: 0; z-index: 2; cursor: pointer; }
-.prow__pick.is-on::after {
+.xrow__pick { position: relative; cursor: pointer; flex: none; display: block; }
+.xrow__pick input { position: absolute; top: -4px; left: -4px; width: 16px; height: 16px; margin: 0; opacity: 0; z-index: 2; cursor: pointer; }
+.xrow__pick.is-on::after {
   content: ''; position: absolute; inset: -2px; border-radius: 50%;
   box-shadow: 0 0 0 2px var(--surface-sunken), 0 0 0 4px var(--accent-ink);
 }
-.prow__pick:hover::before {
+.xrow__pick:hover::before {
   content: ''; position: absolute; inset: 0; border-radius: 50%; background: rgba(0, 0, 0, 0.15);
 }
 
-.prow__who { min-width: 0; }
-.prow__name { font-size: var(--font-size-lg); letter-spacing: var(--tracking-tight); }
-.prow__meta { display: flex; align-items: center; gap: var(--space-8); margin-top: var(--space-3); font-size: var(--font-size-sm); color: var(--text-muted); }
-.prow__club { display: inline-flex; align-items: center; gap: var(--space-6); }
-.prow__dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
-.prow__spacer { flex: 1; }
-.prow__metric { text-align: right; min-width: 50px; }
-.prow__metric .n { font-size: var(--font-size-md); font-variant-numeric: tabular-nums; }
-.prow__metric .l { display: block; font-size: var(--font-size-3xs); letter-spacing: var(--tracking-caps-loose); text-transform: uppercase; color: var(--text-muted); margin-top: var(--space-2); }
-.prow__pts { text-align: right; min-width: 50px; padding-left: var(--space-6); }
-.prow__pts .n { font-size: var(--font-size-7xl); letter-spacing: var(--tracking-tighter); line-height: 1; font-variant-numeric: tabular-nums; }
-.prow__pts .l { display: block; font-size: var(--font-size-3xs); letter-spacing: var(--tracking-caps-looser); text-transform: uppercase; color: var(--text-muted); margin-top: var(--space-2); }
+.xrow__who { min-width: 0; }
+.xrow__name { font-size: var(--font-size-lg); letter-spacing: var(--tracking-tight); }
+.xrow__meta { display: flex; align-items: center; gap: var(--space-8); margin-top: var(--space-3); font-size: var(--font-size-sm); color: var(--text-muted); }
+.xrow__club { display: inline-flex; align-items: center; gap: var(--space-6); }
+.xrow__dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.xrow__spacer { flex: 1; }
+.xrow__metric { text-align: right; min-width: 50px; }
+.xrow__metric .n { font-size: var(--font-size-md); font-variant-numeric: tabular-nums; }
+.xrow__metric .l { display: block; font-size: var(--font-size-3xs); letter-spacing: var(--tracking-caps-loose); text-transform: uppercase; color: var(--text-muted); margin-top: var(--space-2); }
+.xrow__pts { text-align: right; min-width: 50px; padding-left: var(--space-6); }
+.xrow__pts .n { font-size: var(--font-size-7xl); letter-spacing: var(--tracking-tighter); line-height: 1; font-variant-numeric: tabular-nums; }
+.xrow__pts .l { display: block; font-size: var(--font-size-3xs); letter-spacing: var(--tracking-caps-looser); text-transform: uppercase; color: var(--text-muted); margin-top: var(--space-2); }
 
 @media (max-width: 560px) {
-  .prow__metric--hide-sm { display: none; }
+  .xrow__metric--hide-sm { display: none; }
   .feature__photo { width: 116px; }
   .feature__stats { gap: var(--space-18); }
 }
