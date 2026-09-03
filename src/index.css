@@ -4,9 +4,9 @@
    in this file, or any other, should carry a raw hex. */
 
 :root {
-  font: 15px/1.45 var(--font-body);
+  font: var(--font-weight-medium) 15px/1.5 var(--font-body);
   color: var(--text);
-  background: var(--surface);
+  background: var(--surface-sunken);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -18,14 +18,17 @@
 body {
   margin: var(--space-0);
   min-height: 100svh;
-  background: var(--surface);
+  background: var(--surface-sunken);
 }
 
+/* Headings use the editorial serif; size and colour carry the hierarchy, so
+   the weight stays with everything else. */
 h1,
 h2 {
   margin: var(--space-0);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-tighter);
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-tight);
 }
 
 code {

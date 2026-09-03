@@ -30,26 +30,35 @@
      Change these and the whole app follows.
      ===================================================================== */
 
-  --brand: #0f1b2d; /* primary: header, chrome, dark surfaces */
-  --brand-dark: #0a1220; /* hovers, gradients, deeper panels */
+  /* The Claude-app language: a warm, light palette. Everything is light —
+     there is no dark theme (see the v1.1 redesign decision). Personality
+     comes from restraint, warmth and the one coral accent, not colour slabs. */
+  --cream: #f7f6f1; /* the warm canvas */
+  --paper: #ffffff; /* raised surfaces float on the cream */
+  --warm-ink: #1f1e1c; /* warm near-black text */
+  --warm-900: #2a2925;
+  --warm-600: #6e6a62; /* muted text */
+  --warm-400: #a8a49b; /* faint text, meta */
+  --warm-200: #e6e3da; /* control boundaries */
 
-  /* The accent needs two forms. Bright accents are light colours, so one that
-     reads well ON the navy cannot also be text on a white background — every
-     candidate measured below 2.5:1 there. `--accent` is for dark surfaces,
-     `--accent-ink` is the darkened form for text on light ones. */
-  --accent: #2dd4bf; /* on dark surfaces — 9.29:1 on --brand */
-  --accent-ink: #0f766e; /* as text on light — 5.06:1 on --surface-sunken */
+  --coral: #cc785c; /* the one brand accent — Claude's sparkle */
+  --coral-ink: #a24d31; /* darkened coral, ≥4.5:1 as text on light */
+  --blue: #4d6bfe; /* interactive affordances only: focus, toggles, checks */
+  --blue-ink: #3452d6;
 
-  --accent-2: #38bdf8; /* secondary accent: selection, highlights */
-  --accent-2-ink: #0369a1; /* its text-on-light counterpart */
-
-  /* Neutrals. Tinted very slightly toward the brand so greys don't look
-     detached from it. */
-  --neutral-0: #ffffff;
-  --neutral-50: #f6f7f9;
-  --neutral-200: #e3e6ea;
-  --neutral-600: #66707e;
-  --neutral-900: #131a24;
+  /* Existing token names are remapped onto the warm palette, so everything
+     that referenced them through the semantic layer follows automatically. */
+  --brand: var(--warm-ink);
+  --brand-dark: var(--warm-900);
+  --accent: var(--coral);
+  --accent-ink: var(--coral-ink);
+  --accent-2: var(--blue);
+  --accent-2-ink: var(--blue-ink);
+  --neutral-0: var(--paper);
+  --neutral-50: var(--cream);
+  --neutral-200: var(--warm-200);
+  --neutral-600: var(--warm-600);
+  --neutral-900: var(--warm-ink);
 
   /* ========================================================================
      LAYER 2 — SEMANTIC
@@ -57,29 +66,31 @@
      A light/dark switch is a matter of redefining this block.
      ===================================================================== */
 
-  --surface: var(--neutral-0); /* cards, panels, table backgrounds */
-  --surface-sunken: var(--neutral-50); /* page background */
-  --surface-inverse: var(--brand); /* stage, pool */
-  --surface-chrome: var(--neutral-0); /* top bar — light, not a colour slab */
-  --surface-inverse-2: var(--brand-dark); /* deeper inverse areas */
+  --surface: var(--paper); /* cards, panels, the featured hero */
+  --surface-sunken: var(--cream); /* page background */
+  --surface-chrome: var(--cream); /* top bar — part of the canvas, no slab */
+  /* "Inverse" surfaces used to be the dark navy stage/pool. With no dark
+     theme they become soft warm panels — lighter than the canvas, not darker
+     than it — and their text is the normal ink. */
+  --surface-inverse: #efece4;
+  --surface-inverse-2: #e7e3d9;
 
-  --text: var(--neutral-900);
-  --text-muted: var(--neutral-600);
-  --text-on-inverse: var(--neutral-0);
-  --text-on-inverse-muted: rgba(255, 255, 255, 0.66);
+  --text: var(--warm-ink);
+  --text-muted: var(--warm-600);
+  --text-on-inverse: var(--warm-ink);
+  --text-on-inverse-muted: var(--warm-600);
 
-  --border: var(--neutral-200);
+  --border: var(--warm-200);
   /* A quieter rule for separating rows and bands, where a full border would
-     read as a box. Boundaries that identify a *control* still use --border,
-     which keeps them at the 3:1 WCAG 1.4.11 needs. */
-  --border-subtle: rgba(19, 26, 36, 0.08);
-  --border-inverse: rgba(255, 255, 255, 0.16);
+     read as a box. Boundaries that identify a *control* still use --border. */
+  --border-subtle: rgba(31, 30, 28, 0.07);
+  --border-inverse: rgba(31, 30, 28, 0.1);
 
-  --interactive: var(--brand); /* buttons, active tabs */
-  --interactive-hover: var(--brand-dark);
-  --on-interactive: var(--accent); /* text/icons on an interactive fill */
+  --interactive: var(--warm-ink); /* primary buttons — near-black, Claude CTA */
+  --interactive-hover: var(--warm-900);
+  --on-interactive: var(--paper); /* text/icons on an interactive fill */
 
-  --focus-ring: var(--accent-2);
+  --focus-ring: var(--blue);
 
   /* ========================================================================
      LAYER 3 — STATUS
@@ -150,6 +161,7 @@
      ===================================================================== */
 
   --font-body: 'Reddit Sans', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Newsreader', Georgia, 'Times New Roman', serif; /* editorial headings */
   --font-mono: ui-monospace, Consolas, monospace;
 
   /* ========================================================================
@@ -226,16 +238,18 @@
      stage, where a soft black shadow is the only thing that reads.
      ===================================================================== */
 
+  /* Soft, warm shadows for a light app — elevation is used sparingly, so it
+     stays quiet where it appears. */
   --elevation-0: none;
-  --elevation-1: 0 1px 3px rgba(0, 0, 0, 0.3); /* resting card on turf */
-  --elevation-2: 0 2px 6px rgba(0, 0, 0, 0.34); /* lifted card */
-  --elevation-3: 0 8px 24px rgba(0, 0, 0, 0.28); /* menus */
-  --elevation-4: 0 12px 32px rgba(0, 0, 0, 0.18); /* popovers on light */
-  --elevation-5: 0 10px 28px rgba(0, 0, 0, 0.4); /* raised panel */
-  --elevation-6: 0 20px 60px rgba(0, 0, 0, 0.45); /* modal */
-  --elevation-7: 0 24px 60px rgba(0, 0, 0, 0.45); /* tallest modal */
-  --elevation-drawer: -10px 0 40px rgba(0, 0, 0, 0.4); /* casts sideways */
-  --elevation-drawer-soft: -10px 0 40px rgba(0, 0, 0, 0.35);
+  --elevation-1: 0 1px 2px rgba(31, 30, 28, 0.05); /* resting card */
+  --elevation-2: 0 1px 2px rgba(31, 30, 28, 0.04), 0 2px 6px rgba(31, 30, 28, 0.05); /* lifted */
+  --elevation-3: 0 4px 16px rgba(31, 30, 28, 0.08); /* menus */
+  --elevation-4: 0 8px 24px rgba(31, 30, 28, 0.09); /* popovers */
+  --elevation-5: 0 1px 2px rgba(31, 30, 28, 0.04), 0 10px 30px rgba(31, 30, 28, 0.06); /* raised panel */
+  --elevation-6: 0 12px 40px rgba(31, 30, 28, 0.12); /* modal */
+  --elevation-7: 0 16px 50px rgba(31, 30, 28, 0.14); /* tallest modal */
+  --elevation-drawer: -8px 0 30px rgba(31, 30, 28, 0.1); /* casts sideways */
+  --elevation-drawer-soft: -8px 0 30px rgba(31, 30, 28, 0.08);
   --ring-current: inset 0 0 0 1px currentColor; /* selection ring */
 
   /* ========================================================================
@@ -279,12 +293,16 @@
   --font-size-6xl: 24px;
   --font-size-7xl: 26px;
 
-  --font-weight-light: 300;
-  --font-weight-regular: 400;
+  /* No bold, anywhere. Hierarchy is carried by size and colour only — a hard
+     rule from the Claude direction — so every weight token resolves to a
+     single medium. Kept as separate names so intent stays legible in the CSS
+     and one could reintroduce contrast in one place if ever wanted. */
+  --font-weight-light: 500;
+  --font-weight-regular: 500;
   --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
-  --font-weight-extrabold: 800;
+  --font-weight-semibold: 500;
+  --font-weight-bold: 500;
+  --font-weight-extrabold: 500;
 
   --line-height-none: 1; /* icons, badges, single-line numerals */
   --line-height-tight: 1.2;
