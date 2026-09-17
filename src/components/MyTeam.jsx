@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import MatchdayNav from './MatchdayNav'
 import SquadBuilder from './SquadBuilder'
 import TeamLookup from './TeamLookup'
 import '../styles/pitch.css'
@@ -17,6 +18,8 @@ export default function MyTeam() {
 
   return (
     <section className="myteam">
+      <MatchdayNav />
+
       <div className="mode-switch" role="tablist" aria-label="Squad mode">
         {MODES.map((m) => (
           <button

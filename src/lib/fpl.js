@@ -59,6 +59,21 @@ export function nextFixtureForTeam(fixtures, teamId, fromEvent) {
   return upcoming[0] ? fixtureFromTeamView(upcoming[0], teamId) : null
 }
 
+/** The next `n` upcoming fixtures for a team, from the row-team's point of view. */
+export function nextFixturesForTeam(fixtures, teamId, fromEvent, n = 3) {
+  return fixtures
+    .filter(
+      (f) =>
+        f.event != null &&
+        f.event >= fromEvent &&
+        !f.finished &&
+        (f.team_h === teamId || f.team_a === teamId),
+    )
+    .sort((a, b) => a.event - b.event)
+    .slice(0, n)
+    .map((f) => fixtureFromTeamView(f, teamId))
+}
+
 /**
  * Summarise a run of fixtures for one team.
  *

@@ -2,15 +2,19 @@ import { useState } from 'react'
 import { useStickyOffsets } from './hooks/useStickyOffsets'
 import { FplProvider } from './context/FplProvider'
 import { useFpl } from './hooks/useFpl'
+import Overview from './components/Overview'
 import PlayerExplorer from './components/PlayerExplorer'
 import MyTeam from './components/MyTeam'
+import Transfers from './components/Transfers'
 import Fixtures from './components/Fixtures'
 import { TableSkeleton } from './components/Skeleton'
 import './App.css'
 
 const TABS = [
+  { id: 'overview', label: 'Overview', Component: Overview },
   { id: 'players', label: 'Player Explorer', Component: PlayerExplorer },
   { id: 'team', label: 'My Team', Component: MyTeam, wide: true },
+  { id: 'transfers', label: 'Transfers', Component: Transfers, wide: true },
   { id: 'fixtures', label: 'Fixtures', Component: Fixtures },
 ]
 
@@ -91,6 +95,9 @@ function Dashboard() {
       <header className="topbar">
         <div className="topbar__inner">
           <h1 className="wordmark">
+            <svg className="wordmark__spark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 0l2.4 7.2L21.6 4.8 16.8 12l4.8 7.2-7.2-2.4L12 24l-2.4-7.2L2.4 19.2 7.2 12 2.4 4.8l7.2 2.4z" />
+            </svg>
             FPL <span>Dashboard</span>
           </h1>
 
@@ -124,7 +131,7 @@ function Dashboard() {
       </header>
 
       <main className={`shell${tab.wide ? ' shell--wide' : ''}`}>
-        <Component />
+        <Component onNavigate={setActiveTab} />
       </main>
     </>
   )

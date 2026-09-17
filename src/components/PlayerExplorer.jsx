@@ -1,79 +1,67 @@
-import { ArrowCounterClockwise, CaretDown, CaretUp, CaretUpDown, MagnifyingGlass } from '@phosphor-icons/react'
+import { CaretDown, MagnifyingGlass } from '@phosphor-icons/react'
 import { useMemo, useState } from 'react'
 import PlayerDetail from './PlayerDetail'
 import Select from './Select'
 import PlayerCompare from './PlayerCompare'
 import { useFpl } from '../hooks/useFpl'
-import { useMediaQuery } from '../hooks/useMediaQuery'
-import { formatPrice, toNumber } from '../lib/fpl'
-import PlayerPhoto from './PlayerPhoto'
-import TeamBadge from './TeamBadge'
+import { formatPrice, nextFixturesForTeam, toNumber } from '../lib/fpl'
+import { playerPhotoUrl } from '../lib/images'
+import { clubColor } from '../lib/clubColors'
 
-const COLUMNS = [
-  { key: 'photo', label: '', sortable: false, className: 'col-photo' },
-  {
-    key: 'name',
-    label: 'Player',
-    type: 'text',
-    align: 'left',
-    value: (p) => p.web_name,
-  },
-  {
-    key: 'team',
-    label: 'Team',
-    type: 'text',
-    value: (p, { teamsById }) => teamsById.get(p.team)?.short_name ?? '',
-  },
-  {
-    key: 'position',
-    label: 'Pos',
-    type: 'text',
-    value: (p, { positionsById }) =>
-      positionsById.get(p.element_type)?.singular_name_short ?? '',
-  },
-  { key: 'price', label: 'Price', type: 'number', value: (p) => p.now_cost },
-  { key: 'form', label: 'Form', type: 'number', value: (p) => toNumber(p.form) },
-  {
-    key: 'selected',
-    label: 'Selected',
-    type: 'number',
-    value: (p) => toNumber(p.selected_by_percent),
-  },
-  {
-    key: 'total_points',
-    label: 'Pts',
-    type: 'number',
-    value: (p) => p.total_points,
-  },
-  {
-    key: 'defensive_contribution',
-    label: 'DefCon',
-    type: 'number',
-    title: 'Defensive contribution',
-    value: (p) => toNumber(p.defensive_contribution),
-  },
-  {
-    key: 'xgi',
-    label: 'xGI',
-    type: 'number',
-    title: 'Expected goal involvements',
-    value: (p) => toNumber(p.expected_goal_involvements),
-  },
+// Value = points per £m. The single smartest FPL metric — it surfaces the cheap
+// high-scorers a points-only sort buries — so it sorts by default.
+const value = (p) => (p.now_cost ? p.total_points / (p.now_cost / 10) : 0)
+
+// Sortable columns. Each is both a header and a sort key.
+const SORTS = [
+  { key: 'value', label: 'Value', short: 'Value', get: value, fmt: (v) => v.toFixed(1) },
+  { key: 'total_points', label: 'Pts', short: 'Pts', get: (p) => p.total_points },
+  { key: 'form', label: 'Form', short: 'Form', get: (p) => toNumber(p.form) },
+  { key: 'now_cost', label: '£m', short: '£m', get: (p) => p.now_cost, fmt: formatPrice },
+  { key: 'selected', label: 'Owned', short: 'Own', get: (p) => toNumber(p.selected_by_percent), fmt: (v) => `${v}%` },
 ]
+const SORT_BY_KEY = new Map(SORTS.map((s) => [s.key, s]))
 
-const SORTABLE = new Map(
-  COLUMNS.filter((c) => c.sortable !== false).map((c) => [c.key, c]),
-)
+function Avatar({ player, color }) {
+  return (
+    <span className="pavatar" style={{ '--c': color }}>
+      <span className="pavatar__mono">{player.web_name.charAt(0)}</span>
+      <img src={playerPhotoUrl(player, '110x140')} alt="" loading="lazy" onError={(e) => e.currentTarget.remove()} />
+    </span>
+  )
+}
+
+/** A player's next 3 fixtures as difficulty-coloured cells. */
+function FixtureStrip({ teamId, fixtures, fromEvent, teamsById }) {
+  const next = nextFixturesForTeam(fixtures, teamId, fromEvent, 3)
+  return (
+    <span className="efx">
+      {next.length === 0 && <span className="efx__none">—</span>}
+      {next.map((f, i) => {
+        const opp = teamsById.get(f.opponentId)
+        return (
+          <span
+            key={i}
+            className={`efx__c efx__c--d${f.difficulty}`}
+            title={`${opp?.name} (${f.isHome ? 'H' : 'A'}) · difficulty ${f.difficulty}`}
+          >
+            {opp?.short_name}
+          </span>
+        )
+      })}
+    </span>
+  )
+}
 
 export default function PlayerExplorer() {
-  const { players, positions, teamsById, positionsById } = useFpl()
+  const { players, positions, teamsById, positionsById, fixtures, currentEvent } = useFpl()
+  const fromEvent = currentEvent?.id ?? 1
 
   const [priceBounds] = useState(() => {
     const costs = players.map((p) => p.now_cost)
     return { min: Math.min(...costs), max: Math.max(...costs) }
   })
 
-  // £0.5m steps across the actual range, for the price selects.
   const priceSteps = useMemo(() => {
     const steps = []
     for (let c = priceBounds.min; c <= priceBounds.max; c += 5) steps.push(c)
@@ -81,72 +69,48 @@ export default function PlayerExplorer() {
     return steps
   }, [priceBounds])
 
-  // Below this the table is replaced by cards; see issue #19.
-  const compact = useMediaQuery('(max-width: 640px)')
-
   const [positionFilter, setPositionFilter] = useState('all')
   const [minPrice, setMinPrice] = useState(priceBounds.min)
   const [maxPrice, setMaxPrice] = useState(priceBounds.max)
   const [search, setSearch] = useState('')
-  const [sort, setSort] = useState({ key: 'total_points', dir: 'desc' })
+  const [sort, setSort] = useState({ key: 'value', dir: 'desc' })
   const [detail, setDetail] = useState(null)
-  // Comparing more than four columns stops being readable before it stops
-  // being useful, so the selection is capped rather than unbounded.
+
   const MAX_COMPARE = 4
   const [compareIds, setCompareIds] = useState([])
   const [comparing, setComparing] = useState(false)
 
   const toggleCompare = (id) =>
     setCompareIds((ids) =>
-      ids.includes(id)
-        ? ids.filter((x) => x !== id)
-        : ids.length >= MAX_COMPARE
-          ? ids
-          : [...ids, id],
+      ids.includes(id) ? ids.filter((x) => x !== id) : ids.length >= MAX_COMPARE ? ids : [...ids, id],
     )
+  const comparePlayers = compareIds.map((id) => players.find((p) => p.id === id)).filter(Boolean)
 
-  const comparePlayers = compareIds
-    .map((id) => players.find((p) => p.id === id))
-    .filter(Boolean)
+  const sortDef = SORT_BY_KEY.get(sort.key)
 
   const rows = useMemo(() => {
-    const ctx = { teamsById, positionsById }
     const query = search.trim().toLowerCase()
-
     const filtered = players.filter((p) => {
       if (positionFilter !== 'all' && p.element_type !== Number(positionFilter)) return false
       if (p.now_cost < minPrice || p.now_cost > maxPrice) return false
       if (query) {
-        const haystack = `${p.first_name} ${p.second_name} ${p.web_name}`.toLowerCase()
-        if (!haystack.includes(query)) return false
+        const hay = `${p.first_name} ${p.second_name} ${p.web_name}`.toLowerCase()
+        if (!hay.includes(query)) return false
       }
       return true
     })
-
-    const column = SORTABLE.get(sort.key)
-    if (!column) return filtered
-
     const factor = sort.dir === 'asc' ? 1 : -1
     return [...filtered].sort((a, b) => {
-      const va = column.value(a, ctx)
-      const vb = column.value(b, ctx)
-      const cmp =
-        column.type === 'text'
-          ? String(va).localeCompare(String(vb))
-          : va - vb
-      // Stable tie-break so equal values don't jump around between renders.
+      const cmp = sortDef.get(a) - sortDef.get(b)
       return cmp !== 0 ? cmp * factor : a.id - b.id
     })
-  }, [players, teamsById, positionsById, positionFilter, minPrice, maxPrice, search, sort])
+  }, [players, positionFilter, minPrice, maxPrice, search, sort, sortDef])
 
-  function toggleSort(column) {
-    setSort((current) =>
-      current.key === column.key
-        ? { key: column.key, dir: current.dir === 'asc' ? 'desc' : 'asc' }
-        : { key: column.key, dir: column.type === 'text' ? 'asc' : 'desc' },
-    )
+  const maxValue = useMemo(() => Math.max(1, ...rows.map(value)), [rows])
+
+  function toggleSort(key) {
+    setSort((s) => (s.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'desc' }))
   }
-
   function resetFilters() {
     setPositionFilter('all')
     setMinPrice(priceBounds.min)
@@ -154,30 +118,44 @@ export default function PlayerExplorer() {
     setSearch('')
   }
 
+  const featured = !search.trim() && rows.length > 0 ? rows[0] : null
+  const listRows = featured ? rows.slice(1) : rows
+
+  const Header = ({ colKey }) => {
+    const def = SORT_BY_KEY.get(colKey)
+    const active = sort.key === colKey
+    return (
+      <button type="button" className={`ecol ecol--${colKey}${active ? ' ecol--active' : ''}`} onClick={() => toggleSort(colKey)}>
+        {def.short}
+        {active && <CaretDown size={10} weight="bold" style={{ transform: sort.dir === 'asc' ? 'rotate(180deg)' : 'none' }} aria-hidden="true" />}
+      </button>
+    )
+  }
+
   return (
     <section className="explorer">
-      <div className="filters">
-        <label className="field">
-          <span className="field__label">Search</span>
-          <span className="field__with-icon">
-            <MagnifyingGlass className="field__icon" size={15} aria-hidden="true" />
+      <header className="page-head">
+        <h1 className="page-title">Who's worth picking?</h1>
+        <p className="page-sub">
+          {rows.length} {rows.length === 1 ? 'player' : 'players'}, ranked by {sortDef.label.toLowerCase()} — not just points.
+        </p>
+      </header>
+
+      <div className="composer">
+        <label className="composer__field">
+          <MagnifyingGlass size={17} aria-hidden="true" />
           <input
             type="search"
-            className="input"
-            placeholder="Player name"
+            placeholder="Search a player, team or position"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            aria-label="Search players"
           />
-          </span>
         </label>
-
-        <div className="field">
-          <span className="field__label" id="pe-position">
-            Position
-          </span>
+        <div className="composer__row">
           <Select
-            className="input"
-            aria-labelledby="pe-position"
+            className="fpill"
+            aria-label="Position"
             value={positionFilter}
             onChange={setPositionFilter}
             options={[
@@ -185,259 +163,119 @@ export default function PlayerExplorer() {
               ...positions.map((pos) => ({ value: String(pos.id), label: pos.plural_name })),
             ]}
           />
-        </div>
-
-        {/* Two discrete selects rather than a pair of overlaid range inputs:
-            the sliders sat on top of each other, which is fiddly with a mouse
-            and close to unusable with a thumb. */}
-        <div className="field">
-          <span className="field__label" id="pe-min-price">
-            Min price
-          </span>
           <Select
-            className="input input--narrow"
-            aria-labelledby="pe-min-price"
+            className="fpill"
+            aria-label="Minimum price"
             value={minPrice}
-            onChange={(next) => {
-              setMinPrice(next)
-              if (next > maxPrice) setMaxPrice(next)
-            }}
-            options={priceSteps.map((c) => ({ value: c, label: formatPrice(c) }))}
+            onChange={(next) => { setMinPrice(next); if (next > maxPrice) setMaxPrice(next) }}
+            options={priceSteps.map((c) => ({ value: c, label: `From ${formatPrice(c)}` }))}
           />
-        </div>
-
-        <div className="field">
-          <span className="field__label" id="pe-max-price">
-            Max price
-          </span>
           <Select
-            className="input input--narrow"
-            aria-labelledby="pe-max-price"
+            className="fpill"
+            aria-label="Maximum price"
             value={maxPrice}
-            onChange={(next) => {
-              setMaxPrice(next)
-              if (next < minPrice) setMinPrice(next)
-            }}
-            options={priceSteps.map((c) => ({ value: c, label: formatPrice(c) }))}
+            onChange={(next) => { setMaxPrice(next); if (next < minPrice) setMinPrice(next) }}
+            options={priceSteps.map((c) => ({ value: c, label: `To ${formatPrice(c)}` }))}
           />
+          <button type="button" className="btn btn--ghost" onClick={resetFilters}>Reset</button>
         </div>
-
-        {/* On phones the table becomes a card list, so sorting cannot live in
-            column headers you have to scroll sideways to reach. */}
-        {compact && (
-          <div className="field">
-            <span className="field__label" id="pe-sort">
-              Sort by
-            </span>
-            <Select
-              className="input"
-              aria-labelledby="pe-sort"
-              value={sort.key}
-              onChange={(key) => {
-                const column = SORTABLE.get(key)
-                if (column) setSort({ key: column.key, dir: column.type === 'text' ? 'asc' : 'desc' })
-              }}
-              options={[...SORTABLE.values()].map((c) => ({
-                value: c.key,
-                label: c.label || 'Player',
-              }))}
-            />
-          </div>
-        )}
-
-        <button type="button" className="btn" onClick={resetFilters}>
-          <ArrowCounterClockwise size={14} aria-hidden="true" />
-          Reset
-        </button>
-
-        <p className="filters__count">
-          {rows.length} of {players.length} players
-        </p>
       </div>
 
-      {compact ? (
-        <ul className="pcards">
-          {rows.map((player) => {
-            const team = teamsById.get(player.team)
-            const position = positionsById.get(player.element_type)
-            const active = SORTABLE.get(sort.key)
-            return (
-              <li
-                className="pcards__item pcards__item--link"
-                key={player.id}
+      {featured &&
+        (() => {
+          const team = teamsById.get(featured.team)
+          const position = positionsById.get(featured.element_type)
+          const color = clubColor(team?.short_name)
+          return (
+            <button type="button" className="feature" style={{ '--c': color }} onClick={() => setDetail(featured)}>
+              <span className="feature__glow" />
+              <span className="feature__body">
+                <span className="feature__kicker">Top by {sortDef.label.toLowerCase()}</span>
+                <span className="feature__name">{featured.first_name} {featured.second_name}</span>
+                <span className="feature__meta">
+                  <span className={`pos pos--${position?.singular_name_short}`}>{position?.singular_name_short}</span>
+                  {team?.name} · {formatPrice(featured.now_cost)}
+                </span>
+                <span className="feature__stats">
+                  <span className="feature__big"><span className="n">{featured.total_points}</span><span className="l">Points</span></span>
+                  <span className="feature__s"><span className="n">{value(featured).toFixed(1)}</span><span className="l">Pts / £m</span></span>
+                  <span className="feature__s"><span className="n">{featured.form}</span><span className="l">Form</span></span>
+                  <span className="feature__s"><span className="n">{featured.selected_by_percent}%</span><span className="l">Owned</span></span>
+                </span>
+                <span className="feature__fx">
+                  <FixtureStrip teamId={featured.team} fixtures={fixtures} fromEvent={fromEvent} teamsById={teamsById} />
+                </span>
+              </span>
+              <img className="feature__photo" src={playerPhotoUrl(featured, '250x250')} alt="" onError={(e) => (e.currentTarget.style.display = 'none')} />
+            </button>
+          )
+        })()}
+
+      <div className="ethead">
+        <span className="ethead__player">Player</span>
+        <span className="ethead__fx">Next 3</span>
+        <Header colKey="now_cost" />
+        <Header colKey="form" />
+        <Header colKey="value" />
+        <Header colKey="total_points" />
+      </div>
+
+      <ul className="etable">
+        {listRows.map((player, i) => {
+          const team = teamsById.get(player.team)
+          const position = positionsById.get(player.element_type)
+          const color = clubColor(team?.short_name)
+          const selected = compareIds.includes(player.id)
+          return (
+            <li key={player.id}>
+              <div
+                className="etrow"
+                style={{ '--c': color }}
+                role="button"
+                tabIndex={0}
                 onClick={() => setDetail(player)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetail(player) } }}
               >
-                <label
-                  className="cmp-check"
-                  title="Add to comparison"
-                  onClick={(e) => e.stopPropagation()}
-                >
+                <span className="etrow__rank">{featured ? i + 2 : i + 1}</span>
+                <label className={`etrow__pick${selected ? ' is-on' : ''}`} title="Add to comparison" onClick={(e) => e.stopPropagation()}>
                   <input
                     type="checkbox"
-                    checked={compareIds.includes(player.id)}
-                    disabled={
-                      !compareIds.includes(player.id) &&
-                      compareIds.length >= MAX_COMPARE
-                    }
+                    checked={selected}
+                    disabled={!selected && compareIds.length >= MAX_COMPARE}
                     onChange={() => toggleCompare(player.id)}
                     aria-label={`Compare ${player.web_name}`}
                   />
-                  <PlayerPhoto player={player} className="photo--sm" />
+                  <Avatar player={player} color={color} />
                 </label>
-                <span className="pcards__main">
-                  <span className="pcards__name">{player.web_name}</span>
-                  <span className="pcards__sub">
-                    <TeamBadge team={team} className="badge--xs" />
-                    {team?.short_name} ·{' '}
-                    <span className={`pos pos--${position?.singular_name_short}`}>
-                      {position?.singular_name_short}
-                    </span>
+                <span className="etrow__who">
+                  <span className="etrow__name">{player.web_name}</span>
+                  <span className="etrow__meta">
+                    <span className="etrow__club"><span className="etrow__dot" style={{ background: color }} />{team?.short_name}</span>
+                    <span className={`pos pos--${position?.singular_name_short}`}>{position?.singular_name_short}</span>
                   </span>
                 </span>
-                <span className="pcards__stats">
-                  <span className="pcards__price">{formatPrice(player.now_cost)}</span>
-                  {/* Show whatever the list is sorted by, so the sort is
-                      legible rather than invisible. */}
-                  <span className="pcards__metric">
-                    {active && active.key !== 'name' && active.key !== 'price'
-                      ? `${active.label} ${active.value(player, { teamsById, positionsById })}`
-                      : `${player.total_points} pts`}
-                  </span>
+                <FixtureStrip teamId={player.team} fixtures={fixtures} fromEvent={fromEvent} teamsById={teamsById} />
+                <span className="etrow__num etrow__num--mut etrow__num--price">{formatPrice(player.now_cost)}</span>
+                <span className="etrow__num etrow__num--mut etrow__num--form">{player.form}</span>
+                <span className="etrow__val">
+                  <span className="n">{value(player).toFixed(1)}</span>
+                  <span className="bar"><i style={{ width: `${Math.min(100, (value(player) / maxValue) * 100)}%` }} /></span>
                 </span>
-              </li>
-            )
-          })}
-        </ul>
-      ) : (
-      <div className="table-scroll">
-        <table className="table">
-          <thead>
-            <tr>
-              {COLUMNS.map((column) => {
-                const sortable = column.sortable !== false
-                const active = sort.key === column.key
-                return (
-                  <th
-                    key={column.key}
-                    className={column.className}
-                    title={column.title}
-                    aria-sort={
-                      active
-                        ? sort.dir === 'asc'
-                          ? 'ascending'
-                          : 'descending'
-                        : 'none'
-                    }
-                    style={{ textAlign: column.align ?? 'center' }}
-                  >
-                    {sortable ? (
-                      <button
-                        type="button"
-                        className={`th-btn${active ? ' th-btn--active' : ''}`}
-                        onClick={() => toggleSort(column)}
-                      >
-                        {column.label}
-                        <span className="th-btn__arrow">
-                          {active ? (
-                            sort.dir === 'asc' ? (
-                              <CaretUp size={11} weight="bold" aria-hidden="true" />
-                            ) : (
-                              <CaretDown size={11} weight="bold" aria-hidden="true" />
-                            )
-                          ) : (
-                            <CaretUpDown size={11} weight="bold" aria-hidden="true" />
-                          )}
-                        </span>
-                      </button>
-                    ) : (
-                      column.label
-                    )}
-                  </th>
-                )
-              })}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((player) => {
-              const team = teamsById.get(player.team)
-              const position = positionsById.get(player.element_type)
-              return (
-                <tr key={player.id}>
-                  <td className="col-photo">
-                    <label className="cmp-check" title="Add to comparison">
-                      <input
-                        type="checkbox"
-                        checked={compareIds.includes(player.id)}
-                        disabled={
-                          !compareIds.includes(player.id) &&
-                          compareIds.length >= MAX_COMPARE
-                        }
-                        onChange={() => toggleCompare(player.id)}
-                        aria-label={`Compare ${player.web_name}`}
-                      />
-                      <PlayerPhoto player={player} className="photo--sm" />
-                    </label>
-                  </td>
-                  <td className="col-name">
-                    <button
-                      type="button"
-                      className="player-name player-name--link"
-                      onClick={() => setDetail(player)}
-                    >
-                      {player.web_name}
-                    </button>
-                    <span className="player-sub">
-                      {player.first_name} {player.second_name}
-                    </span>
-                  </td>
-                  <td>
-                    <TeamBadge team={team} className="badge--sm" />
-                  </td>
-                  <td>
-                    <span className={`pos pos--${position?.singular_name_short}`}>
-                      {position?.singular_name_short}
-                    </span>
-                  </td>
-                  <td className="num">{formatPrice(player.now_cost)}</td>
-                  <td className="num">{player.form}</td>
-                  <td className="num">{player.selected_by_percent}%</td>
-                  <td className="num num--strong">{player.total_points}</td>
-                  <td className="num">{player.defensive_contribution}</td>
-                  <td className="num">{player.expected_goal_involvements}</td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+                <span className="etrow__pts"><span className="n">{player.total_points}</span></span>
+              </div>
+            </li>
+          )
+        })}
+      </ul>
 
-      </div>
-      )}
-
-      {rows.length === 0 && (
-        <p className="empty">No players match these filters.</p>
-      )}
+      {rows.length === 0 && <p className="empty">No players match these filters.</p>}
 
       {compareIds.length > 0 && (
         <div className="cmp-bar" role="status">
-          <span className="cmp-bar__count">
-            {compareIds.length} selected
-            {compareIds.length >= MAX_COMPARE && ' (max)'}
-          </span>
-          <span className="cmp-bar__names">
-            {comparePlayers.map((p) => p.web_name).join(', ')}
-          </span>
-          <button
-            type="button"
-            className="btn btn--primary"
-            disabled={compareIds.length < 2}
-            title={compareIds.length < 2 ? 'Pick at least two players' : undefined}
-            onClick={() => setComparing(true)}
-          >
-            Compare
-          </button>
-          <button type="button" className="btn" onClick={() => setCompareIds([])}>
-            Clear
-          </button>
+          <span className="cmp-bar__count">{compareIds.length} selected{compareIds.length >= MAX_COMPARE && ' (max)'}</span>
+          <span className="cmp-bar__names">{comparePlayers.map((p) => p.web_name).join(', ')}</span>
+          <button type="button" className="btn btn--primary" disabled={compareIds.length < 2} title={compareIds.length < 2 ? 'Pick at least two players' : undefined} onClick={() => setComparing(true)}>Compare</button>
+          <button type="button" className="btn btn--ghost" onClick={() => setCompareIds([])}>Clear</button>
         </div>
       )}
 

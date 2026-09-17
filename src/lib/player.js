@@ -66,3 +66,40 @@ export function setPieces(player) {
 
 /** Season-long price movement, in tenths like now_cost. */
 export const priceChange = (player) => player.cost_change_start ?? 0
+
+/**
+ * A UEFA-style "how he scored" breakdown of a player's season points, derived
+ * from their totals under the standard FPL scoring rules. The event lines are
+ * exact; whatever the shown events don't account for (appearances, defensive
+ * contribution, goals conceded nuances) is reconciled into a final line so the
+ * breakdown always sums to the real total.
+ */
+export function pointsBreakdown(player, posShort) {
+  const goalPts = { GKP: 6, DEF: 6, MID: 5, FWD: 4 }[posShort] ?? 4
+  const csPts = { GKP: 4, DEF: 4, MID: 1, FWD: 0 }[posShort] ?? 0
+  const n = (v) => Number(v) || 0
+
+  const lines = []
+  const add = (count, unit, label, points) => {
+    if (count) lines.push({ label: `${count} ${label}`, points, unit })
+  }
+
+  add(n(player.goals_scored), 'goal', n(player.goals_scored) === 1 ? 'goal scored' : 'goals scored', n(player.goals_scored) * goalPts)
+  add(n(player.assists), 'assist', n(player.assists) === 1 ? 'assist' : 'assists', n(player.assists) * 3)
+  if (csPts) add(n(player.clean_sheets), 'cs', n(player.clean_sheets) === 1 ? 'clean sheet' : 'clean sheets', n(player.clean_sheets) * csPts)
+  if (n(player.saves) >= 3) add(n(player.saves), 'save', 'saves', Math.floor(n(player.saves) / 3))
+  add(n(player.penalties_saved), 'ps', 'penalties saved', n(player.penalties_saved) * 5)
+  if (player.bonus) lines.push({ label: 'Bonus points', points: n(player.bonus) })
+  add(n(player.yellow_cards), 'yc', n(player.yellow_cards) === 1 ? 'yellow card' : 'yellow cards', -n(player.yellow_cards))
+  add(n(player.red_cards), 'rc', n(player.red_cards) === 1 ? 'red card' : 'red cards', -n(player.red_cards) * 3)
+  add(n(player.own_goals), 'og', n(player.own_goals) === 1 ? 'own goal' : 'own goals', -n(player.own_goals) * 2)
+  add(n(player.penalties_missed), 'pm', 'penalties missed', -n(player.penalties_missed) * 2)
+  if (csPts) add(n(player.goals_conceded), 'gc', 'goals conceded', -Math.floor(n(player.goals_conceded) / 2))
+
+  const accounted = lines.reduce((s, l) => s + l.points, 0)
+  const rest = n(player.total_points) - accounted
+  if (rest !== 0 || lines.length === 0) {
+    lines.push({ label: 'Appearances & other', points: rest })
+  }
+  return lines
+}
