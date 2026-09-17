@@ -5,6 +5,7 @@ import { useFpl } from './hooks/useFpl'
 import Overview from './components/Overview'
 import PlayerExplorer from './components/PlayerExplorer'
 import MyTeam from './components/MyTeam'
+import Transfers from './components/Transfers'
 import Fixtures from './components/Fixtures'
 import { TableSkeleton } from './components/Skeleton'
 import './App.css'
@@ -13,6 +14,7 @@ const TABS = [
   { id: 'overview', label: 'Overview', Component: Overview },
   { id: 'players', label: 'Player Explorer', Component: PlayerExplorer },
   { id: 'team', label: 'My Team', Component: MyTeam, wide: true },
+  { id: 'transfers', label: 'Transfers', Component: Transfers, wide: true },
   { id: 'fixtures', label: 'Fixtures', Component: Fixtures },
 ]
 
