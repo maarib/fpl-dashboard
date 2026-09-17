@@ -5,6 +5,7 @@
 
 :root {
   font: var(--font-weight-medium) 15px/1.5 var(--font-body);
+  font-optical-sizing: auto;
   color: var(--text);
   background: var(--surface-sunken);
   -webkit-font-smoothing: antialiased;
@@ -21,8 +22,7 @@ body {
   background: var(--surface-sunken);
 }
 
-/* Headings use the editorial serif; size and colour carry the hierarchy, so
-   the weight stays with everything else. */
+/* Headings share the single weight; size and colour carry the hierarchy. */
 h1,
 h2 {
   margin: var(--space-0);

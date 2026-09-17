@@ -163,8 +163,9 @@
      TYPOGRAPHY
      ===================================================================== */
 
-  --font-body: 'Reddit Sans', system-ui, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Newsreader', Georgia, 'Times New Roman', serif; /* editorial headings */
+  /* One typeface, Manrope, for everything — display headings included. */
+  --font-body: 'Manrope', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Manrope', system-ui, 'Segoe UI', Roboto, sans-serif;
   --font-mono: ui-monospace, Consolas, monospace;
 
   /* ========================================================================
@@ -298,8 +299,8 @@
 
   /* No bold, anywhere. Hierarchy is carried by size and colour only — a hard
      rule from the Claude direction — so every weight token resolves to a
-     single medium. Kept as separate names so intent stays legible in the CSS
-     and one could reintroduce contrast in one place if ever wanted. */
+     single medium. Manrope is loaded as a variable font so this (and any
+     other weight) renders. Kept as separate names so intent stays legible. */
   --font-weight-light: 500;
   --font-weight-regular: 500;
   --font-weight-medium: 500;
