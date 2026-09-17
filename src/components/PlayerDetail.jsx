@@ -6,7 +6,7 @@ import { usePlayerSummary } from '../hooks/usePlayerSummary'
 import { useScrollLock } from '../hooks/useScrollLock'
 import { fdrStyle, formatPrice } from '../lib/fpl'
 import { playerPhotoUrl } from '../lib/images'
-import { availability, ordinal, positionRanks, priceChange, setPieces } from '../lib/player'
+import { availability, ordinal, pointsBreakdown, positionRanks, priceChange, setPieces } from '../lib/player'
 import TeamBadge from './TeamBadge'
 
 function Stat({ label, value, sub }) {
@@ -48,6 +48,10 @@ export default function PlayerDetail({ player, onClose }) {
   const nextFixtures = (data?.fixtures ?? []).slice(0, 5)
   const pastSeasons = data?.history_past ?? []
   const thisSeason = data?.history ?? []
+
+  const posShort = position?.singular_name_short
+  const ptsValue = player.now_cost ? (player.total_points / (player.now_cost / 10)).toFixed(1) : '0.0'
+  const breakdown = pointsBreakdown(player, posShort)
 
   return (
     <div
@@ -124,12 +128,34 @@ export default function PlayerDetail({ player, onClose }) {
           <h3>This season</h3>
           <div className="pd-stats">
             <Stat label="Total points" value={player.total_points} />
+            <Stat label="Value" value={ptsValue} sub="pts / £m" />
             <Stat label="Form" value={player.form} />
             <Stat label="Per game" value={player.points_per_game} />
             <Stat label="Selected" value={`${player.selected_by_percent}%`} />
             <Stat label="Minutes" value={player.minutes} sub={`${player.starts} starts`} />
-            <Stat label="Bonus" value={player.bonus} />
           </div>
+        </section>
+
+        {/* How the points were earned — the UEFA-style scoring breakdown. */}
+        <section className="pd-section">
+          <h3>How he scored</h3>
+          <ul className="pd-breakdown">
+            {breakdown.map((line) => (
+              <li key={line.label}>
+                <span className="pd-breakdown__label">{line.label}</span>
+                <span
+                  className={`pd-breakdown__pts${line.points < 0 ? ' is-neg' : ''}`}
+                >
+                  {line.points > 0 ? '+' : ''}
+                  {line.points} {Math.abs(line.points) === 1 ? 'pt' : 'pts'}
+                </span>
+              </li>
+            ))}
+            <li className="pd-breakdown__total">
+              <span className="pd-breakdown__label">Total</span>
+              <span className="pd-breakdown__pts">{player.total_points} pts</span>
+            </li>
+          </ul>
         </section>
 
         {ranks.length > 0 && (

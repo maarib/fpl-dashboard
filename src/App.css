@@ -1852,3 +1852,18 @@
   .ecol--form, .etrow__num--form { display: none; }
   .efx__c { width: 30px; }
 }
+
+/* Player detail — "how he scored" points breakdown */
+.pd-breakdown { list-style: none; margin: 0; padding: 0; }
+.pd-breakdown li {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: var(--space-12); padding: var(--space-9) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.pd-breakdown li:last-child { border-bottom: 0; }
+.pd-breakdown__label { color: var(--text); font-size: var(--font-size-md); }
+.pd-breakdown__pts { color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pd-breakdown__pts.is-neg { color: var(--status-bad); }
+.pd-breakdown__total { margin-top: var(--space-2); }
+.pd-breakdown__total .pd-breakdown__label { font-weight: var(--font-weight-bold); }
+.pd-breakdown__total .pd-breakdown__pts { color: var(--text); font-weight: var(--font-weight-bold); font-size: var(--font-size-lg); }
