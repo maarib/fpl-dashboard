@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useStickyOffsets } from './hooks/useStickyOffsets'
 import { FplProvider } from './context/FplProvider'
 import { useFpl } from './hooks/useFpl'
+import Overview from './components/Overview'
 import PlayerExplorer from './components/PlayerExplorer'
 import MyTeam from './components/MyTeam'
 import Fixtures from './components/Fixtures'
@@ -9,6 +10,7 @@ import { TableSkeleton } from './components/Skeleton'
 import './App.css'
 
 const TABS = [
+  { id: 'overview', label: 'Overview', Component: Overview },
   { id: 'players', label: 'Player Explorer', Component: PlayerExplorer },
   { id: 'team', label: 'My Team', Component: MyTeam, wide: true },
   { id: 'fixtures', label: 'Fixtures', Component: Fixtures },
@@ -127,7 +129,7 @@ function Dashboard() {
       </header>
 
       <main className={`shell${tab.wide ? ' shell--wide' : ''}`}>
-        <Component />
+        <Component onNavigate={setActiveTab} />
       </main>
     </>
   )

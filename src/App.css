@@ -1867,3 +1867,56 @@
 .pd-breakdown__total { margin-top: var(--space-2); }
 .pd-breakdown__total .pd-breakdown__label { font-weight: var(--font-weight-bold); }
 .pd-breakdown__total .pd-breakdown__pts { color: var(--text); font-weight: var(--font-weight-bold); font-size: var(--font-size-lg); }
+
+/* ==========================================================================
+   OVERVIEW — the landing page (deadline + leaderboards)
+   ========================================================================== */
+
+.overview { max-width: 820px; margin: 0 auto; }
+
+/* Deadline countdown — the one elevated hero on the page */
+.deadline {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  background: var(--surface); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg, 20px); padding: var(--space-24) var(--space-24) var(--space-22);
+  box-shadow: var(--elevation-5); margin-bottom: var(--space-30);
+}
+.deadline__kicker { font-size: var(--font-size-xs); letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--accent-ink); }
+.deadline__gw { font-size: var(--font-size-xl); margin-top: var(--space-4); }
+.deadline__clock { display: flex; align-items: flex-start; gap: var(--space-10); margin: var(--space-16) 0 var(--space-20); }
+.deadline__clock span { display: flex; flex-direction: column; align-items: center; }
+.deadline__clock b { font-size: 40px; line-height: 1; letter-spacing: var(--tracking-tighter); font-weight: var(--font-weight-extrabold); font-variant-numeric: tabular-nums; }
+.deadline__clock i { font-size: var(--font-size-2xs); letter-spacing: var(--tracking-caps-loose); text-transform: uppercase; color: var(--text-muted); font-style: normal; margin-top: var(--space-6); }
+.deadline__sep { font-size: 30px; color: var(--faint, var(--text-muted)); padding-top: var(--space-2); }
+.deadline__clock--passed { font-size: var(--font-size-xl); color: var(--text-muted); margin: var(--space-16) 0 var(--space-20); }
+.deadline__cta { display: inline-flex; align-items: center; gap: var(--space-6); }
+
+/* Leaderboards */
+.lb-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-16); }
+.lb { }
+.lb__head { display: flex; align-items: baseline; justify-content: space-between; padding: 0 var(--space-8) var(--space-8); }
+.lb__title { font-size: var(--font-size-lg); }
+.lb__note { font-size: var(--font-size-2xs); letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--text-muted); }
+.lb__list { list-style: none; margin: 0; padding: 0; }
+.lb-row {
+  display: flex; align-items: center; gap: var(--space-10); width: 100%;
+  appearance: none; border: 0; background: transparent; cursor: pointer; text-align: left;
+  padding: var(--space-8); border-radius: var(--radius-10); border-bottom: 1px solid var(--border-subtle);
+}
+.lb__list li:last-child .lb-row { border-bottom: 0; }
+.lb-row:hover { background: rgba(31, 30, 28, 0.035); border-bottom-color: transparent; }
+.lb-row__rank { width: var(--space-14); text-align: center; font-size: var(--font-size-sm); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.pavatar--sm { width: 34px; height: 34px; }
+.pavatar--sm .pavatar__mono { font-size: var(--font-size-md); }
+.lb-row__who { flex: 1; min-width: 0; }
+.lb-row__name { display: block; font-size: var(--font-size-md); letter-spacing: var(--tracking-tight); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lb-row__meta { display: flex; align-items: center; gap: var(--space-5); margin-top: var(--space-2); font-size: var(--font-size-sm); color: var(--text-muted); }
+.lb-row__dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.lb-row__stat { font-size: var(--font-size-lg); font-variant-numeric: tabular-nums; }
+
+.ov-more {
+  display: inline-flex; align-items: center; gap: var(--space-6); margin-top: var(--space-24);
+  appearance: none; border: 0; background: transparent; cursor: pointer;
+  font: inherit; font-size: var(--font-size-md); color: var(--accent-ink);
+}
+.ov-more:hover { text-decoration: underline; }
