@@ -163,6 +163,10 @@
     order: 3;
     width: 100%;
     gap: var(--space-4);
+    /* Five tabs no longer fit on one line at phone width — wrap so every
+       destination stays visible instead of scrolling the last one off. */
+    flex-wrap: wrap;
+    overflow-x: visible;
   }
 
   .tab {
