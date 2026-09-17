@@ -1514,3 +1514,6 @@
 .mdcell__gw { font-size: var(--font-size-md); letter-spacing: var(--tracking-tight); }
 .mdcell__sub { font-size: var(--font-size-2xs); color: var(--text-muted); white-space: nowrap; }
 .mdcell.is-current .mdcell__sub { color: var(--accent-ink); }
+
+/* Pool value column (pts/£m) — consistency with the Transfers market */
+.prow__val { width: 42px; text-align: right; font-size: var(--font-size-base); font-variant-numeric: tabular-nums; color: var(--accent-ink); flex: none; }

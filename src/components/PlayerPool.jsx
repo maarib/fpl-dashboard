@@ -54,6 +54,12 @@ function PoolRow({ player, team, reason, inSquad, onAdd, onRemove, onInspect }) 
 
       <span className="prow__price">{formatPrice(player.now_cost)}</span>
       <span className="prow__tp">{player.total_points}</span>
+      <span
+        className="prow__val"
+        title="Value — points per £m"
+      >
+        {player.now_cost ? (player.total_points / (player.now_cost / 10)).toFixed(1) : '—'}
+      </span>
 
       {inSquad ? (
         <button
@@ -195,6 +201,7 @@ export default function PlayerPool({ squad, onAdd, onRemove }) {
                 <span>{position.plural_name}</span>
                 <span className="pool__col">Price</span>
                 <span className="pool__col">TP</span>
+                <span className="pool__col">Val</span>
               </header>
               <ul className="pool__rows">
                 {rows.slice(0, 60).map((player) => {
