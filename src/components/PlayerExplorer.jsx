@@ -1,24 +1,24 @@
-import { MagnifyingGlass } from '@phosphor-icons/react'
+import { CaretDown, MagnifyingGlass } from '@phosphor-icons/react'
 import { useMemo, useState } from 'react'
 import PlayerDetail from './PlayerDetail'
 import Select from './Select'
 import PlayerCompare from './PlayerCompare'
 import { useFpl } from '../hooks/useFpl'
-import { formatPrice, toNumber } from '../lib/fpl'
+import { formatPrice, nextFixturesForTeam, toNumber } from '../lib/fpl'
 import { playerPhotoUrl } from '../lib/images'
 import { clubColor } from '../lib/clubColors'
 
-// What the list can be sorted by. `big` is the value shown as the row's large
-// numeral; when the sort is one of these, the numeral follows the sort so the
-// ordering is always legible.
+// Value = points per £m. The single smartest FPL metric — it surfaces the cheap
+// high-scorers a points-only sort buries — so it sorts by default.
+const value = (p) => (p.now_cost ? p.total_points / (p.now_cost / 10) : 0)
+
+// Sortable columns. Each is both a header and a sort key.
 const SORTS = [
-  { key: 'total_points', label: 'Points', short: 'Pts', value: (p) => p.total_points },
-  { key: 'form', label: 'Form', short: 'Form', value: (p) => toNumber(p.form) },
-  { key: 'selected', label: 'Ownership', short: 'Own', value: (p) => toNumber(p.selected_by_percent), fmt: (v) => `${v}%` },
-  { key: 'price', label: 'Price', short: '£m', value: (p) => p.now_cost, fmt: formatPrice },
-  { key: 'defensive_contribution', label: 'Defence', short: 'DefC', value: (p) => toNumber(p.defensive_contribution) },
-  { key: 'xgi', label: 'xGI', short: 'xGI', value: (p) => toNumber(p.expected_goal_involvements) },
-  { key: 'name', label: 'Name', short: '', type: 'text', value: (p) => p.web_name },
+  { key: 'value', label: 'Value', short: 'Value', get: value, fmt: (v) => v.toFixed(1) },
+  { key: 'total_points', label: 'Pts', short: 'Pts', get: (p) => p.total_points },
+  { key: 'form', label: 'Form', short: 'Form', get: (p) => toNumber(p.form) },
+  { key: 'now_cost', label: '£m', short: '£m', get: (p) => p.now_cost, fmt: formatPrice },
+  { key: 'selected', label: 'Owned', short: 'Own', get: (p) => toNumber(p.selected_by_percent), fmt: (v) => `${v}%` },
 ]
 const SORT_BY_KEY = new Map(SORTS.map((s) => [s.key, s]))
 
@@ -26,18 +26,36 @@ function Avatar({ player, color }) {
   return (
     <span className="pavatar" style={{ '--c': color }}>
       <span className="pavatar__mono">{player.web_name.charAt(0)}</span>
-      <img
-        src={playerPhotoUrl(player, '110x140')}
-        alt=""
-        loading="lazy"
-        onError={(e) => e.currentTarget.remove()}
-      />
+      <img src={playerPhotoUrl(player, '110x140')} alt="" loading="lazy" onError={(e) => e.currentTarget.remove()} />
+    </span>
+  )
+}
+
+/** A player's next 3 fixtures as difficulty-coloured cells. */
+function FixtureStrip({ teamId, fixtures, fromEvent, teamsById }) {
+  const next = nextFixturesForTeam(fixtures, teamId, fromEvent, 3)
+  return (
+    <span className="efx">
+      {next.length === 0 && <span className="efx__none">—</span>}
+      {next.map((f, i) => {
+        const opp = teamsById.get(f.opponentId)
+        return (
+          <span
+            key={i}
+            className={`efx__c efx__c--d${f.difficulty}`}
+            title={`${opp?.name} (${f.isHome ? 'H' : 'A'}) · difficulty ${f.difficulty}`}
+          >
+            {opp?.short_name}
+          </span>
+        )
+      })}
     </span>
   )
 }
 
 export default function PlayerExplorer() {
-  const { players, positions, teamsById, positionsById } = useFpl()
+  const { players, positions, teamsById, positionsById, fixtures, currentEvent } = useFpl()
+  const fromEvent = currentEvent?.id ?? 1
 
   const [priceBounds] = useState(() => {
     const costs = players.map((p) => p.now_cost)
@@ -55,7 +73,7 @@ export default function PlayerExplorer() {
   const [minPrice, setMinPrice] = useState(priceBounds.min)
   const [maxPrice, setMaxPrice] = useState(priceBounds.max)
   const [search, setSearch] = useState('')
-  const [sortKey, setSortKey] = useState('total_points')
+  const [sort, setSort] = useState({ key: 'value', dir: 'desc' })
   const [detail, setDetail] = useState(null)
 
   const MAX_COMPARE = 4
@@ -64,18 +82,11 @@ export default function PlayerExplorer() {
 
   const toggleCompare = (id) =>
     setCompareIds((ids) =>
-      ids.includes(id)
-        ? ids.filter((x) => x !== id)
-        : ids.length >= MAX_COMPARE
-          ? ids
-          : [...ids, id],
+      ids.includes(id) ? ids.filter((x) => x !== id) : ids.length >= MAX_COMPARE ? ids : [...ids, id],
     )
+  const comparePlayers = compareIds.map((id) => players.find((p) => p.id === id)).filter(Boolean)
 
-  const comparePlayers = compareIds
-    .map((id) => players.find((p) => p.id === id))
-    .filter(Boolean)
-
-  const sort = SORT_BY_KEY.get(sortKey)
+  const sortDef = SORT_BY_KEY.get(sort.key)
 
   const rows = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -83,21 +94,23 @@ export default function PlayerExplorer() {
       if (positionFilter !== 'all' && p.element_type !== Number(positionFilter)) return false
       if (p.now_cost < minPrice || p.now_cost > maxPrice) return false
       if (query) {
-        const haystack = `${p.first_name} ${p.second_name} ${p.web_name}`.toLowerCase()
-        if (!haystack.includes(query)) return false
+        const hay = `${p.first_name} ${p.second_name} ${p.web_name}`.toLowerCase()
+        if (!hay.includes(query)) return false
       }
       return true
     })
-
-    const factor = sort.type === 'text' ? 1 : -1
+    const factor = sort.dir === 'asc' ? 1 : -1
     return [...filtered].sort((a, b) => {
-      const va = sort.value(a)
-      const vb = sort.value(b)
-      const cmp = sort.type === 'text' ? String(va).localeCompare(String(vb)) : va - vb
+      const cmp = sortDef.get(a) - sortDef.get(b)
       return cmp !== 0 ? cmp * factor : a.id - b.id
     })
-  }, [players, positionFilter, minPrice, maxPrice, search, sort])
+  }, [players, positionFilter, minPrice, maxPrice, search, sort, sortDef])
 
+  const maxValue = useMemo(() => Math.max(1, ...rows.map(value)), [rows])
+
+  function toggleSort(key) {
+    setSort((s) => (s.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'desc' }))
+  }
   function resetFilters() {
     setPositionFilter('all')
     setMinPrice(priceBounds.min)
@@ -105,18 +118,18 @@ export default function PlayerExplorer() {
     setSearch('')
   }
 
-  // The leader is pulled out as a featured card; the search view stays a plain
-  // list so a query isn't reframed as "the standout result".
   const featured = !search.trim() && rows.length > 0 ? rows[0] : null
   const listRows = featured ? rows.slice(1) : rows
 
-  // The row's big numeral is total points, unless the list is sorted by another
-  // number — then it follows the sort so the ranking reads.
-  const bigStat = sort.type === 'text' || sort.key === 'price' ? SORT_BY_KEY.get('total_points') : sort
-
-  const renderBig = (player) => {
-    const v = bigStat.value(player)
-    return bigStat.fmt ? bigStat.fmt(v) : v
+  const Header = ({ colKey }) => {
+    const def = SORT_BY_KEY.get(colKey)
+    const active = sort.key === colKey
+    return (
+      <button type="button" className={`ecol ecol--${colKey}${active ? ' ecol--active' : ''}`} onClick={() => toggleSort(colKey)}>
+        {def.short}
+        {active && <CaretDown size={10} weight="bold" style={{ transform: sort.dir === 'asc' ? 'rotate(180deg)' : 'none' }} aria-hidden="true" />}
+      </button>
+    )
   }
 
   return (
@@ -124,7 +137,7 @@ export default function PlayerExplorer() {
       <header className="page-head">
         <h1 className="page-title">Who's worth picking?</h1>
         <p className="page-sub">
-          {rows.length} {rows.length === 1 ? 'player' : 'players'}, ranked by {sort.label.toLowerCase()}.
+          {rows.length} {rows.length === 1 ? 'player' : 'players'}, ranked by {sortDef.label.toLowerCase()} — not just points.
         </p>
       </header>
 
@@ -154,32 +167,17 @@ export default function PlayerExplorer() {
             className="fpill"
             aria-label="Minimum price"
             value={minPrice}
-            onChange={(next) => {
-              setMinPrice(next)
-              if (next > maxPrice) setMaxPrice(next)
-            }}
+            onChange={(next) => { setMinPrice(next); if (next > maxPrice) setMaxPrice(next) }}
             options={priceSteps.map((c) => ({ value: c, label: `From ${formatPrice(c)}` }))}
           />
           <Select
             className="fpill"
             aria-label="Maximum price"
             value={maxPrice}
-            onChange={(next) => {
-              setMaxPrice(next)
-              if (next < minPrice) setMinPrice(next)
-            }}
+            onChange={(next) => { setMaxPrice(next); if (next < minPrice) setMinPrice(next) }}
             options={priceSteps.map((c) => ({ value: c, label: `To ${formatPrice(c)}` }))}
           />
-          <Select
-            className="fpill"
-            aria-label="Sort by"
-            value={sortKey}
-            onChange={setSortKey}
-            options={SORTS.filter((s) => s.key !== 'name').map((s) => ({ value: s.key, label: `Sort · ${s.label}` }))}
-          />
-          <button type="button" className="btn btn--ghost" onClick={resetFilters}>
-            Reset
-          </button>
+          <button type="button" className="btn btn--ghost" onClick={resetFilters}>Reset</button>
         </div>
       </div>
 
@@ -189,50 +187,40 @@ export default function PlayerExplorer() {
           const position = positionsById.get(featured.element_type)
           const color = clubColor(team?.short_name)
           return (
-            <button
-              type="button"
-              className="feature"
-              style={{ '--c': color }}
-              onClick={() => setDetail(featured)}
-            >
+            <button type="button" className="feature" style={{ '--c': color }} onClick={() => setDetail(featured)}>
               <span className="feature__glow" />
               <span className="feature__body">
-                <span className="feature__kicker">Leading · {sort.label}</span>
-                <span className="feature__name">
-                  {featured.first_name} {featured.second_name}
-                </span>
+                <span className="feature__kicker">Top by {sortDef.label.toLowerCase()}</span>
+                <span className="feature__name">{featured.first_name} {featured.second_name}</span>
                 <span className="feature__meta">
-                  <span className={`pos pos--${position?.singular_name_short}`}>
-                    {position?.singular_name_short}
-                  </span>
+                  <span className={`pos pos--${position?.singular_name_short}`}>{position?.singular_name_short}</span>
                   {team?.name} · {formatPrice(featured.now_cost)}
                 </span>
                 <span className="feature__stats">
-                  <span className="feature__big">
-                    <span className="n">{featured.total_points}</span>
-                    <span className="l">Points</span>
-                  </span>
+                  <span className="feature__big"><span className="n">{featured.total_points}</span><span className="l">Points</span></span>
+                  <span className="feature__s"><span className="n">{value(featured).toFixed(1)}</span><span className="l">Pts / £m</span></span>
                   <span className="feature__s"><span className="n">{featured.form}</span><span className="l">Form</span></span>
                   <span className="feature__s"><span className="n">{featured.selected_by_percent}%</span><span className="l">Owned</span></span>
-                  <span className="feature__s"><span className="n">{featured.expected_goal_involvements}</span><span className="l">xGI</span></span>
+                </span>
+                <span className="feature__fx">
+                  <FixtureStrip teamId={featured.team} fixtures={fixtures} fromEvent={fromEvent} teamsById={teamsById} />
                 </span>
               </span>
-              <img
-                className="feature__photo"
-                src={playerPhotoUrl(featured, '250x250')}
-                alt=""
-                onError={(e) => (e.currentTarget.style.display = 'none')}
-              />
+              <img className="feature__photo" src={playerPhotoUrl(featured, '250x250')} alt="" onError={(e) => (e.currentTarget.style.display = 'none')} />
             </button>
           )
         })()}
 
-      <div className="rank-head">
-        <span>{featured ? 'Ranked' : 'Players'}</span>
-        <span>{sort.short || 'Pts'}</span>
+      <div className="ethead">
+        <span className="ethead__player">Player</span>
+        <span className="ethead__fx">Next 3</span>
+        <Header colKey="now_cost" />
+        <Header colKey="form" />
+        <Header colKey="value" />
+        <Header colKey="total_points" />
       </div>
 
-      <ul className="xrows">
+      <ul className="etable">
         {listRows.map((player, i) => {
           const team = teamsById.get(player.team)
           const position = positionsById.get(player.element_type)
@@ -241,24 +229,15 @@ export default function PlayerExplorer() {
           return (
             <li key={player.id}>
               <div
-                className="xrow"
+                className="etrow"
                 style={{ '--c': color }}
                 role="button"
                 tabIndex={0}
                 onClick={() => setDetail(player)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault()
-                    setDetail(player)
-                  }
-                }}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetail(player) } }}
               >
-                <span className="xrow__rank">{featured ? i + 2 : i + 1}</span>
-                <label
-                  className={`xrow__pick${selected ? ' is-on' : ''}`}
-                  title="Add to comparison"
-                  onClick={(e) => e.stopPropagation()}
-                >
+                <span className="etrow__rank">{featured ? i + 2 : i + 1}</span>
+                <label className={`etrow__pick${selected ? ' is-on' : ''}`} title="Add to comparison" onClick={(e) => e.stopPropagation()}>
                   <input
                     type="checkbox"
                     checked={selected}
@@ -268,31 +247,21 @@ export default function PlayerExplorer() {
                   />
                   <Avatar player={player} color={color} />
                 </label>
-                <span className="xrow__who">
-                  <span className="xrow__name">{player.web_name}</span>
-                  <span className="xrow__meta">
-                    <span className="xrow__club">
-                      <span className="xrow__dot" style={{ background: color }} />
-                      {team?.short_name}
-                    </span>
-                    <span className={`pos pos--${position?.singular_name_short}`}>
-                      {position?.singular_name_short}
-                    </span>
+                <span className="etrow__who">
+                  <span className="etrow__name">{player.web_name}</span>
+                  <span className="etrow__meta">
+                    <span className="etrow__club"><span className="etrow__dot" style={{ background: color }} />{team?.short_name}</span>
+                    <span className={`pos pos--${position?.singular_name_short}`}>{position?.singular_name_short}</span>
                   </span>
                 </span>
-                <span className="xrow__spacer" />
-                <span className="xrow__metric">
-                  <span className="n">{player.form}</span>
-                  <span className="l">Form</span>
+                <FixtureStrip teamId={player.team} fixtures={fixtures} fromEvent={fromEvent} teamsById={teamsById} />
+                <span className="etrow__num etrow__num--mut etrow__num--price">{formatPrice(player.now_cost)}</span>
+                <span className="etrow__num etrow__num--mut etrow__num--form">{player.form}</span>
+                <span className="etrow__val">
+                  <span className="n">{value(player).toFixed(1)}</span>
+                  <span className="bar"><i style={{ width: `${Math.min(100, (value(player) / maxValue) * 100)}%` }} /></span>
                 </span>
-                <span className="xrow__metric xrow__metric--hide-sm">
-                  <span className="n">{formatPrice(player.now_cost)}</span>
-                  <span className="l">Price</span>
-                </span>
-                <span className="xrow__pts">
-                  <span className="n">{renderBig(player)}</span>
-                  <span className="l">{bigStat.short || 'Pts'}</span>
-                </span>
+                <span className="etrow__pts"><span className="n">{player.total_points}</span></span>
               </div>
             </li>
           )
@@ -303,25 +272,10 @@ export default function PlayerExplorer() {
 
       {compareIds.length > 0 && (
         <div className="cmp-bar" role="status">
-          <span className="cmp-bar__count">
-            {compareIds.length} selected
-            {compareIds.length >= MAX_COMPARE && ' (max)'}
-          </span>
-          <span className="cmp-bar__names">
-            {comparePlayers.map((p) => p.web_name).join(', ')}
-          </span>
-          <button
-            type="button"
-            className="btn btn--primary"
-            disabled={compareIds.length < 2}
-            title={compareIds.length < 2 ? 'Pick at least two players' : undefined}
-            onClick={() => setComparing(true)}
-          >
-            Compare
-          </button>
-          <button type="button" className="btn btn--ghost" onClick={() => setCompareIds([])}>
-            Clear
-          </button>
+          <span className="cmp-bar__count">{compareIds.length} selected{compareIds.length >= MAX_COMPARE && ' (max)'}</span>
+          <span className="cmp-bar__names">{comparePlayers.map((p) => p.web_name).join(', ')}</span>
+          <button type="button" className="btn btn--primary" disabled={compareIds.length < 2} title={compareIds.length < 2 ? 'Pick at least two players' : undefined} onClick={() => setComparing(true)}>Compare</button>
+          <button type="button" className="btn btn--ghost" onClick={() => setCompareIds([])}>Clear</button>
         </div>
       )}
 

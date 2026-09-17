@@ -1774,3 +1774,81 @@
 .tab:hover { background: rgba(31, 30, 28, 0.04); }
 .tab--active { background: rgba(31, 30, 28, 0.06); }
 .gw__label, .gw__deadline { font-weight: var(--font-weight-medium); }
+
+/* ==========================================================================
+   PLAYER EXPLORER v3 — decision-support table (fixtures + value + sortable)
+   ========================================================================== */
+
+.explorer { --et-cols: 18px 44px minmax(104px, 1fr) auto 56px 50px 66px 50px; }
+
+.feature__fx { margin-top: var(--space-14); }
+
+.ethead {
+  display: grid; grid-template-columns: var(--et-cols); gap: var(--space-10);
+  align-items: center; padding: 0 var(--space-12) var(--space-6);
+  font-size: var(--font-size-xs); letter-spacing: var(--tracking-caps-wide);
+  text-transform: uppercase; color: var(--text-muted);
+}
+.ethead__player { grid-column: 3; }
+.ethead__fx { grid-column: 4; }
+.ecol {
+  appearance: none; border: 0; background: transparent; cursor: pointer;
+  font: inherit; font-size: var(--font-size-xs); letter-spacing: var(--tracking-caps-wide);
+  text-transform: uppercase; color: var(--text-muted);
+  display: inline-flex; align-items: center; justify-content: flex-end; gap: var(--space-3);
+  text-align: right; padding: var(--space-2) 0;
+}
+.ecol:hover { color: var(--text); }
+.ecol--active { color: var(--text); }
+
+.etable { list-style: none; margin: 0; padding: 0; }
+.etrow {
+  display: grid; grid-template-columns: var(--et-cols); gap: var(--space-10);
+  align-items: center; padding: var(--space-11) var(--space-12);
+  border-radius: var(--radius-md, 12px); border-bottom: 1px solid var(--border-subtle);
+  cursor: pointer;
+}
+.etable li:last-child .etrow { border-bottom: 0; }
+.etrow:hover { background: rgba(31, 30, 28, 0.035); border-bottom-color: transparent; }
+.etrow:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.etrow__rank { text-align: center; font-size: var(--font-size-base); color: var(--faint, var(--text-muted)); font-variant-numeric: tabular-nums; }
+
+.etrow__pick { position: relative; cursor: pointer; display: block; }
+.etrow__pick input { position: absolute; inset: -4px auto auto -4px; width: 16px; height: 16px; margin: 0; opacity: 0; z-index: 2; cursor: pointer; }
+.etrow__pick.is-on::after { content: ''; position: absolute; inset: -2px; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface-sunken), 0 0 0 4px var(--accent-ink); }
+
+.etrow__who { min-width: 0; }
+.etrow__name { font-size: var(--font-size-md); letter-spacing: var(--tracking-tight); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.etrow__meta { display: flex; align-items: center; gap: var(--space-7); margin-top: var(--space-2); font-size: var(--font-size-sm); color: var(--text-muted); }
+.etrow__club { display: inline-flex; align-items: center; gap: var(--space-5); }
+.etrow__dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+
+/* fixture-difficulty strip */
+.efx { display: inline-flex; gap: var(--space-3); }
+.efx__none { color: var(--text-muted); }
+.efx__c {
+  width: 34px; height: 26px; border-radius: var(--radius-5); flex: none;
+  display: grid; place-items: center; line-height: 1;
+  font-size: var(--font-size-3xs); letter-spacing: 0.02em;
+}
+.efx__c--d1 { background: var(--fdr-1-bg); color: var(--fdr-1-fg); }
+.efx__c--d2 { background: var(--fdr-2-bg); color: var(--fdr-2-fg); }
+.efx__c--d3 { background: var(--fdr-3-bg); color: var(--fdr-3-fg); }
+.efx__c--d4 { background: var(--fdr-4-bg); color: var(--fdr-4-fg); }
+.efx__c--d5 { background: var(--fdr-5-bg); color: var(--fdr-5-fg); }
+
+.etrow__num { text-align: right; font-size: var(--font-size-md); font-variant-numeric: tabular-nums; }
+.etrow__num--mut { color: var(--text-muted); }
+.etrow__val { text-align: right; }
+.etrow__val .n { font-size: var(--font-size-md); font-variant-numeric: tabular-nums; }
+.etrow__val .bar { height: 3px; border-radius: 2px; background: rgba(31, 30, 28, 0.06); margin-top: var(--space-4); overflow: hidden; }
+.etrow__val .bar i { display: block; height: 100%; background: var(--accent); border-radius: 2px; }
+.etrow__pts { text-align: right; }
+.etrow__pts .n { font-size: var(--font-size-5xl); letter-spacing: var(--tracking-tighter); line-height: 1; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 620px) {
+  /* Drop the Form column so the grid stays exactly 7 cells wide and aligned. */
+  .explorer { --et-cols: 16px 40px minmax(80px, 1fr) auto 56px 62px 48px; }
+  .ecol--form, .etrow__num--form { display: none; }
+  .efx__c { width: 30px; }
+}
