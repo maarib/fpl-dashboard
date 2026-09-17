@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Player Explorer — v3 (decision-support)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Reddit+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --cream:#f7f6f1; --surface:#fff; --ink:#1f1e1c; --muted:#6e6a62; --faint:#a8a49b;
+        --hairline:rgba(31,30,28,0.09); --hover:rgba(31,30,28,0.035); --active-fill:rgba(31,30,28,0.06);
+        --coral:#cc785c; --coral-ink:#a24d31; --blue:#4d6bfe;
+        /* club */
+        --mun:#da291c; --mci:#6cabdd; --ars:#ef0107; --che:#034694; --hul:#f5a12d;
+        /* fixture difficulty (from tokens.css) */
+        --f1:#00e07b; --f1t:#04291b; --f2:#a1e86b; --f2t:#213207;
+        --f3:#e4e4e8; --f3t:#3b3b45; --f4:#ff8a8e; --f4t:#3d0308; --f5:#c33; --f5t:#fff;
+        --serif:'Newsreader',Georgia,serif; --sans:'Reddit Sans',system-ui,sans-serif;
+        --r-sm:9px; --r-md:12px; --r-lg:20px;
+      }
+      *{box-sizing:border-box}
+      html,body{margin:0}
+      body{font-family:var(--sans);font-weight:500;background:var(--cream);color:var(--ink);-webkit-font-smoothing:antialiased}
+
+      .topbar{display:flex;align-items:center;gap:20px;padding:0 28px;height:58px;border-bottom:1px solid var(--hairline)}
+      .brand{display:flex;align-items:center;gap:9px;font-size:16px;letter-spacing:-.01em}
+      .spark{width:15px;height:15px;color:var(--coral)}
+      .brand .d{color:var(--muted)}
+      .tabs{display:flex;gap:2px}
+      .tab{padding:7px 13px;border-radius:var(--r-sm);font-size:14px;color:var(--muted);cursor:pointer}
+      .tab:hover{background:var(--hover);color:var(--ink)}
+      .tab.active{background:var(--active-fill);color:var(--ink)}
+      .status{margin-left:auto;text-align:right;line-height:1.2}
+      .status .gw{font-size:13px}.status .gw .live{color:#3a9d6e}
+      .status .dl{font-size:11px;color:var(--muted)}
+
+      .wrap{max-width:880px;margin:0 auto;padding:40px 28px 90px}
+      .greet{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+      .sparkbig{width:24px;height:24px;color:var(--coral);flex:none}
+      h1{margin:0;font-family:var(--serif);font-weight:500;font-size:33px;letter-spacing:-.01em}
+      .sub{color:var(--muted);font-size:14px;margin:0 0 24px 36px}
+
+      .composer{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--r-lg);padding:15px 18px;box-shadow:0 1px 2px rgba(31,30,28,.03);margin-bottom:14px}
+      .field{display:flex;align-items:center;gap:10px;color:var(--muted)}
+      .field input{border:0;background:transparent;outline:none;font:inherit;font-size:15px;color:var(--ink);width:100%}
+      .field svg{width:17px;height:17px;flex:none}
+      .frow{display:flex;gap:8px;margin-top:13px;flex-wrap:wrap}
+      .pill{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:var(--r-sm);font-size:13px;color:var(--ink);cursor:pointer;border:1px solid var(--hairline);background:var(--surface)}
+      .pill:hover{background:var(--hover)} .pill .cap{color:var(--muted)} .pill svg{width:12px;height:12px;color:var(--faint)}
+      .pill.on{background:var(--active-fill);border-color:transparent}
+
+      /* featured */
+      .feature{position:relative;overflow:hidden;display:flex;gap:16px;background:var(--surface);border:1px solid var(--hairline);border-radius:var(--r-lg);padding:20px 22px;margin:22px 0 30px;box-shadow:0 1px 2px rgba(31,30,28,.03),0 10px 30px rgba(31,30,28,.04);--c:var(--mun)}
+      .feature .glow{position:absolute;right:0;top:0;bottom:0;width:320px;background:radial-gradient(80% 90% at 78% 40%,color-mix(in srgb,var(--c) 15%,transparent),transparent 70%)}
+      .feature .body{position:relative;z-index:2;flex:1}
+      .kicker{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--coral-ink)}
+      .feature .name{font-family:var(--serif);font-size:28px;letter-spacing:-.01em;margin-top:6px}
+      .feature .meta{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:13px;color:var(--muted)}
+      .feature .stats{display:flex;gap:26px;margin-top:16px;align-items:flex-end}
+      .big .n{font-size:42px;line-height:.9;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+      .big .l,.s .l{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);margin-top:4px;display:block}
+      .s .n{font-size:17px;font-variant-numeric:tabular-nums}
+      .feature .photo{position:relative;z-index:1;width:140px;align-self:flex-end}
+      .feature .photo img{width:140px;display:block}
+      .feature .fx{margin-top:14px}
+
+      /* fixture difficulty strip */
+      .fxstrip{display:inline-flex;gap:3px}
+      .fxcell{width:34px;height:26px;border-radius:5px;display:grid;place-items:center;line-height:1;font-size:9.5px;letter-spacing:.02em}
+      .fxcell b{font-weight:500}
+      .d1{background:var(--f1);color:var(--f1t)} .d2{background:var(--f2);color:var(--f2t)}
+      .d3{background:var(--f3);color:var(--f3t)} .d4{background:var(--f4);color:var(--f4t)} .d5{background:var(--f5);color:var(--f5t)}
+
+      /* sortable data table */
+      .thead{display:grid;grid-template-columns:20px 44px minmax(120px,1fr) 118px 58px 52px 70px 52px;gap:10px;align-items:center;padding:0 12px 8px;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint)}
+      .thead .s-h{cursor:pointer;text-align:right;display:inline-flex;align-items:center;justify-content:flex-end;gap:3px}
+      .thead .s-h:hover{color:var(--muted)}
+      .thead .s-h.act{color:var(--ink)}
+      .thead .s-h svg{width:10px;height:10px}
+      .thead .fxh{text-align:left}
+      .trow{display:grid;grid-template-columns:20px 44px minmax(120px,1fr) 118px 58px 52px 70px 52px;gap:10px;align-items:center;padding:11px 12px;border-radius:var(--r-md);border-bottom:1px solid var(--hairline);cursor:pointer}
+      .trows :last-child .trow{border-bottom:0}
+      .trow:hover{background:var(--hover);border-bottom-color:transparent}
+      .rank{text-align:center;font-size:13px;color:var(--faint);font-variant-numeric:tabular-nums}
+      .avatar{position:relative;width:40px;height:40px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 34%,color-mix(in srgb,var(--c) 40%,#fff),color-mix(in srgb,var(--c) 80%,#201f1c))}
+      .avatar img{position:absolute;inset:0;width:100%;height:120%;object-fit:cover;object-position:top center}
+      .avatar .mono{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:15px}
+      .who{min-width:0}
+      .who .nm{font-size:14.5px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .who .mt{display:flex;align-items:center;gap:7px;margin-top:2px;font-size:12px;color:var(--muted)}
+      .club{display:inline-flex;align-items:center;gap:5px}
+      .dot{width:7px;height:7px;border-radius:50%}
+      .postag{padding:1px 6px;border-radius:999px;font-size:10px}
+      .p-gkp{background:#f2ead4;color:#7c5a05}.p-def{background:#dcefe4;color:#0c6d4e}.p-mid{background:#e3e9fb;color:#3457cc}.p-fwd{background:#f8e2e2;color:#b83a4a}
+      .num{text-align:right;font-size:14px;font-variant-numeric:tabular-nums}
+      .num.mut{color:var(--muted)}
+      /* value cell with a faint bar underneath */
+      .val{text-align:right}
+      .val .n{font-size:14px;font-variant-numeric:tabular-nums}
+      .val .bar{height:3px;border-radius:2px;background:var(--active-fill);margin-top:4px;overflow:hidden}
+      .val .bar i{display:block;height:100%;background:var(--coral);border-radius:2px}
+      .pts{text-align:right}
+      .pts .n{font-size:22px;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+      .colhint{font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;text-align:left}
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="brand"><svg class="spark" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l2.4 7.2L21.6 4.8 16.8 12l4.8 7.2-7.2-2.4L12 24l-2.4-7.2L2.4 19.2 7.2 12 2.4 4.8l7.2 2.4z"/></svg> FPL <span class="d">Dashboard</span></div>
+      <nav class="tabs"><span class="tab active">Player Explorer</span><span class="tab">My Team</span><span class="tab">Fixtures</span></nav>
+      <div class="status"><div class="gw"><span class="live">●</span> Gameweek 2 · Live</div><div class="dl">Next deadline · Sat 30 Aug, 11:00</div></div>
+    </div>
+
+    <div class="wrap">
+      <div class="greet">
+        <svg class="sparkbig" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l2.4 7.2L21.6 4.8 16.8 12l4.8 7.2-7.2-2.4L12 24l-2.4-7.2L2.4 19.2 7.2 12 2.4 4.8l7.2 2.4z"/></svg>
+        <h1>Who's worth picking?</h1>
+      </div>
+      <p class="sub">629 players. Sort by value, form or fixtures — not just points.</p>
+
+      <div class="composer">
+        <label class="field">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input placeholder="Search a player, team or position" />
+        </label>
+        <div class="frow">
+          <span class="pill"><span class="cap">Position</span> All <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></span>
+          <span class="pill"><span class="cap">Team</span> All <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></span>
+          <span class="pill"><span class="cap">Price</span> up to £15.5m <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></span>
+          <span class="pill on">Available only</span>
+        </div>
+      </div>
+
+      <!-- Featured leader with its upcoming run -->
+      <div class="feature" style="--c:var(--mun)">
+        <div class="glow"></div>
+        <div class="body">
+          <div class="kicker">Best value this week</div>
+          <div class="name">Bruno Fernandes</div>
+          <div class="meta"><span class="postag p-mid">MID</span> Man Utd · £12.0m</div>
+          <div class="stats">
+            <div class="big"><div class="n">25</div><div class="l">Points</div></div>
+            <div class="s"><div class="n">2.1</div><div class="l">Pts / £m</div></div>
+            <div class="s"><div class="n">8.4</div><div class="l">Form</div></div>
+            <div class="s"><div class="n">48.6%</div><div class="l">Owned</div></div>
+          </div>
+          <div class="fx">
+            <span class="fxstrip">
+              <span class="fxcell d2"><b>VFK</b></span><span class="fxcell d3"><b>LIL</b></span><span class="fxcell d4"><b>MCI</b></span>
+            </span>
+          </div>
+        </div>
+        <div class="photo"><img src="https://resources.premierleague.com/premierleague/photos/players/250x250/p141746.png" alt="" onerror="this.style.display='none'"/></div>
+      </div>
+
+      <!-- Sortable data table -->
+      <div class="thead">
+        <span></span><span></span><span>Player</span>
+        <span class="fxh">Next 3</span>
+        <span class="s-h">£m</span>
+        <span class="s-h">Form</span>
+        <span class="s-h act">Value <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg></span>
+        <span class="s-h">Pts</span>
+      </div>
+
+      <div class="trows">
+        <!-- rows: rank | avatar | who | fixtures | price | form | value(bar) | pts -->
+        <div class="row"><div class="trow" style="--c:var(--hul)">
+          <span class="rank">1</span>
+          <span class="avatar"><span class="mono">A</span></span>
+          <span class="who"><span class="nm">Ajayi</span><span class="mt"><span class="club"><span class="dot" style="background:var(--hul)"></span>HUL</span><span class="postag p-def">DEF</span></span></span>
+          <span class="fxstrip"><span class="fxcell d2"><b>COV</b></span><span class="fxcell d3"><b>AVL</b></span><span class="fxcell d4"><b>CHE</b></span></span>
+          <span class="num mut">4.1</span>
+          <span class="num mut">6.0</span>
+          <span class="val"><span class="n">4.9</span><span class="bar"><i style="width:100%"></i></span></span>
+          <span class="pts"><span class="n">20</span></span>
+        </div></div>
+
+        <div class="row"><div class="trow" style="--c:var(--hul)">
+          <span class="rank">2</span>
+          <span class="avatar"><span class="mono">T</span></span>
+          <span class="who"><span class="nm">Tzolakis</span><span class="mt"><span class="club"><span class="dot" style="background:var(--hul)"></span>HUL</span><span class="postag p-gkp">GKP</span></span></span>
+          <span class="fxstrip"><span class="fxcell d2"><b>COV</b></span><span class="fxcell d3"><b>AVL</b></span><span class="fxcell d4"><b>CHE</b></span></span>
+          <span class="num mut">4.5</span>
+          <span class="num mut">5.4</span>
+          <span class="val"><span class="n">4.4</span><span class="bar"><i style="width:90%"></i></span></span>
+          <span class="pts"><span class="n">20</span></span>
+        </div></div>
+
+        <div class="row"><div class="trow" style="--c:var(--ars)">
+          <span class="rank">3</span>
+          <span class="avatar"><span class="mono">C</span></span>
+          <span class="who"><span class="nm">Calafiori</span><span class="mt"><span class="club"><span class="dot" style="background:var(--ars)"></span>ARS</span><span class="postag p-def">DEF</span></span></span>
+          <span class="fxstrip"><span class="fxcell d2"><b>LIL</b></span><span class="fxcell d3"><b>SUN</b></span><span class="fxcell d4"><b>CHE</b></span></span>
+          <span class="num mut">5.6</span>
+          <span class="num mut">6.8</span>
+          <span class="val"><span class="n">3.6</span><span class="bar"><i style="width:73%"></i></span></span>
+          <span class="pts"><span class="n">20</span></span>
+        </div></div>
+
+        <div class="row"><div class="trow" style="--c:var(--mci)">
+          <span class="rank">4</span>
+          <span class="avatar"><span class="mono">C</span></span>
+          <span class="who"><span class="nm">Cherki</span><span class="mt"><span class="club"><span class="dot" style="background:var(--mci)"></span>MCI</span><span class="postag p-mid">MID</span></span></span>
+          <span class="fxstrip"><span class="fxcell d3"><b>PSG</b></span><span class="fxcell d2"><b>BHA</b></span><span class="fxcell d2"><b>COV</b></span></span>
+          <span class="num mut">7.7</span>
+          <span class="num mut">7.2</span>
+          <span class="val"><span class="n">2.9</span><span class="bar"><i style="width:59%"></i></span></span>
+          <span class="pts"><span class="n">22</span></span>
+        </div></div>
+
+        <div class="row"><div class="trow" style="--c:var(--che)">
+          <span class="rank">5</span>
+          <span class="avatar"><span class="mono">J</span><img src="https://resources.premierleague.com/premierleague/photos/players/110x140/p475168.png" onerror="this.remove()"/></span>
+          <span class="who"><span class="nm">João Pedro</span><span class="mt"><span class="club"><span class="dot" style="background:var(--che)"></span>CHE</span><span class="postag p-fwd">FWD</span></span></span>
+          <span class="fxstrip"><span class="fxcell d5"><b>ARS</b></span><span class="fxcell d2"><b>HUL</b></span><span class="fxcell d2"><b>BHA</b></span></span>
+          <span class="num mut">7.7</span>
+          <span class="num mut">6.1</span>
+          <span class="val"><span class="n">2.6</span><span class="bar"><i style="width:53%"></i></span></span>
+          <span class="pts"><span class="n">20</span></span>
+        </div></div>
+
+        <div class="row"><div class="trow" style="--c:var(--ars)">
+          <span class="rank">6</span>
+          <span class="avatar"><span class="mono">S</span><img src="https://resources.premierleague.com/premierleague/photos/players/110x140/p223340.png" onerror="this.remove()"/></span>
+          <span class="who"><span class="nm">Saka</span><span class="mt"><span class="club"><span class="dot" style="background:var(--ars)"></span>ARS</span><span class="postag p-mid">MID</span></span></span>
+          <span class="fxstrip"><span class="fxcell d2"><b>LIL</b></span><span class="fxcell d3"><b>SUN</b></span><span class="fxcell d4"><b>CHE</b></span></span>
+          <span class="num mut">9.5</span>
+          <span class="num mut">7.0</span>
+          <span class="val"><span class="n">2.1</span><span class="bar"><i style="width:43%"></i></span></span>
+          <span class="pts"><span class="n">20</span></span>
+        </div></div>
+
+        <div class="row"><div class="trow" style="--c:var(--che)">
+          <span class="rank">7</span>
+          <span class="avatar"><span class="mono">P</span></span>
+          <span class="who"><span class="nm">Palmer</span><span class="mt"><span class="club"><span class="dot" style="background:var(--che)"></span>CHE</span><span class="postag p-mid">MID</span></span></span>
+          <span class="fxstrip"><span class="fxcell d5"><b>ARS</b></span><span class="fxcell d2"><b>HUL</b></span><span class="fxcell d2"><b>BHA</b></span></span>
+          <span class="num mut">9.6</span>
+          <span class="num mut">6.4</span>
+          <span class="val"><span class="n">2.1</span><span class="bar"><i style="width:43%"></i></span></span>
+          <span class="pts"><span class="n">20</span></span>
+        </div></div>
+      </div>
+    </div>
+  </body>
+</html>
