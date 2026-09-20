@@ -409,6 +409,17 @@ export default function TeamV2() {
           )}
 
           <div className="t2-pitch">
+            {/* The turf is a single plane tilted back under perspective; its
+                markings ride along so the centre circle reads as an ellipse.
+                The player cards are a separate, untransformed overlay so they
+                stay upright and legible — the field recedes, the players don't. */}
+            <div className="t2-pitch__turf" aria-hidden="true">
+              <span className="t2-mark t2-mark--box t2-mark--box-far" />
+              <span className="t2-mark t2-mark--box t2-mark--box-near" />
+              <span className="t2-mark t2-mark--halfway" />
+              <span className="t2-mark t2-mark--circle" />
+            </div>
+
             <button
               type="button"
               className={`t2-oppbtn${opponentView ? ' is-on' : ''}`}
