@@ -2,11 +2,15 @@ import {
   ArrowLeft,
   ArrowsClockwise,
   ArrowsLeftRight,
+  CalendarBlank,
   CaretUpDown,
   Check,
+  CheckCircle,
   Lightning,
   MagnifyingGlass,
+  SoccerBall,
   Sparkle,
+  Wallet,
   X,
 } from '@phosphor-icons/react'
 import { useMemo, useState } from 'react'
@@ -148,7 +152,7 @@ function MatchesRail({ fixtures, currentEvent, teamsById }) {
   return (
     <aside className="t2-rail">
       <div className="t2-rail__head">
-        <span className="t2-rail__tab">Matches</span>
+        <span className="t2-rail__tab"><SoccerBall size={13} weight="fill" aria-hidden="true" /> Matches</span>
       </div>
       <div className="t2-rail__scroll">
         {groups.length === 0 && <p className="t2-rail__empty">No fixtures scheduled for this gameweek.</p>}
@@ -373,13 +377,21 @@ export default function TeamV2() {
             return (
               <div key={e.id} className={`t2-md${active ? ' is-active' : ''}${e.finished ? ' is-done' : ''}`}>
                 <span className="t2-md__gw">{e.name}</span>
-                <span className="t2-md__sub">{active ? 'Make transfers' : e.finished ? 'Finished' : date}</span>
+                <span className="t2-md__sub">
+                  {active ? (
+                    <><Lightning size={11} weight="fill" aria-hidden="true" /> Make transfers</>
+                  ) : e.finished ? (
+                    <><CheckCircle size={11} weight="fill" aria-hidden="true" /> Finished</>
+                  ) : (
+                    <><CalendarBlank size={11} aria-hidden="true" /> {date}</>
+                  )}
+                </span>
               </div>
             )
           })}
         </div>
         <div className="t2-mdnav__total">
-          <span className="t2-md__gw">Squad value</span>
+          <span className="t2-md__gw"><Wallet size={11} weight="fill" aria-hidden="true" /> Squad value</span>
           <span className="t2-md__total">{formatPrice(cost)}</span>
         </div>
       </div>
