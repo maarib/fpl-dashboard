@@ -17,6 +17,10 @@
   --pl-ink: #ffffff;
   --pl-muted: rgba(255, 255, 255, 0.62);
 
+  /* Turf tone vars the PitchSurface SVG reads (scoped to .myteam elsewhere) */
+  --turf-sheen: 0.08;
+  --turf-line-width: 2.4;
+
   color: var(--pl-ink);
   background: radial-gradient(120% 90% at 50% 0%, #4a0050 0%, var(--pl-purple) 45%, var(--pl-purple-2) 100%);
   border-radius: var(--radius-panel);
@@ -91,46 +95,24 @@
 .t2-chip:hover { filter: brightness(1.06); }
 .t2-chip:last-child { background: var(--pl-cyan); }
 
-/* ---------- The pitch ---------- */
+/* ---------- The pitch ----------
+   Reuses the early app's perspective turf (PitchSurface: converging
+   touchlines, compressing mow bands, trapezoid box, elliptical centre
+   circle) painted by an absolutely-positioned SVG behind the rows. */
 .t2-pitch {
   position: relative; border-radius: var(--radius-card) var(--radius-card) 0 0;
-  padding: var(--space-28) var(--space-12) var(--space-20);
-  overflow: hidden;
-  /* Establishes the vanishing point for the tilted turf below. */
-  perspective: 1100px; perspective-origin: 50% 42%;
+  overflow: hidden; min-height: 470px; display: flex; flex-direction: column;
 }
+.t2-pitch .pitch-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
-/* The turf: one plane rotated back around its near (bottom) edge so it recedes
-   into a trapezoid, wider in front and narrower at the far touchline. Oversized
-   and clipped by the pitch so the near edge stays full-bleed after the tilt. */
-.t2-pitch__turf {
-  position: absolute; left: -12%; right: -12%; bottom: 0; top: -28%;
-  transform-origin: 50% 100%; transform: rotateX(34deg);
-  background:
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 42px, rgba(0, 0, 0, 0.035) 42px 84px),
-    linear-gradient(180deg, #04863f 0%, #069449 42%, #0bbf63 100%);
-  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.28);
+/* Formation rows sit flat on the turf; space-between spreads them from the far
+   goal to the near edge. Top padding clears the perimeter boards + goal. */
+.t2-pitch__grid {
+  position: relative; z-index: 1; flex: 1;
+  display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-10);
+  padding: var(--space-24) var(--space-8) var(--space-16);
 }
-
-/* Pitch markings — children of the turf, so they tilt with it. The circle
-   projects to an ellipse and the far box shrinks, selling the depth for free. */
-.t2-mark { position: absolute; border: 2px solid rgba(255, 255, 255, 0.22); }
-.t2-mark--halfway { left: 0; right: 0; top: 50%; height: 0; border-width: 2px 0 0; }
-.t2-mark--circle {
-  left: 50%; top: 50%; width: 26%; aspect-ratio: 1; transform: translate(-50%, -50%);
-  border-radius: 50%; border-width: 2px;
-}
-.t2-mark--box { left: 50%; transform: translateX(-50%); border-top: 0; }
-.t2-mark--box-far { top: 0; width: 34%; height: 16%; border-radius: 0 0 4px 4px; border-top: 2px solid rgba(255, 255, 255, 0.22); border-bottom: 0; }
-.t2-mark--box-near { bottom: 0; width: 52%; height: 20%; border-bottom: 0; }
-
-.t2-pitch__grid { position: relative; z-index: 1; display: flex; flex-direction: column; gap: var(--space-16); }
-.t2-row { display: flex; justify-content: center; gap: var(--space-10); flex-wrap: wrap; }
-/* A touch of depth on the cards themselves: the forward line sits "farther"
-   and reads a hair smaller than the defence and keeper in front. */
-.t2-row:nth-child(1) { transform: scale(0.92); }
-.t2-row:nth-child(2) { transform: scale(0.96); }
-.t2-row--gk { transform: scale(1.02); }
+.t2-row { display: flex; justify-content: center; align-items: flex-start; gap: var(--space-10); flex-wrap: wrap; }
 
 .t2-oppbtn {
   position: absolute; left: var(--space-12); bottom: var(--space-12); z-index: 2;
