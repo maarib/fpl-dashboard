@@ -1795,18 +1795,21 @@
 /* Deadline hero — the one accent card, echoing the CL blue deadline panel */
 .ov-deadline {
   display: flex; flex-direction: column; align-items: center; text-align: center; justify-content: center;
-  color: #fff; border-radius: var(--radius-panel); padding: var(--space-24) var(--space-20);
-  background: linear-gradient(155deg, var(--accent-2) 0%, var(--accent-2-ink) 100%);
+  color: var(--text); border-radius: var(--radius-panel); padding: var(--space-24) var(--space-20);
+  /* A charcoal card lit by a soft coral glow — the countdown itself carries
+     the accent, no colour slab. */
+  background: radial-gradient(130% 120% at 50% -10%, color-mix(in srgb, var(--accent) 18%, var(--surface)) 0%, var(--surface) 68%);
+  border: 1px solid var(--border-subtle);
   box-shadow: var(--elevation-2);
 }
-.ov-deadline__kicker { font-size: var(--font-size-xs); letter-spacing: var(--tracking-caps); text-transform: uppercase; opacity: 0.85; }
+.ov-deadline__kicker { font-size: var(--font-size-xs); letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--accent-ink); }
 .ov-clock { display: flex; align-items: flex-start; gap: var(--space-10); margin: var(--space-12) 0 var(--space-12); }
 .ov-clock__unit { display: flex; flex-direction: column; align-items: center; min-width: 52px; }
-.ov-clock__unit b { font-size: 44px; line-height: 1; letter-spacing: var(--tracking-tighter); font-weight: var(--font-weight-extrabold); font-variant-numeric: tabular-nums; }
-.ov-clock__unit i { font-size: var(--font-size-2xs); letter-spacing: var(--tracking-caps-loose); text-transform: uppercase; opacity: 0.8; font-style: normal; margin-top: var(--space-6); }
-.ov-clock__sep { font-size: 34px; line-height: 1.1; opacity: 0.5; }
-.ov-clock--passed { font-size: var(--font-size-lg); opacity: 0.9; margin: var(--space-14) 0; }
-.ov-deadline__date { font-size: var(--font-size-sm); opacity: 0.85; }
+.ov-clock__unit b { font-size: 44px; line-height: 1; letter-spacing: var(--tracking-tighter); font-weight: var(--font-weight-extrabold); font-variant-numeric: tabular-nums; color: var(--accent-ink); }
+.ov-clock__unit i { font-size: var(--font-size-2xs); letter-spacing: var(--tracking-caps-loose); text-transform: uppercase; color: var(--text-muted); font-style: normal; margin-top: var(--space-6); }
+.ov-clock__sep { font-size: 34px; line-height: 1.1; color: var(--accent-ink); opacity: 0.4; }
+.ov-clock--passed { font-size: var(--font-size-lg); color: var(--text-muted); margin: var(--space-14) 0; }
+.ov-deadline__date { font-size: var(--font-size-sm); color: var(--text-muted); }
 
 /* Strategy promo card beside the deadline */
 .ov-promo {
