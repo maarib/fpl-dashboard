@@ -4,7 +4,6 @@ import { FplProvider } from './context/FplProvider'
 import { useFpl } from './hooks/useFpl'
 import Overview from './components/Overview'
 import PlayerExplorer from './components/PlayerExplorer'
-import MyTeam from './components/MyTeam'
 import TeamV2 from './components/TeamV2'
 import Transfers from './components/Transfers'
 import Fixtures from './components/Fixtures'
@@ -14,8 +13,7 @@ import './App.css'
 const TABS = [
   { id: 'overview', label: 'Overview', Component: Overview },
   { id: 'players', label: 'Player Explorer', Component: PlayerExplorer },
-  { id: 'team', label: 'My Team', Component: MyTeam, wide: true },
-  { id: 'teamv2', label: 'My Team v2', Component: TeamV2, wide: true },
+  { id: 'team', label: 'My Team', Component: TeamV2, wide: true },
   { id: 'transfers', label: 'Transfers', Component: Transfers, wide: true },
   { id: 'fixtures', label: 'Fixtures', Component: Fixtures },
 ]

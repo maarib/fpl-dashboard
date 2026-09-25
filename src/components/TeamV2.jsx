@@ -14,66 +14,26 @@ import {
   X,
 } from '@phosphor-icons/react'
 import { useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useFpl } from '../hooks/useFpl'
+import { useSquad } from '../hooks/useSquad'
 import { formatPrice, nextFixtureForTeam, toNumber } from '../lib/fpl'
 import { teamBadgeUrl, teamKitUrl } from '../lib/images'
-import { BUDGET } from '../lib/squad'
+import {
+  BUDGET,
+  SQUAD_SHAPE,
+  addRejectionReason,
+  findPlayerSlot,
+  firstEmptySlot,
+  parseFormation,
+  squadCost,
+} from '../lib/squad'
 import PitchSurface from './PitchSurface'
+import PlayerDetail from './PlayerDetail'
 import '../styles/teamv2.css'
 
-/* -------------------------------------------------------------------------- */
-/*  A believable, budget-legal demo XI so the exploration renders fully.       */
-/*  Kept in local state — never touches the user's real saved squad.           */
-/* -------------------------------------------------------------------------- */
-
-const NEED = { 1: 2, 2: 5, 3: 5, 4: 3 } // total squad shape
-const START = { 1: 1, 2: 4, 3: 3, 4: 3 } // 4-3-3 starters
 const POS_SHORT = { 1: 'GKP', 2: 'DEF', 3: 'MID', 4: 'FWD' }
-
-function buildDemoSquad(players) {
-  const byPos = {}
-  const cheapest = {}
-  for (const pos of [1, 2, 3, 4]) {
-    byPos[pos] = players
-      .filter((p) => p.element_type === pos)
-      .sort((a, b) => b.total_points - a.total_points || a.now_cost - b.now_cost)
-    cheapest[pos] = Math.min(...byPos[pos].map((p) => p.now_cost))
-  }
-
-  const slotsLeft = { ...NEED }
-  const squad = { 1: [], 2: [], 3: [], 4: [] }
-  const clubCount = new Map()
-  let spent = 0
-
-  // What the still-empty slots must cost at minimum, if we take this pick now.
-  const reserveExcluding = (curPos) => {
-    let r = 0
-    for (const pos of [1, 2, 3, 4]) {
-      const left = slotsLeft[pos] - (pos === curPos ? 1 : 0)
-      r += Math.max(0, left) * cheapest[pos]
-    }
-    return r
-  }
-
-  // Spend the premium budget on attackers first, fill keepers last.
-  for (const pos of [4, 3, 2, 1]) {
-    while (slotsLeft[pos] > 0) {
-      const maxAffordable = BUDGET - spent - reserveExcluding(pos)
-      const pick = byPos[pos].find(
-        (p) =>
-          !squad[pos].includes(p.id) &&
-          p.now_cost <= maxAffordable &&
-          (clubCount.get(p.team) ?? 0) < 3,
-      )
-      const chosen = pick ?? byPos[pos].find((p) => !squad[pos].includes(p.id))
-      squad[pos].push(chosen.id)
-      spent += chosen.now_cost
-      clubCount.set(chosen.team, (clubCount.get(chosen.team) ?? 0) + 1)
-      slotsLeft[pos] -= 1
-    }
-  }
-  return squad
-}
+const SQUAD_TOTAL = Object.values(SQUAD_SHAPE).reduce((a, b) => a + b, 0)
 
 /* -------------------------------------------------------------------------- */
 /*  Pitch player card                                                          */
@@ -85,14 +45,17 @@ function fixtureLabel(fx, teamsById) {
   return `${opp} (${fx.isHome ? 'H' : 'A'})`
 }
 
-function PitchCard({ id, playersById, teamsById, fixtures, fromEvent, isGK, isCaptain, isVice, transfers, onRemove, label, order }) {
+function PitchCard({
+  id, playersById, teamsById, fixtures, fromEvent, isGK,
+  isCaptain, isVice, transfers, onRemove, onClick, label, order,
+}) {
   const player = id ? playersById.get(id) : null
   if (!player) {
     return (
-      <div className="t2-card t2-card--empty">
+      <button type="button" className="t2-card t2-card--empty" onClick={onClick}>
         <span className="t2-card__plus">+</span>
         <span className="t2-card__name">Add {label ?? ''}</span>
-      </div>
+      </button>
     )
   }
   const team = teamsById.get(player.team)
@@ -107,16 +70,18 @@ function PitchCard({ id, playersById, teamsById, fixtures, fromEvent, isGK, isCa
       )}
       {isCaptain && <span className="t2-card__badge">C</span>}
       {isVice && <span className="t2-card__badge t2-card__badge--v">V</span>}
-      {kit ? (
-        <img className="t2-card__kit" src={kit} alt="" loading="lazy" onError={(e) => (e.currentTarget.style.visibility = 'hidden')} />
-      ) : (
-        <span className="t2-card__kit t2-card__kit--ph" />
-      )}
-      <span className="t2-card__name">
-        {order != null && <i className="t2-card__order">{order}</i>}
-        {player.web_name}
-      </span>
-      <span className="t2-card__fix">{fixtureLabel(fx, teamsById)}</span>
+      <button type="button" className="t2-card__body" onClick={onClick}>
+        {kit ? (
+          <img className="t2-card__kit" src={kit} alt="" loading="lazy" onError={(e) => (e.currentTarget.style.visibility = 'hidden')} />
+        ) : (
+          <span className="t2-card__kit t2-card__kit--ph" />
+        )}
+        <span className="t2-card__name">
+          {order != null && <i className="t2-card__order">{order}</i>}
+          {player.web_name}
+        </span>
+        <span className="t2-card__fix">{fixtureLabel(fx, teamsById)}</span>
+      </button>
     </div>
   )
 }
@@ -192,7 +157,7 @@ const COLS = [
   { key: 'value', label: 'Pts / £m', get: (p) => value(p), fmt: (p) => value(p).toFixed(1) },
 ]
 
-function MarketRail({ players, teamsById, positionsById, fixtures, fromEvent, ownedIds, onPick }) {
+function MarketRail({ players, teamsById, positionsById, fixtures, fromEvent, squad, playersById, onPick }) {
   const [search, setSearch] = useState('')
   const [pos, setPos] = useState('all')
   const [sort, setSort] = useState({ key: 'total_points', dir: -1 })
@@ -244,11 +209,12 @@ function MarketRail({ players, teamsById, positionsById, fixtures, fromEvent, ow
             {rows.map((p) => {
               const team = teamsById.get(p.team)
               const fx = nextFixtureForTeam(fixtures, p.team, fromEvent)
-              const owned = ownedIds.has(p.id)
+              const owned = findPlayerSlot(squad, p.id) != null
+              const reason = owned ? 'Already in your squad' : addRejectionReason(p, squad, playersById)
               return (
                 <tr key={p.id} className={owned ? 'is-owned' : ''}>
                   <td className="t2-tbl__player">
-                    <button type="button" className="t2-prow" onClick={() => !owned && onPick(p)} disabled={owned}>
+                    <button type="button" className="t2-prow" onClick={() => !reason && onPick(p)} disabled={Boolean(reason)} title={reason || `Add ${p.web_name}`}>
                       <span className={`t2-prow__badge${owned ? ' is-owned' : ''}`}>
                         {owned ? <Check size={12} weight="bold" aria-hidden="true" /> : teamBadgeUrl(team, 50) && <img src={teamBadgeUrl(team, 50)} alt="" loading="lazy" />}
                       </span>
@@ -274,95 +240,87 @@ function MarketRail({ players, teamsById, positionsById, fixtures, fromEvent, ow
 }
 
 /* -------------------------------------------------------------------------- */
-/*  The page                                                                   */
+/*  The page — now the real My Team, backed by the persisted squad             */
 /* -------------------------------------------------------------------------- */
 
 export default function TeamV2() {
   const { players, playersById, teamsById, positionsById, fixtures, events, currentEvent } = useFpl()
   const fromEvent = currentEvent?.id ?? 1
+  const { formation, squad, captain, viceCaptain, setSlot, clearSlot, reset, setCaptain, setViceCaptain } = useSquad()
 
-  const [squad, setSquad] = useState(() => buildDemoSquad(players))
   const [mode, setMode] = useState('default') // 'default' | 'transfers'
   const [opponentView, setOpponentView] = useState(false)
+  const [menu, setMenu] = useState(null) // { pos, index, id, isStarter, x, y }
+  const [detail, setDetail] = useState(null)
 
-  const ownedIds = useMemo(() => new Set([1, 2, 3, 4].flatMap((pos) => squad[pos].filter(Boolean))), [squad])
+  const need = useMemo(() => parseFormation(formation), [formation])
 
-  const cost = useMemo(
-    () => [1, 2, 3, 4].reduce((sum, pos) => sum + squad[pos].reduce((s, id) => s + (id ? playersById.get(id)?.now_cost ?? 0 : 0), 0), 0),
-    [squad, playersById],
-  )
+  const cost = squadCost(squad, playersById)
   const bank = BUDGET - cost
-  const picked = ownedIds.size
+  const picked = [1, 2, 3, 4].reduce((n, pos) => n + squad[pos].filter(Boolean).length, 0)
 
-  // Captain / vice = the two highest scorers among the starting XI.
-  const armband = useMemo(() => {
-    const starters = [1, 2, 3, 4].flatMap((pos) => squad[pos].slice(0, START[pos]))
-    const ranked = starters
-      .map((id) => playersById.get(id))
-      .filter(Boolean)
-      .sort((a, b) => b.total_points - a.total_points)
-    return { c: ranked[0]?.id, v: ranked[1]?.id }
-  }, [squad, playersById])
-
-  function removeId(targetId) {
-    setSquad((s) => {
-      const next = { 1: [...s[1]], 2: [...s[2]], 3: [...s[3]], 4: [...s[4]] }
-      for (const pos of [1, 2, 3, 4]) {
-        const i = next[pos].indexOf(targetId)
-        if (i !== -1) next[pos][i] = null
-      }
-      return next
-    })
+  function addPlayer(player) {
+    const slot = firstEmptySlot(squad, player.element_type)
+    if (slot !== -1) setSlot(player.element_type, slot, player.id)
   }
 
-  function pickPlayer(player) {
-    const pos = player.element_type
-    setSquad((s) => {
-      if (s[pos].filter(Boolean).length >= NEED[pos]) return s // position full
-      const next = { ...s, [pos]: [...s[pos]] }
-      const empty = next[pos].indexOf(null)
-      if (empty !== -1) next[pos][empty] = player.id
-      else next[pos].push(player.id)
-      return next
-    })
+  function openSlotToAdd() {
+    setMode('transfers')
   }
-
-  const resetSquad = () => setSquad(buildDemoSquad(players))
-
-  // Rows top-to-bottom: FWD, MID, DEF, GK
-  const starterRows = [4, 3, 2].map((pos) => squad[pos].slice(0, START[pos]))
-  const gkRow = squad[1].slice(0, START[1])
-
-  // Bench: reserve GK, then the outfield subs in position order
-  const benchOutfield = [2, 3, 4].flatMap((pos) =>
-    squad[pos].slice(START[pos]).map((id) => ({ id, pos })),
-  )
-  const benchGk = { id: squad[1][START[1]], pos: 1 }
-
-  const cardProps = (id, isGK, extra = {}) => ({
-    id,
-    playersById,
-    teamsById,
-    fixtures,
-    fromEvent,
-    isGK,
-    isCaptain: id === armband.c,
-    isVice: id === armband.v,
-    transfers: mode === 'transfers',
-    onRemove: () => removeId(id),
-    ...extra,
-  })
 
   const deadlineDate = currentEvent?.deadline_time
     ? new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }).format(new Date(currentEvent.deadline_time))
     : null
 
-  // Matchday rail — a window around the current gameweek.
   const mdEvents = useMemo(() => {
     const evs = events ?? []
     const idx = Math.max(0, evs.findIndex((e) => e.id === fromEvent))
     return evs.slice(Math.max(0, idx - 1), idx + 7)
   }, [events, fromEvent])
+
+  // Build one card for a squad slot, wiring the real mutations.
+  function renderCard(pos, index, { isGK = false, order } = {}) {
+    const id = squad[pos][index]
+    const isStarter = index < need[pos]
+
+    const onClick = (e) => {
+      if (!id) { openSlotToAdd(); return }
+      if (mode !== 'default') { setDetail(playersById.get(id)); return }
+      const r = e.currentTarget.getBoundingClientRect()
+      setMenu({ pos, index, id, isStarter, x: r.left + r.width / 2, y: r.bottom + 4 })
+    }
+
+    return (
+      <PitchCard
+        key={`${pos}-${index}-${id ?? 'e'}`}
+        id={id}
+        playersById={playersById}
+        teamsById={teamsById}
+        fixtures={fixtures}
+        fromEvent={fromEvent}
+        isGK={isGK}
+        isCaptain={captain === id}
+        isVice={viceCaptain === id}
+        transfers={mode === 'transfers'}
+        onRemove={() => clearSlot(pos, index)}
+        onClick={onClick}
+        label={POS_SHORT[pos]}
+        order={order}
+      />
+    )
+  }
+
+  // Rows top-to-bottom: FWD, MID, DEF (starters), then GK.
+  const starterRows = [4, 3, 2].map((pos) =>
+    Array.from({ length: need[pos] }, (_, i) => renderCard(pos, i)),
+  )
+  const gkRow = [renderCard(1, 0, { isGK: true })]
+
+  // Bench: reserve GK first, then outfield subs in numbered order.
+  const benchGk = renderCard(1, 1, { isGK: true })
+  const benchOutfield = [2, 3, 4].flatMap((pos) =>
+    Array.from({ length: SQUAD_SHAPE[pos] - need[pos] }, (_, i) => ({ pos, index: need[pos] + i })),
+  )
 
   return (
     <div className="t2">
@@ -422,10 +380,6 @@ export default function TeamV2() {
           )}
 
           <div className="t2-pitch">
-            {/* The turf from the early app — one SVG driven by a single
-                perspective model (converging touchlines, compressing mow
-                bands, trapezoid box, elliptical centre circle). The player
-                cards sit flat over it in the formation rows. */}
             <PitchSurface />
 
             <button
@@ -438,44 +392,33 @@ export default function TeamV2() {
 
             <div className="t2-pitch__grid">
               {starterRows.map((row, ri) => (
-                <div className="t2-row" key={ri}>
-                  {row.map((id, i) => (
-                    <PitchCard key={`${ri}-${i}-${id ?? 'e'}`} {...cardProps(id, false)} label={POS_SHORT[[4, 3, 2][ri]]} />
-                  ))}
-                </div>
+                <div className="t2-row" key={ri}>{row}</div>
               ))}
-              <div className="t2-row t2-row--gk">
-                {gkRow.map((id, i) => (
-                  <PitchCard key={`gk-${i}-${id ?? 'e'}`} {...cardProps(id, true)} label="GKP" />
-                ))}
-              </div>
+              <div className="t2-row t2-row--gk">{gkRow}</div>
             </div>
           </div>
 
           {/* Bench */}
           <div className="t2-bench">
-            <PitchCard {...cardProps(benchGk.id, true)} label="GKP" />
-            {benchOutfield.map((b, i) => (
-              <PitchCard key={`b-${i}-${b.id ?? 'e'}`} {...cardProps(b.id, false)} label={POS_SHORT[b.pos]} order={i + 1} />
-            ))}
+            {benchGk}
+            {benchOutfield.map((b, i) => renderCard(b.pos, b.index, { order: i + 1 }))}
           </div>
 
           {/* Action bar */}
           {mode === 'default' ? (
             <div className="t2-actions">
-              <button type="button" className="t2-btn t2-btn--ghost"><ArrowsClockwise size={15} aria-hidden="true" /> Subs</button>
               <button type="button" className="t2-btn t2-btn--go" onClick={() => setMode('transfers')}>
-                <ArrowsLeftRight size={15} aria-hidden="true" /> Transfers
+                <ArrowsLeftRight size={15} aria-hidden="true" /> Make transfers
               </button>
             </div>
           ) : (
             <div className="t2-trbar">
-              <span className="t2-trstat"><i>Transfers</i><b>2 free</b></span>
-              <span className="t2-trstat"><i>Remaining</i><b className={bank < 0 ? 'is-neg' : ''}>{formatPrice(bank)}</b></span>
-              <span className="t2-trstat"><i>Picked</i><b>{picked}/15</b></span>
+              <span className="t2-trstat"><i>Picked</i><b>{picked}/{SQUAD_TOTAL}</b></span>
+              <span className="t2-trstat"><i>In the bank</i><b className={bank < 0 ? 'is-neg' : ''}>{formatPrice(bank)}</b></span>
+              <span className="t2-trstat"><i>Squad value</i><b>{formatPrice(cost)}</b></span>
               <span className="t2-trbar__spacer" />
-              <button type="button" className="t2-icon" onClick={resetSquad} aria-label="Reset squad"><ArrowsClockwise size={16} aria-hidden="true" /></button>
-              <button type="button" className="t2-btn t2-btn--go" onClick={() => setMode('default')}>Confirm transfers</button>
+              <button type="button" className="t2-icon" onClick={reset} aria-label="Clear squad"><ArrowsClockwise size={16} aria-hidden="true" /></button>
+              <button type="button" className="t2-btn t2-btn--go" onClick={() => setMode('default')}>Done</button>
             </div>
           )}
         </div>
@@ -490,11 +433,36 @@ export default function TeamV2() {
             positionsById={positionsById}
             fixtures={fixtures}
             fromEvent={fromEvent}
-            ownedIds={ownedIds}
-            onPick={pickPlayer}
+            squad={squad}
+            playersById={playersById}
+            onPick={addPlayer}
           />
         )}
       </div>
+
+      {/* Card action menu — portalled so it clears the pitch stacking context */}
+      {menu && createPortal(
+        <>
+          <button type="button" className="t2-menuveil" aria-label="Close menu" onClick={() => setMenu(null)} />
+          <div className="t2-cardmenu" role="menu" style={{ top: menu.y, left: menu.x }}>
+            <button type="button" role="menuitem" onClick={() => { setDetail(playersById.get(menu.id)); setMenu(null) }}>View player</button>
+            {menu.isStarter && (
+              <>
+                <button type="button" role="menuitem" onClick={() => { setCaptain(menu.id); setMenu(null) }}>
+                  {captain === menu.id ? 'Captain ✓' : 'Make captain'}
+                </button>
+                <button type="button" role="menuitem" onClick={() => { setViceCaptain(menu.id); setMenu(null) }}>
+                  {viceCaptain === menu.id ? 'Vice-captain ✓' : 'Make vice-captain'}
+                </button>
+              </>
+            )}
+            <button type="button" role="menuitem" className="is-danger" onClick={() => { clearSlot(menu.pos, menu.index); setMenu(null) }}>Remove player</button>
+          </div>
+        </>,
+        document.body,
+      )}
+
+      {detail && <PlayerDetail player={detail} onClose={() => setDetail(null)} />}
     </div>
   )
 }
