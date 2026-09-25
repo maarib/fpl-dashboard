@@ -47,12 +47,13 @@ function fixtureLabel(fx, teamsById) {
 
 function PitchCard({
   id, playersById, teamsById, fixtures, fromEvent, isGK,
-  isCaptain, isVice, transfers, onRemove, onClick, label, order,
+  isCaptain, isVice, transfers, swapping, target, onRemove, onClick, label, order,
 }) {
+  const swapCls = `${swapping ? ' is-swapping' : ''}${target ? ' is-swaptarget' : ''}`
   const player = id ? playersById.get(id) : null
   if (!player) {
     return (
-      <button type="button" className="t2-card t2-card--empty" onClick={onClick}>
+      <button type="button" className={`t2-card t2-card--empty${swapCls}`} onClick={onClick}>
         <span className="t2-card__plus">+</span>
         <span className="t2-card__name">Add {label ?? ''}</span>
       </button>
@@ -62,7 +63,7 @@ function PitchCard({
   const fx = nextFixtureForTeam(fixtures, player.team, fromEvent)
   const kit = teamKitUrl(team, isGK, 110)
   return (
-    <div className="t2-card">
+    <div className={`t2-card${swapCls}`}>
       {transfers && (
         <button type="button" className="t2-card__x" aria-label={`Remove ${player.web_name}`} onClick={onRemove}>
           <X size={11} weight="bold" aria-hidden="true" />
@@ -246,14 +247,23 @@ function MarketRail({ players, teamsById, positionsById, fixtures, fromEvent, sq
 export default function TeamV2() {
   const { players, playersById, teamsById, positionsById, fixtures, events, currentEvent } = useFpl()
   const fromEvent = currentEvent?.id ?? 1
-  const { formation, squad, captain, viceCaptain, setSlot, clearSlot, reset, setCaptain, setViceCaptain } = useSquad()
+  const { formation, squad, captain, viceCaptain, setSlot, clearSlot, swapSlots, reset, setCaptain, setViceCaptain } = useSquad()
 
   const [mode, setMode] = useState('default') // 'default' | 'transfers'
   const [opponentView, setOpponentView] = useState(false)
   const [menu, setMenu] = useState(null) // { pos, index, id, isStarter, x, y }
+  const [swapFrom, setSwapFrom] = useState(null) // { pos, index } mid-substitution
   const [detail, setDetail] = useState(null)
 
   const need = useMemo(() => parseFormation(formation), [formation])
+
+  // A substitution swaps a starter with a bench player in the SAME position, so
+  // the formation stays legal. A valid target is therefore same-position and on
+  // the opposite side of the starter/bench line from the player being moved.
+  function isSwapTarget(pos, index) {
+    if (!swapFrom || swapFrom.pos !== pos || swapFrom.index === index) return false
+    return (swapFrom.index < need[pos]) !== (index < need[pos])
+  }
 
   const cost = squadCost(squad, playersById)
   const bank = BUDGET - cost
@@ -282,8 +292,16 @@ export default function TeamV2() {
   function renderCard(pos, index, { isGK = false, order } = {}) {
     const id = squad[pos][index]
     const isStarter = index < need[pos]
+    const swapping = swapFrom?.pos === pos && swapFrom?.index === index
+    const target = isSwapTarget(pos, index)
 
     const onClick = (e) => {
+      // Mid-substitution, a click means "swap with this slot" or "cancel".
+      if (swapFrom) {
+        if (target) swapSlots(pos, swapFrom.index, index)
+        setSwapFrom(null)
+        return
+      }
       if (!id) { openSlotToAdd(); return }
       if (mode !== 'default') { setDetail(playersById.get(id)); return }
       const r = e.currentTarget.getBoundingClientRect()
@@ -302,6 +320,8 @@ export default function TeamV2() {
         isCaptain={captain === id}
         isVice={viceCaptain === id}
         transfers={mode === 'transfers'}
+        swapping={swapping}
+        target={target}
         onRemove={() => clearSlot(pos, index)}
         onClick={onClick}
         label={POS_SHORT[pos]}
@@ -356,7 +376,7 @@ export default function TeamV2() {
 
       <div className="t2-main">
         {/* LEFT — the pitch */}
-        <div className="t2-left">
+        <div className={`t2-left${swapFrom ? ' is-swapmode' : ''}`}>
           {mode === 'default' ? (
             <div className="t2-teamhead">
               <h2 className="t2-teamhead__name">My Team</h2>
@@ -406,11 +426,21 @@ export default function TeamV2() {
 
           {/* Action bar */}
           {mode === 'default' ? (
-            <div className="t2-actions">
-              <button type="button" className="t2-btn t2-btn--go" onClick={() => setMode('transfers')}>
-                <ArrowsLeftRight size={15} aria-hidden="true" /> Make transfers
-              </button>
-            </div>
+            swapFrom ? (
+              <div className="t2-subbar">
+                <span className="t2-subbar__hint">
+                  <ArrowsLeftRight size={15} aria-hidden="true" />
+                  Pick a highlighted player to {swapFrom.index < need[swapFrom.pos] ? 'bring on' : 'send off'}
+                </span>
+                <button type="button" className="t2-btn t2-btn--ghost" onClick={() => setSwapFrom(null)}>Cancel</button>
+              </div>
+            ) : (
+              <div className="t2-actions">
+                <button type="button" className="t2-btn t2-btn--go" onClick={() => setMode('transfers')}>
+                  <ArrowsLeftRight size={15} aria-hidden="true" /> Make transfers
+                </button>
+              </div>
+            )
           ) : (
             <div className="t2-trbar">
               <span className="t2-trstat"><i>Picked</i><b>{picked}/{SQUAD_TOTAL}</b></span>
@@ -456,6 +486,9 @@ export default function TeamV2() {
                 </button>
               </>
             )}
+            <button type="button" role="menuitem" onClick={() => { setSwapFrom({ pos: menu.pos, index: menu.index }); setMenu(null) }}>
+              {menu.isStarter ? 'Substitute out' : 'Bring on'}
+            </button>
             <button type="button" role="menuitem" className="is-danger" onClick={() => { clearSlot(menu.pos, menu.index); setMenu(null) }}>Remove player</button>
           </div>
         </>,

@@ -178,6 +178,26 @@
 }
 .t2-card--empty .t2-card__name { background: var(--c-veil); color: var(--c-muted); border-radius: var(--radius-4); }
 
+/* Substitution highlights: the player being moved, and the slots they may
+   swap into. A tinted panel behind the card, drawn under its content. */
+.t2-card.is-swaptarget::before,
+.t2-card.is-swapping::before {
+  content: ''; position: absolute; inset: -6px -4px; z-index: 0; border-radius: var(--radius-8);
+}
+.t2-card.is-swaptarget::before { background: color-mix(in srgb, var(--c-accent) 20%, transparent); border: 1px solid var(--c-accent); }
+.t2-card.is-swapping::before { border: 2px solid var(--c-accent); }
+.t2-card.is-swaptarget, .t2-card.is-swapping { cursor: pointer; }
+/* Dim everything else so the eye goes to the valid targets. */
+.t2-left.is-swapmode .t2-card:not(.is-swaptarget):not(.is-swapping) { opacity: 0.4; }
+
+.t2-subbar {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-12);
+  background: var(--c-surface); border: 1px solid var(--c-line); border-radius: var(--radius-pill);
+  padding: var(--space-6) var(--space-6) var(--space-6) var(--space-18);
+}
+.t2-subbar__hint { display: inline-flex; align-items: center; gap: var(--space-8); font-size: var(--font-size-sm); color: var(--c-ink); }
+.t2-subbar__hint svg { color: var(--c-accent); }
+
 /* ---------- Bench ---------- */
 .t2-bench {
   display: flex; justify-content: space-around; gap: var(--space-10);
