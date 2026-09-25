@@ -16,6 +16,23 @@
   box-sizing: border-box;
 }
 
+/* Buttons don't inherit text colour by default — the UA gives them black. On
+   the light theme that happened to match the ink; on dark it renders invisible
+   labels. Inherit so every unstyled button follows its context. Buttons that
+   set their own colour (via a class) still win on specificity. */
+button {
+  color: inherit;
+}
+
+/* Native selects and their option lists paint a light UA control face, which
+   traps light text on the dark theme. Give the bare controls dark surfaces;
+   styled controls override on specificity. */
+select,
+option {
+  background-color: var(--surface);
+  color: var(--text);
+}
+
 body {
   margin: var(--space-0);
   min-height: 100svh;

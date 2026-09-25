@@ -30,21 +30,22 @@
      Change these and the whole app follows.
      ===================================================================== */
 
-  /* The Claude-app language: a warm, light palette. Everything is light —
-     there is no dark theme (see the v1.1 redesign decision). Personality
-     comes from restraint, warmth and the one coral accent, not colour slabs. */
-  --cream: #f7f6f1; /* the warm canvas */
-  --paper: #ffffff; /* raised surfaces float on the cream */
-  --warm-ink: #1f1e1c; /* warm near-black text */
-  --warm-900: #2a2925;
-  --warm-600: #6e6a62; /* muted text */
-  --warm-400: #a8a49b; /* faint text, meta */
-  --warm-200: #e6e3da; /* control boundaries */
+  /* The Claude Code desktop DARK palette: warm charcoal surfaces, off-white
+     text, one coral accent, blue for interactive affordances. Personality
+     comes from restraint, warmth and the coral, not colour slabs. Names are
+     kept from the old light palette so the semantic layer follows for free. */
+  --cream: #1a1917; /* the warm charcoal canvas / page background */
+  --paper: #262523; /* raised surfaces float on the canvas */
+  --warm-ink: #ededea; /* off-white primary text */
+  --warm-900: #f6f5f2; /* brightest text / strong hover */
+  --warm-600: #a6a49d; /* muted text */
+  --warm-400: #78766f; /* faint text, meta */
+  --warm-200: rgba(255, 255, 255, 0.14); /* control boundaries */
 
-  --coral: #cc785c; /* the one brand accent — Claude's sparkle */
-  --coral-ink: #a24d31; /* darkened coral, ≥4.5:1 as text on light */
-  --blue: #4d6bfe; /* interactive affordances only: focus, toggles, checks */
-  --blue-ink: #3452d6;
+  --coral: #d97757; /* the one brand accent — Claude's coral */
+  --coral-ink: #e59578; /* lighter coral, legible as text on the dark canvas */
+  --blue: #5b7cfa; /* interactive affordances only: focus, toggles, checks */
+  --blue-ink: #93a7ff; /* blue as text on dark */
 
   /* Existing token names are remapped onto the warm palette, so everything
      that referenced them through the semantic layer follows automatically. */
@@ -68,12 +69,11 @@
 
   --surface: var(--paper); /* cards, panels, the featured hero */
   --surface-sunken: var(--cream); /* page background */
-  --surface-chrome: var(--cream); /* top bar — part of the canvas, no slab */
-  /* "Inverse" surfaces used to be the dark navy stage/pool. With no dark
-     theme they become soft warm panels — lighter than the canvas, not darker
-     than it — and their text is the normal ink. */
-  --surface-inverse: #efece4;
-  --surface-inverse-2: #e7e3d9;
+  --surface-chrome: #1e1d1b; /* top bar — a hair off the canvas */
+  /* "Inverse" surfaces are raised insets (stage, chips, fields) — a step
+     lighter than the cards, with the normal off-white ink on top. */
+  --surface-inverse: #302f2c;
+  --surface-inverse-2: #3a3835;
 
   --text: var(--warm-ink);
   --text-muted: var(--warm-600);
@@ -83,12 +83,22 @@
   --border: var(--warm-200);
   /* A quieter rule for separating rows and bands, where a full border would
      read as a box. Boundaries that identify a *control* still use --border. */
-  --border-subtle: rgba(31, 30, 28, 0.07);
-  --border-inverse: rgba(31, 30, 28, 0.1);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-inverse: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.2);
 
-  --interactive: var(--warm-ink); /* primary buttons — near-black, Claude CTA */
+  /* Primary "interactive" fill stays a high-contrast light chip on the dark
+     canvas — a light button with, by convention here, a coral label. It also
+     remains the strong-ink colour for text and borders, which now reads
+     off-white. Both roles are satisfied by the one light value. */
+  --interactive: var(--warm-ink);
   --interactive-hover: var(--warm-900);
-  --on-interactive: var(--paper); /* text/icons on an interactive fill */
+  --on-interactive: var(--cream); /* dark text/icons on the light fill */
+
+  /* Subtle wash for hover and selected states on the dark canvas, replacing
+     the old dark-on-light alphas that would vanish here. */
+  --hover-fill: rgba(255, 255, 255, 0.05);
+  --active-fill: rgba(255, 255, 255, 0.09);
 
   --focus-ring: var(--blue);
 

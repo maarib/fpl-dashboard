@@ -160,11 +160,11 @@
 .btn--pool-on {
   background: var(--interactive);
   border-color: var(--interactive);
-  color: #fff;
+  color: var(--on-interactive);
 }
 .btn--pool-on .btn__icon {
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
+  background: rgba(0, 0, 0, 0.12);
+  color: var(--on-interactive);
 }
 .btn--pool-on:hover {
   background: var(--interactive-hover);
@@ -304,7 +304,7 @@
 }
 .stat-select select option {
   color: var(--text);
-  background: #fff;
+  background: var(--surface);
 }
 .stat-select__chev {
   position: absolute;
@@ -572,19 +572,19 @@
   width: 21px;
   height: 21px;
   border-radius: var(--radius-circle);
-  background: var(--interactive);
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-interactive);
   display: grid;
   place-items: center;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-extrabold);
-  border: 1.5px solid #fff;
+  border: 1.5px solid var(--surface);
   z-index: var(--z-sticky);
 }
 .fcard__armband--vice {
-  background: #fff;
-  color: var(--interactive);
-  border-color: var(--interactive);
+  background: var(--accent-2);
+  color: #fff;
+  border-color: var(--surface);
   font-size: var(--font-size-3xs);
 }
 
@@ -681,7 +681,8 @@
   color: #fff;
 }
 .fcard--empty .fcard__name {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.42);
+  color: var(--text);
 }
 
 /* ==========================================================================
@@ -795,7 +796,7 @@
   min-width: 190px;
   padding: var(--space-5);
   border-radius: var(--radius-10);
-  background: #fff;
+  background: var(--surface);
   box-shadow: var(--elevation-5);
   text-align: left;
 }
@@ -971,7 +972,7 @@
 }
 .pool__select option {
   color: var(--text);
-  background: #fff;
+  background: var(--surface);
 }
 .pool__reset:hover {
   background: rgba(255, 255, 255, 0.16);
@@ -1065,6 +1066,26 @@
 }
 .prow__tp {
   font-weight: var(--font-weight-bold);
+}
+
+/* Small "i" info button — was relying on the UA button face, which reads as a
+   light chip under the dark theme. Give it an explicit subtle treatment. */
+.prow__info {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-circle);
+  border: 1px solid var(--border);
+  background: var(--surface-inverse);
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  font-style: italic;
+  line-height: 1;
+  cursor: pointer;
+}
+.prow__info:hover {
+  background: var(--surface-inverse-2);
+  color: var(--text);
 }
 
 .prow__btn {
@@ -1459,8 +1480,8 @@
 .pool { background: var(--surface); color: var(--text); }
 .pool-drawer { background: rgba(31, 30, 28, 0.35); }
 .pool-drawer__panel { background: var(--surface); }
-.pool-drawer__close { background: rgba(31, 30, 28, 0.06); color: var(--text); }
-.pool-drawer__close:hover { background: rgba(31, 30, 28, 0.12); }
+.pool-drawer__close { background: var(--hover-fill); color: var(--text); }
+.pool-drawer__close:hover { background: var(--active-fill); }
 .pool__blurb,
 .pool__col,
 .pool__empty,

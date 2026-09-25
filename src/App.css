@@ -230,7 +230,7 @@
   padding: var(--space-8) var(--space-10);
   border: 1px solid var(--border);
   border-radius: var(--radius-8);
-  background: #fff;
+  background: var(--surface-inverse);
   color: var(--text);
   min-width: 170px;
 }
@@ -255,12 +255,12 @@
   padding: var(--space-9) var(--space-16);
   border-radius: var(--radius-8);
   border: 1px solid var(--border);
-  background: #fff;
+  background: var(--surface-inverse);
   color: var(--text);
   cursor: pointer;
 }
 .btn:hover {
-  background: var(--surface-sunken);
+  background: var(--surface-inverse-2);
 }
 .btn--primary {
   background: var(--interactive);
@@ -565,7 +565,7 @@
 }
 
 .table--fdr .th-btn:hover {
-  background: rgba(31, 30, 28, 0.04);
+  background: var(--hover-fill);
   color: var(--text);
 }
 .fdr__team-head {
@@ -654,7 +654,7 @@
   padding: var(--space-11) var(--space-16);
   border-radius: var(--radius-12);
   background: var(--interactive);
-  color: #fff;
+  color: var(--on-interactive);
   box-shadow: var(--elevation-3);
 }
 .cmp-bar__count {
@@ -705,7 +705,7 @@
   justify-content: space-between;
   padding: var(--space-14) var(--space-18);
   background: var(--interactive);
-  color: #fff;
+  color: var(--on-interactive);
 }
 .cmp__head h2 {
   font-size: var(--font-size-2xl);
@@ -1404,6 +1404,11 @@
   width: 100%;
   cursor: pointer;
   text-align: left;
+  /* No UA button face — variants (.input, .fpill, .pool__select) supply their
+     own fill; a bare trigger inherits its container's surface. */
+  background: transparent;
+  border: 0;
+  color: inherit;
 }
 
 .select__trigger:disabled {
@@ -1586,7 +1591,7 @@
   border: 1px solid transparent;
   color: var(--text-muted);
 }
-.btn--ghost:hover { background: rgba(31, 30, 28, 0.035); color: var(--text); }
+.btn--ghost:hover { background: var(--hover-fill); color: var(--text); }
 
 /* Position tags — soft tinted pills, quiet */
 .pos {
@@ -1644,8 +1649,8 @@
 .wordmark__spark { width: 15px; height: 15px; color: var(--accent); flex: none; }
 .tab { border-radius: var(--radius-9); }
 .tab::before, .tab::after { display: none; }
-.tab:hover { background: rgba(31, 30, 28, 0.04); }
-.tab--active { background: rgba(31, 30, 28, 0.06); }
+.tab:hover { background: var(--hover-fill); }
+.tab--active { background: var(--active-fill); color: var(--text); }
 .gw__label, .gw__deadline { font-weight: var(--font-weight-medium); }
 
 /* ==========================================================================
@@ -1682,7 +1687,7 @@
   cursor: pointer;
 }
 .etable li:last-child .etrow { border-bottom: 0; }
-.etrow:hover { background: rgba(31, 30, 28, 0.035); border-bottom-color: transparent; }
+.etrow:hover { background: var(--hover-fill); border-bottom-color: transparent; }
 .etrow:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
 .etrow__rank { text-align: center; font-size: var(--font-size-base); color: var(--faint, var(--text-muted)); font-variant-numeric: tabular-nums; }
 
@@ -1714,7 +1719,7 @@
 .etrow__num--mut { color: var(--text-muted); }
 .etrow__val { text-align: right; }
 .etrow__val .n { font-size: var(--font-size-md); font-variant-numeric: tabular-nums; }
-.etrow__val .bar { height: 3px; border-radius: 2px; background: rgba(31, 30, 28, 0.06); margin-top: var(--space-4); overflow: hidden; }
+.etrow__val .bar { height: 3px; border-radius: 2px; background: var(--active-fill); margin-top: var(--space-4); overflow: hidden; }
 .etrow__val .bar i { display: block; height: 100%; background: var(--accent); border-radius: 2px; }
 .etrow__pts { text-align: right; }
 .etrow__pts .n { font-size: var(--font-size-5xl); letter-spacing: var(--tracking-tighter); line-height: 1; font-variant-numeric: tabular-nums; }
@@ -1790,18 +1795,21 @@
 /* Deadline hero — the one accent card, echoing the CL blue deadline panel */
 .ov-deadline {
   display: flex; flex-direction: column; align-items: center; text-align: center; justify-content: center;
-  color: #fff; border-radius: var(--radius-panel); padding: var(--space-24) var(--space-20);
-  background: linear-gradient(155deg, var(--accent-2) 0%, var(--accent-2-ink) 100%);
+  color: var(--text); border-radius: var(--radius-panel); padding: var(--space-24) var(--space-20);
+  /* A charcoal card lit by a soft coral glow — the countdown itself carries
+     the accent, no colour slab. */
+  background: radial-gradient(130% 120% at 50% -10%, color-mix(in srgb, var(--accent) 18%, var(--surface)) 0%, var(--surface) 68%);
+  border: 1px solid var(--border-subtle);
   box-shadow: var(--elevation-2);
 }
-.ov-deadline__kicker { font-size: var(--font-size-xs); letter-spacing: var(--tracking-caps); text-transform: uppercase; opacity: 0.85; }
+.ov-deadline__kicker { font-size: var(--font-size-xs); letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--accent-ink); }
 .ov-clock { display: flex; align-items: flex-start; gap: var(--space-10); margin: var(--space-12) 0 var(--space-12); }
 .ov-clock__unit { display: flex; flex-direction: column; align-items: center; min-width: 52px; }
-.ov-clock__unit b { font-size: 44px; line-height: 1; letter-spacing: var(--tracking-tighter); font-weight: var(--font-weight-extrabold); font-variant-numeric: tabular-nums; }
-.ov-clock__unit i { font-size: var(--font-size-2xs); letter-spacing: var(--tracking-caps-loose); text-transform: uppercase; opacity: 0.8; font-style: normal; margin-top: var(--space-6); }
-.ov-clock__sep { font-size: 34px; line-height: 1.1; opacity: 0.5; }
-.ov-clock--passed { font-size: var(--font-size-lg); opacity: 0.9; margin: var(--space-14) 0; }
-.ov-deadline__date { font-size: var(--font-size-sm); opacity: 0.85; }
+.ov-clock__unit b { font-size: 44px; line-height: 1; letter-spacing: var(--tracking-tighter); font-weight: var(--font-weight-extrabold); font-variant-numeric: tabular-nums; color: var(--accent-ink); }
+.ov-clock__unit i { font-size: var(--font-size-2xs); letter-spacing: var(--tracking-caps-loose); text-transform: uppercase; color: var(--text-muted); font-style: normal; margin-top: var(--space-6); }
+.ov-clock__sep { font-size: 34px; line-height: 1.1; color: var(--accent-ink); opacity: 0.4; }
+.ov-clock--passed { font-size: var(--font-size-lg); color: var(--text-muted); margin: var(--space-14) 0; }
+.ov-deadline__date { font-size: var(--font-size-sm); color: var(--text-muted); }
 
 /* Strategy promo card beside the deadline */
 .ov-promo {
@@ -1903,7 +1911,7 @@
   padding: var(--space-7) var(--space-6); border-radius: var(--radius-8); border-bottom: 1px solid var(--border-subtle);
 }
 .ov-stat__list li:last-child .ov-stat { border-bottom: 0; }
-.ov-stat:hover { background: rgba(31, 30, 28, 0.035); border-bottom-color: transparent; }
+.ov-stat:hover { background: var(--hover-fill); border-bottom-color: transparent; }
 .ov-stat__rank { width: var(--space-14); text-align: center; font-size: var(--font-size-sm); color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .pavatar--sm { width: 34px; height: 34px; }
 .pavatar--sm .pavatar__mono { font-size: var(--font-size-md); }
