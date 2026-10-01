@@ -9,6 +9,33 @@ import {
 
 const STORAGE_KEY = 'fpl-dashboard:my-xi'
 
+/** The chips that snapshot the squad so they can be committed or reverted. */
+const CHIPS = ['wildcard', 'freehit']
+const asId = (v) => (Number.isInteger(v) ? v : null)
+
+/** Rebuild a valid squad shape from untrusted data; unknown entries drop to null. */
+function coerceSquad(raw) {
+  const squad = emptySquad()
+  for (const pos of [1, 2, 3, 4]) {
+    const saved = raw?.[pos]
+    if (!Array.isArray(saved)) continue
+    for (let i = 0; i < SQUAD_SHAPE[pos]; i += 1) {
+      squad[pos][i] = asId(saved[i])
+    }
+  }
+  return squad
+}
+
+/** A snapshot of the whole squad, taken when a chip is played. */
+function cloneState(s) {
+  return {
+    formation: s.formation,
+    squad: coerceSquad(s.squad),
+    captain: s.captain,
+    viceCaptain: s.viceCaptain,
+  }
+}
+
 /** Re-validate whatever came out of localStorage; never trust its shape. */
 function hydrate(raw) {
   const fallback = {
@@ -16,6 +43,8 @@ function hydrate(raw) {
     squad: emptySquad(),
     captain: null,
     viceCaptain: null,
+    chip: null,
+    backup: null,
   }
   if (!raw) return fallback
 
@@ -25,21 +54,24 @@ function hydrate(raw) {
       ? parsed.formation
       : DEFAULT_FORMATION
 
-    const squad = emptySquad()
-    for (const pos of [1, 2, 3, 4]) {
-      const saved = parsed?.squad?.[pos]
-      if (!Array.isArray(saved)) continue
-      for (let i = 0; i < SQUAD_SHAPE[pos]; i += 1) {
-        const id = saved[i]
-        squad[pos][i] = Number.isInteger(id) ? id : null
-      }
-    }
-    const id = (v) => (Number.isInteger(v) ? v : null)
+    const chip = CHIPS.includes(parsed?.chip) ? parsed.chip : null
+    const b = chip ? parsed?.backup : null
+    const backup = b
+      ? {
+          formation: FORMATIONS.includes(b.formation) ? b.formation : DEFAULT_FORMATION,
+          squad: coerceSquad(b.squad),
+          captain: asId(b.captain),
+          viceCaptain: asId(b.viceCaptain),
+        }
+      : null
+
     return sanitize({
       formation,
-      squad,
-      captain: id(parsed?.captain),
-      viceCaptain: id(parsed?.viceCaptain),
+      squad: coerceSquad(parsed?.squad),
+      captain: asId(parsed?.captain),
+      viceCaptain: asId(parsed?.viceCaptain),
+      chip,
+      backup,
     })
   } catch {
     return fallback
@@ -106,7 +138,32 @@ export function useSquad() {
       squad: emptySquad(),
       captain: null,
       viceCaptain: null,
+      chip: null,
+      backup: null,
     })
+  }, [])
+
+  /**
+   * Chips. Playing one snapshots the whole squad so the move can be undone:
+   * Wildcard is a permanent rebuild (commit keeps it), Free Hit is a one-week
+   * team (revert restores the saved squad). Only one chip is active at a time.
+   */
+  const activateChip = useCallback((chip) => {
+    setState((s) => (s.chip ? s : { ...s, chip, backup: cloneState(s) }))
+  }, [])
+
+  /** Discard the chip's changes and restore the pre-chip squad. */
+  const revertChip = useCallback(() => {
+    setState((s) =>
+      s.backup
+        ? sanitize({ ...s.backup, chip: null, backup: null })
+        : { ...s, chip: null, backup: null },
+    )
+  }, [])
+
+  /** Keep the current squad and clear the chip (commit). */
+  const endChip = useCallback(() => {
+    setState((s) => ({ ...s, chip: null, backup: null }))
   }, [])
 
   /**
@@ -156,6 +213,7 @@ export function useSquad() {
     squad: state.squad,
     captain: state.captain,
     viceCaptain: state.viceCaptain,
+    chip: state.chip,
     setFormation,
     setSlot,
     clearSlot,
@@ -164,5 +222,8 @@ export function useSquad() {
     replaceAll,
     setCaptain,
     setViceCaptain,
+    activateChip,
+    revertChip,
+    endChip,
   }
 }

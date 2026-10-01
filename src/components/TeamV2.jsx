@@ -247,7 +247,7 @@ function MarketRail({ players, teamsById, positionsById, fixtures, fromEvent, sq
 export default function TeamV2() {
   const { players, playersById, teamsById, positionsById, fixtures, events, currentEvent } = useFpl()
   const fromEvent = currentEvent?.id ?? 1
-  const { formation, squad, captain, viceCaptain, setSlot, clearSlot, swapSlots, reset, setCaptain, setViceCaptain } = useSquad()
+  const { formation, squad, captain, viceCaptain, chip, setSlot, clearSlot, swapSlots, reset, setCaptain, setViceCaptain, activateChip, revertChip, endChip } = useSquad()
 
   const [mode, setMode] = useState('default') // 'default' | 'transfers'
   const [opponentView, setOpponentView] = useState(false)
@@ -374,6 +374,28 @@ export default function TeamV2() {
         </div>
       </div>
 
+      {/* Active-chip banner — governs the chip's commit / revert lifecycle */}
+      {chip && (
+        <div className={`t2-chipbar t2-chipbar--${chip}`}>
+          <span className="t2-chipbar__label">
+            {chip === 'wildcard' ? <Lightning size={16} weight="fill" aria-hidden="true" /> : <Sparkle size={16} weight="fill" aria-hidden="true" />}
+            {chip === 'wildcard'
+              ? 'Wildcard active — unlimited transfers this week, changes are permanent'
+              : 'Free Hit active — a one-week team that reverts to your saved squad'}
+          </span>
+          <span className="t2-chipbar__actions">
+            {chip === 'wildcard' ? (
+              <>
+                <button type="button" className="t2-btn t2-btn--ghost" onClick={() => { revertChip(); setMenu(null) }}>Cancel</button>
+                <button type="button" className="t2-btn t2-btn--go" onClick={() => { endChip(); setMenu(null) }}>Confirm wildcard</button>
+              </>
+            ) : (
+              <button type="button" className="t2-btn t2-btn--go" onClick={() => { revertChip(); setMenu(null) }}>End Free Hit</button>
+            )}
+          </span>
+        </div>
+      )}
+
       <div className="t2-main">
         {/* LEFT — the pitch */}
         <div className={`t2-left${swapFrom ? ' is-swapmode' : ''}`}>
@@ -393,8 +415,24 @@ export default function TeamV2() {
               </button>
               <h2 className="t2-teamhead__name">Transfers</h2>
               <div className="t2-chips">
-                <button type="button" className="t2-chip"><Lightning size={13} weight="fill" aria-hidden="true" /> Wildcard</button>
-                <button type="button" className="t2-chip"><Sparkle size={13} weight="fill" aria-hidden="true" /> Free Hit</button>
+                <button
+                  type="button"
+                  className={`t2-chip${chip === 'wildcard' ? ' is-on' : ''}`}
+                  disabled={Boolean(chip) && chip !== 'wildcard'}
+                  aria-pressed={chip === 'wildcard'}
+                  onClick={() => activateChip('wildcard')}
+                >
+                  <Lightning size={13} weight="fill" aria-hidden="true" /> Wildcard
+                </button>
+                <button
+                  type="button"
+                  className={`t2-chip${chip === 'freehit' ? ' is-on' : ''}`}
+                  disabled={Boolean(chip) && chip !== 'freehit'}
+                  aria-pressed={chip === 'freehit'}
+                  onClick={() => activateChip('freehit')}
+                >
+                  <Sparkle size={13} weight="fill" aria-hidden="true" /> Free Hit
+                </button>
               </div>
             </div>
           )}

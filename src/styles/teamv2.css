@@ -111,9 +111,35 @@
   background: var(--c-surface-2); border: 1px solid var(--c-line); border-radius: var(--radius-pill);
   padding: var(--space-6) var(--space-12);
 }
-.t2-chip:hover { background: var(--c-surface-3); }
+.t2-chip:hover:not(:disabled) { background: var(--c-surface-3); }
 .t2-chip svg { color: var(--c-accent); }
 .t2-chip:last-child svg { color: var(--c-blue); }
+.t2-chip:disabled { opacity: 0.4; cursor: not-allowed; }
+.t2-chip.is-on { background: var(--c-accent); color: var(--c-ink-dark); border-color: transparent; }
+.t2-chip.is-on svg { color: var(--c-ink-dark); }
+.t2-chip:last-child.is-on { background: var(--c-blue); color: #fff; }
+.t2-chip:last-child.is-on svg { color: #fff; }
+
+/* Active-chip banner */
+.t2-chipbar {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-12);
+  margin-bottom: var(--space-16); padding: var(--space-8) var(--space-8) var(--space-8) var(--space-18);
+  border-radius: var(--radius-card); border: 1px solid var(--c-line);
+  background: color-mix(in srgb, var(--c-accent) 15%, var(--c-surface));
+}
+.t2-chipbar--freehit { background: color-mix(in srgb, var(--c-blue) 15%, var(--c-surface)); }
+.t2-chipbar__label { display: inline-flex; align-items: center; gap: var(--space-8); font-size: var(--font-size-sm); color: var(--c-ink); }
+.t2-chipbar__label svg { color: var(--c-accent); flex: none; }
+.t2-chipbar--freehit .t2-chipbar__label svg { color: var(--c-blue); }
+.t2-chipbar__actions { display: flex; gap: var(--space-8); flex: none; }
+.t2-chipbar .t2-btn { padding: var(--space-7) var(--space-16); font-size: var(--font-size-sm); }
+.t2-chipbar--freehit .t2-btn--go { background: var(--c-blue); color: #fff; }
+.t2-chipbar--freehit .t2-btn--go:hover { filter: brightness(1.06); }
+
+@media (max-width: 560px) {
+  .t2-chipbar { flex-direction: column; align-items: stretch; }
+  .t2-chipbar__actions { justify-content: flex-end; }
+}
 
 /* ==========================================================================
    The pitch — early app's perspective turf behind flat formation rows
