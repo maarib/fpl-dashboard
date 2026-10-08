@@ -3,10 +3,7 @@ import {
   CaretRight,
   Confetti,
   Lightning,
-  Newspaper,
-  Plus,
   Trophy,
-  Users,
   Warning,
 } from '@phosphor-icons/react'
 import { useEffect, useMemo, useState } from 'react'
@@ -233,20 +230,7 @@ export default function Overview({ onNavigate }) {
         <CaretRight size={16} className="ov-alert__caret" aria-hidden="true" />
       </button>
 
-      {/* Row 3 — leagues (framed) + last gameweek recap (real, league-wide) */}
-      <section className="ov-card ov-leagues">
-        <header className="ov-card__head">
-          <h2 className="ov-card__title">Your leagues</h2>
-        </header>
-        <p className="ov-empty">
-          Mini-leagues arrive with accounts. For now, rank yourself against the global
-          averages below.
-        </p>
-        <button type="button" className="ov-join" onClick={() => onNavigate('team')}>
-          <Plus size={16} aria-hidden="true" /> Create or join a league
-        </button>
-      </section>
-
+      {/* Row 3 — gameweek recap + stats leaderboard (both real, side by side) */}
       <section className="ov-card ov-recap">
         <header className="ov-card__head">
           <h2 className="ov-card__title">{lastEvent ? lastEvent.name : 'Last gameweek'}</h2>
@@ -269,30 +253,6 @@ export default function Overview({ onNavigate }) {
         </button>
       </section>
 
-      {/* Row 4 — players of the gameweek podium */}
-      <section className="ov-card ov-podium">
-        <header className="ov-card__head">
-          <h2 className="ov-card__title">Players of the gameweek</h2>
-          {lastEvent && <span className="ov-card__note">{lastEvent.name}</span>}
-        </header>
-        <div className="ov-podium__grid">
-          {boards.gwStars.map((p, i) => (
-            <PotmCard
-              key={p.id}
-              player={p}
-              rank={i + 1}
-              teamsById={teamsById}
-              positionsById={positionsById}
-              onOpen={setDetail}
-            />
-          ))}
-        </div>
-        <button type="button" className="ov-card__link" onClick={() => onNavigate('players')}>
-          <Trophy size={14} aria-hidden="true" /> See the full standings
-        </button>
-      </section>
-
-      {/* Row 5 — stats with a tabbed carousel */}
       <section className="ov-card ov-stats">
         <header className="ov-card__head">
           <h2 className="ov-card__title">Stats</h2>
@@ -329,25 +289,27 @@ export default function Overview({ onNavigate }) {
         </button>
       </section>
 
-      {/* Row 6 — news & tips (framed navigational cards) */}
-      <section className="ov-card ov-news">
+      {/* Row 4 — players of the gameweek podium */}
+      <section className="ov-card ov-podium">
         <header className="ov-card__head">
-          <h2 className="ov-card__title">News &amp; tips</h2>
+          <h2 className="ov-card__title">Players of the gameweek</h2>
+          {lastEvent && <span className="ov-card__note">{lastEvent.name}</span>}
         </header>
-        <div className="ov-news__grid">
-          <button type="button" className="ov-news__item" onClick={() => onNavigate('players')}>
-            <span className="ov-news__thumb" data-kind="scout"><Users size={20} weight="fill" /></span>
-            <span className="ov-news__cap">Scout the best-value picks this week</span>
-          </button>
-          <button type="button" className="ov-news__item" onClick={() => onNavigate('fixtures')}>
-            <span className="ov-news__thumb" data-kind="fix"><Lightning size={20} weight="fill" /></span>
-            <span className="ov-news__cap">Fixture swings to target and avoid</span>
-          </button>
-          <button type="button" className="ov-news__item" onClick={() => onNavigate('transfers')}>
-            <span className="ov-news__thumb" data-kind="news"><Newspaper size={20} weight="fill" /></span>
-            <span className="ov-news__cap">Plan your transfers before the deadline</span>
-          </button>
+        <div className="ov-podium__grid">
+          {boards.gwStars.map((p, i) => (
+            <PotmCard
+              key={p.id}
+              player={p}
+              rank={i + 1}
+              teamsById={teamsById}
+              positionsById={positionsById}
+              onOpen={setDetail}
+            />
+          ))}
         </div>
+        <button type="button" className="ov-card__link" onClick={() => onNavigate('players')}>
+          <Trophy size={14} aria-hidden="true" /> See the full standings
+        </button>
       </section>
 
       {detail && <PlayerDetail player={detail} onClose={() => setDetail(null)} />}

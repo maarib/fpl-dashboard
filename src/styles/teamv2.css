@@ -24,8 +24,8 @@
   --c-faint: rgba(237, 237, 234, 0.38);
 
   /* — accents — */
-  --c-accent: #d97757;      /* Claude coral — primary action / active */
-  --c-accent-2: #c2643f;    /* darker coral for hover */
+  --c-accent: #ff4d8d;      /* football-forward magenta — primary action / active */
+  --c-accent-2: #f03b7c;    /* deeper magenta for hover */
   --c-blue: #5b7cfa;        /* interactive: filters, sort, vice */
   --c-good: #57a877;        /* positive: owned / in squad */
   --c-danger: #d9534f;      /* remove */
@@ -44,6 +44,40 @@
   overflow: hidden;
 }
 .t2 h2 { color: var(--c-ink); }
+
+/* ---------- Page mode switch (My Team / Look up a team) ---------- */
+.t2-modeswitch {
+  display: inline-flex; gap: var(--space-2); margin-bottom: var(--space-16);
+  background: var(--c-surface); border: 1px solid var(--c-line); border-radius: var(--radius-pill); padding: 3px;
+}
+.t2-modeswitch__btn {
+  appearance: none; border: 0; cursor: pointer; font: inherit; font-size: var(--font-size-sm);
+  padding: var(--space-7) var(--space-18); border-radius: var(--radius-pill);
+  background: transparent; color: var(--c-muted);
+}
+.t2-modeswitch__btn.is-on { background: var(--c-surface-2); color: var(--c-ink); }
+
+/* ---------- Look up a team ---------- */
+.t2-lookup { display: flex; align-items: flex-end; gap: var(--space-12); flex-wrap: wrap; margin-bottom: var(--space-16); }
+.t2-lookup__field { display: flex; flex-direction: column; gap: var(--space-5); }
+.t2-lookup__label { font-size: var(--font-size-2xs); text-transform: uppercase; letter-spacing: var(--tracking-caps); color: var(--c-muted); }
+.t2-lookup__input,
+.t2-lookup .select__trigger {
+  background: var(--c-bg-2); border: 1px solid var(--c-line); border-radius: var(--radius-control);
+  color: var(--c-ink); font: inherit; font-size: var(--font-size-sm); padding: var(--space-9) var(--space-12);
+}
+.t2-lookup__input { min-width: 200px; }
+.t2-lookup__input::placeholder { color: var(--c-muted); }
+.t2-lookup .select__trigger { min-width: 150px; }
+.t2-lookup .t2-btn--go { padding: var(--space-9) var(--space-20); }
+.t2-lookup__hint { color: var(--c-muted); font-size: var(--font-size-sm); line-height: 1.55; max-width: 640px; margin: var(--space-4) 0 0; }
+.t2-lookup__hint code { background: var(--c-surface-2); padding: 2px var(--space-6); border-radius: var(--radius-4); font-size: var(--font-size-xs); }
+.t2-lookup__error {
+  background: color-mix(in srgb, var(--c-danger) 12%, var(--c-surface)); border: 1px solid var(--c-line);
+  border-radius: var(--radius-card); padding: var(--space-14) var(--space-16); max-width: 640px;
+}
+.t2-lookup__error strong { display: block; margin-bottom: var(--space-4); }
+.t2-lookup__error p { margin: 0; color: var(--c-muted); font-size: var(--font-size-sm); line-height: 1.5; }
 
 /* ==========================================================================
    Matchday navigator — a contained ticker with a filled active segment
@@ -197,7 +231,7 @@
 }
 .t2-card__x:hover { filter: brightness(1.1); }
 
-.t2-card--empty { justify-content: center; min-height: 92px; }
+.t2-card--empty { justify-content: center; min-height: 92px; background: transparent; border: 0; padding: 0; cursor: pointer; color: inherit; font: inherit; }
 .t2-card--empty .t2-card__plus {
   width: 52px; height: 52px; display: grid; place-items: center; font-size: var(--font-size-2xl);
   border-radius: var(--radius-8); border: 2px dashed var(--c-line-strong); color: var(--c-muted);

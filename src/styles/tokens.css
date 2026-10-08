@@ -42,8 +42,8 @@
   --warm-400: #78766f; /* faint text, meta */
   --warm-200: rgba(255, 255, 255, 0.14); /* control boundaries */
 
-  --coral: #d97757; /* the one brand accent — Claude's coral */
-  --coral-ink: #e59578; /* lighter coral, legible as text on the dark canvas */
+  --coral: #ff4d8d; /* the one brand accent — a football-forward magenta */
+  --coral-ink: #ff86ae; /* lighter magenta, legible as text on the dark canvas */
   --blue: #5b7cfa; /* interactive affordances only: focus, toggles, checks */
   --blue-ink: #93a7ff; /* blue as text on dark */
 

@@ -1770,7 +1770,7 @@
   align-items: start;
 }
 /* Cards that read as one full-width band rather than a column pair */
-.ov-alert, .ov-podium, .ov-stats, .ov-news { grid-column: 1 / -1; }
+.ov-alert, .ov-podium { grid-column: 1 / -1; }
 
 /* Shared card chrome */
 .ov-card {

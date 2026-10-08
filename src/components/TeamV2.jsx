@@ -13,8 +13,9 @@ import {
   Wallet,
   X,
 } from '@phosphor-icons/react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { fetchEntry, fetchPicks } from '../api/fpl'
 import { useFpl } from '../hooks/useFpl'
 import { useSquad } from '../hooks/useSquad'
 import { formatPrice, nextFixtureForTeam, toNumber } from '../lib/fpl'
@@ -30,6 +31,7 @@ import {
 } from '../lib/squad'
 import PitchSurface from './PitchSurface'
 import PlayerDetail from './PlayerDetail'
+import Select from './Select'
 import '../styles/teamv2.css'
 
 const POS_SHORT = { 1: 'GKP', 2: 'DEF', 3: 'MID', 4: 'FWD' }
@@ -244,7 +246,7 @@ function MarketRail({ players, teamsById, positionsById, fixtures, fromEvent, sq
 /*  The page — now the real My Team, backed by the persisted squad             */
 /* -------------------------------------------------------------------------- */
 
-export default function TeamV2() {
+function MyTeamView() {
   const { players, playersById, teamsById, positionsById, fixtures, events, currentEvent } = useFpl()
   const fromEvent = currentEvent?.id ?? 1
   const { formation, squad, captain, viceCaptain, chip, setSlot, clearSlot, swapSlots, reset, setCaptain, setViceCaptain, activateChip, revertChip, endChip } = useSquad()
@@ -343,7 +345,7 @@ export default function TeamV2() {
   )
 
   return (
-    <div className="t2">
+    <>
       {/* Matchday navigator */}
       <div className="t2-mdnav">
         <div className="t2-mdnav__rail">
@@ -534,6 +536,180 @@ export default function TeamV2() {
       )}
 
       {detail && <PlayerDetail player={detail} onClose={() => setDetail(null)} />}
+    </>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Look up a team — render any FPL manager's squad from public data           */
+/* -------------------------------------------------------------------------- */
+
+const MANAGER_KEY = 'fpl-dashboard:manager-id'
+
+function LookupView() {
+  const { fixtures, playersById, teamsById, events, currentEvent } = useFpl()
+  const [managerIdInput, setManagerIdInput] = useState(() => localStorage.getItem(MANAGER_KEY) ?? '')
+  const [gameweek, setGameweek] = useState(currentEvent?.id ?? 1)
+  const [query, setQuery] = useState(null)
+  const [state, setState] = useState({ loading: false, error: null, data: null })
+  const [detail, setDetail] = useState(null)
+
+  useEffect(() => {
+    if (!query) return
+    let cancelled = false
+    setState({ loading: true, error: null, data: null })
+    Promise.all([
+      fetchPicks(query.managerId, query.gameweek),
+      fetchEntry(query.managerId).catch(() => null),
+    ])
+      .then(([picks, entry]) => { if (!cancelled) setState({ loading: false, error: null, data: { picks, entry } }) })
+      .catch((error) => { if (!cancelled) setState({ loading: false, error, data: null }) })
+    return () => { cancelled = true }
+  }, [query])
+
+  function onSubmit(e) {
+    e.preventDefault()
+    const managerId = managerIdInput.trim()
+    if (!managerId) return
+    localStorage.setItem(MANAGER_KEY, managerId)
+    setQuery({ managerId, gameweek })
+  }
+
+  const { loading, error, data } = state
+  const picks = data?.picks?.picks ?? []
+  const fromEvent = query?.gameweek ?? gameweek
+
+  const entries = picks
+    .map((pick) => {
+      const player = playersById.get(pick.element)
+      return player ? { pick, player, pos: player.element_type, isBench: pick.position > 11 } : null
+    })
+    .filter(Boolean)
+
+  const card = (entry, { order } = {}) => (
+    <PitchCard
+      key={entry.player.id}
+      id={entry.player.id}
+      playersById={playersById}
+      teamsById={teamsById}
+      fixtures={fixtures}
+      fromEvent={fromEvent}
+      isGK={entry.pos === 1}
+      isCaptain={entry.pick.is_captain}
+      isVice={entry.pick.is_vice_captain}
+      transfers={false}
+      onClick={() => setDetail(entry.player)}
+      label={POS_SHORT[entry.pos]}
+      order={order}
+    />
+  )
+
+  const starters = entries.filter((e) => !e.isBench)
+  const starterRows = [4, 3, 2].map((pos) =>
+    starters.filter((e) => e.pos === pos).sort((a, b) => a.pick.position - b.pick.position).map((e) => card(e)),
+  )
+  const gkRow = starters.filter((e) => e.pos === 1).map((e) => card(e))
+  const bench = entries
+    .filter((e) => e.isBench)
+    .sort((a, b) => a.pick.position - b.pick.position)
+    .map((e) => card(e, { order: e.pos === 1 ? undefined : e.pick.position - 12 }))
+
+  const entry = data?.entry
+  const managerName = entry ? `${entry.player_first_name} ${entry.player_last_name}` : query ? `Manager ${query.managerId}` : ''
+  const teamName = entry?.name
+  const gwPoints = data?.picks?.entry_history?.points
+  const activeChip = data?.picks?.active_chip
+  const gwName = events?.find((e) => e.id === fromEvent)?.name ?? `Gameweek ${fromEvent}`
+
+  return (
+    <>
+      <form className="t2-lookup" onSubmit={onSubmit}>
+        <label className="t2-lookup__field">
+          <span className="t2-lookup__label">Manager ID</span>
+          <input
+            className="t2-lookup__input"
+            type="text"
+            inputMode="numeric"
+            placeholder="e.g. 1234567"
+            value={managerIdInput}
+            onChange={(e) => setManagerIdInput(e.target.value)}
+          />
+        </label>
+        <label className="t2-lookup__field">
+          <span className="t2-lookup__label">Gameweek</span>
+          <Select
+            className="t2-lookup__select"
+            aria-label="Gameweek"
+            value={gameweek}
+            onChange={setGameweek}
+            options={(events ?? []).map((ev) => ({ value: ev.id, label: ev.name }))}
+          />
+        </label>
+        <button type="submit" className="t2-btn t2-btn--go" disabled={!managerIdInput.trim()}>Load team</button>
+      </form>
+
+      {!query && (
+        <p className="t2-lookup__hint">
+          Enter an FPL manager ID to see their team on the pitch. You’ll find it in the URL of
+          their Points page — <code>fantasy.premierleague.com/entry/&lt;id&gt;/event/&lt;gw&gt;</code>.
+        </p>
+      )}
+      {loading && <p className="t2-lookup__hint">Loading team…</p>}
+      {error && (
+        <div className="t2-lookup__error">
+          <strong>Couldn’t load that team.</strong>
+          <p>
+            {error.status === 404
+              ? 'No squad for that manager and gameweek yet — a team only appears once the gameweek’s deadline has passed. Try an earlier gameweek, or check the ID.'
+              : error.message}
+          </p>
+        </div>
+      )}
+
+      {data && (
+        <div className="t2-main">
+          <div className="t2-left">
+            <div className="t2-teamhead">
+              <h2 className="t2-teamhead__name">{teamName || managerName}</h2>
+              <span className="t2-teamhead__deadline">
+                {managerName}{gwPoints != null ? ` · ${gwPoints} pts` : ''} · {gwName}
+                {activeChip ? ` · ${activeChip}` : ''}
+              </span>
+            </div>
+
+            <div className="t2-pitch">
+              <PitchSurface />
+              <div className="t2-pitch__grid">
+                {starterRows.map((row, ri) => (
+                  <div className="t2-row" key={ri}>{row}</div>
+                ))}
+                <div className="t2-row t2-row--gk">{gkRow}</div>
+              </div>
+            </div>
+
+            <div className="t2-bench">{bench}</div>
+          </div>
+
+          <MatchesRail fixtures={fixtures} currentEvent={{ id: fromEvent }} teamsById={teamsById} />
+        </div>
+      )}
+
+      {detail && <PlayerDetail player={detail} onClose={() => setDetail(null)} />}
+    </>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+
+export default function TeamV2() {
+  const [pageMode, setPageMode] = useState('myteam') // 'myteam' | 'lookup'
+  return (
+    <div className="t2">
+      <div className="t2-modeswitch" role="tablist" aria-label="Team view">
+        <button type="button" role="tab" aria-selected={pageMode === 'myteam'} className={`t2-modeswitch__btn${pageMode === 'myteam' ? ' is-on' : ''}`} onClick={() => setPageMode('myteam')}>My Team</button>
+        <button type="button" role="tab" aria-selected={pageMode === 'lookup'} className={`t2-modeswitch__btn${pageMode === 'lookup' ? ' is-on' : ''}`} onClick={() => setPageMode('lookup')}>Look up a team</button>
+      </div>
+      {pageMode === 'myteam' ? <MyTeamView /> : <LookupView />}
     </div>
   )
 }
