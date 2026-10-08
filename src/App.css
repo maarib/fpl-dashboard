@@ -263,12 +263,13 @@
   background: var(--surface-inverse-2);
 }
 .btn--primary {
-  background: var(--interactive);
-  border-color: var(--interactive);
-  color: var(--accent);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-interactive);
+  font-weight: var(--font-weight-bold);
 }
 .btn--primary:hover {
-  background: var(--interactive-hover);
+  filter: brightness(1.08);
 }
 .btn:disabled {
   opacity: 0.5;

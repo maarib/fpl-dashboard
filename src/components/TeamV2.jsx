@@ -439,6 +439,17 @@ function MyTeamView() {
             </div>
           )}
 
+          {mode === 'default' && picked === 0 && (
+            <div className="t2-emptyhint">
+              <span className="t2-emptyhint__text">
+                Your pitch is empty — pick your 15 players to get started.
+              </span>
+              <button type="button" className="t2-btn t2-btn--go" onClick={() => setMode('transfers')}>
+                <ArrowsLeftRight size={15} aria-hidden="true" /> Pick your squad
+              </button>
+            </div>
+          )}
+
           <div className="t2-pitch">
             <PitchSurface />
 

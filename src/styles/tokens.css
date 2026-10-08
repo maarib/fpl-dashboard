@@ -30,22 +30,22 @@
      Change these and the whole app follows.
      ===================================================================== */
 
-  /* The Claude Code desktop DARK palette: warm charcoal surfaces, off-white
-     text, one coral accent, blue for interactive affordances. Personality
-     comes from restraint, warmth and the coral, not colour slabs. Names are
-     kept from the old light palette so the semantic layer follows for free. */
-  --cream: #1a1917; /* the warm charcoal canvas / page background */
-  --paper: #262523; /* raised surfaces float on the canvas */
-  --warm-ink: #ededea; /* off-white primary text */
-  --warm-900: #f6f5f2; /* brightest text / strong hover */
-  --warm-600: #a6a49d; /* muted text */
-  --warm-400: #78766f; /* faint text, meta */
+  /* Champions-League-inspired DARK palette: deep navy surfaces, cool-white
+     text, an electric-cyan accent, bright blue for interactive affordances.
+     The green pitch stays green and pops against the navy. Names are kept
+     from the old light palette so the semantic layer follows for free. */
+  --cream: #0a0e24; /* the deep navy canvas / page background */
+  --paper: #121839; /* navy cards float on the canvas */
+  --warm-ink: #eef1ff; /* cool-white primary text */
+  --warm-900: #ffffff; /* brightest text / strong hover */
+  --warm-600: #9aa3cc; /* blue-grey muted text */
+  --warm-400: #6b73a0; /* faint text, meta */
   --warm-200: rgba(255, 255, 255, 0.14); /* control boundaries */
 
-  --coral: #ff4d8d; /* the one brand accent — a football-forward magenta */
-  --coral-ink: #ff86ae; /* lighter magenta, legible as text on the dark canvas */
-  --blue: #5b7cfa; /* interactive affordances only: focus, toggles, checks */
-  --blue-ink: #93a7ff; /* blue as text on dark */
+  --coral: #1fe0ff; /* the one brand accent — electric Champions-League cyan */
+  --coral-ink: #5fe9ff; /* lighter cyan, legible as text on the navy canvas */
+  --blue: #4d7cff; /* interactive affordances only: focus, toggles, checks */
+  --blue-ink: #8aa6ff; /* blue as text on dark */
 
   /* Existing token names are remapped onto the warm palette, so everything
      that referenced them through the semantic layer follows automatically. */
@@ -69,11 +69,11 @@
 
   --surface: var(--paper); /* cards, panels, the featured hero */
   --surface-sunken: var(--cream); /* page background */
-  --surface-chrome: #1e1d1b; /* top bar — a hair off the canvas */
+  --surface-chrome: #0d1230; /* top bar — a hair off the canvas */
   /* "Inverse" surfaces are raised insets (stage, chips, fields) — a step
      lighter than the cards, with the normal off-white ink on top. */
-  --surface-inverse: #302f2c;
-  --surface-inverse-2: #3a3835;
+  --surface-inverse: #1b2148;
+  --surface-inverse-2: #262c54;
 
   --text: var(--warm-ink);
   --text-muted: var(--warm-600);
@@ -153,8 +153,8 @@
   /* Perimeter boards: a calm, desaturated slate rather than bright cyan/blue,
      so the pitch scene sits quietly under the cream chrome. Kept dark enough
      that the white goal net still reads against it. */
-  --board-from: #46586b;
-  --board-to: #364554;
+  --board-from: #1b2148;
+  --board-to: #0e1330;
   --goal-net: rgba(255, 255, 255, 0.75);
   --goal-frame: #ffffff;
 

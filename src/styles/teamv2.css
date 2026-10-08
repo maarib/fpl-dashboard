@@ -7,36 +7,36 @@
 
 .t2 {
   /* — surfaces — */
-  --c-bg: #1a1917;          /* deepest canvas */
-  --c-bg-2: #121110;
-  --c-surface: #262523;     /* cards, rail, panels */
-  --c-surface-2: #302f2c;   /* raised: table head, active segment, hover */
-  --c-surface-3: #3a3835;
-  --c-plate: #1b1a18;       /* player name plate on the turf */
-  --c-veil: rgba(16, 15, 13, 0.62); /* translucent panels over the turf */
+  --c-bg: #0a0e24;          /* deepest navy canvas */
+  --c-bg-2: #06091a;
+  --c-surface: #121839;     /* navy cards, rail, panels */
+  --c-surface-2: #1b2148;   /* raised: table head, active segment, hover */
+  --c-surface-3: #262c54;
+  --c-plate: #0e1330;       /* player name plate on the turf */
+  --c-veil: rgba(6, 9, 22, 0.64); /* translucent panels over the turf */
   --c-line: rgba(255, 255, 255, 0.09);
   --c-line-strong: rgba(255, 255, 255, 0.16);
 
   /* — ink — */
-  --c-ink: #ededea;         /* primary text */
-  --c-ink-dark: #1c1b19;    /* text on light/accent chips */
-  --c-muted: rgba(237, 237, 234, 0.58);
-  --c-faint: rgba(237, 237, 234, 0.38);
+  --c-ink: #eef1ff;         /* cool-white primary text */
+  --c-ink-dark: #0a0e24;    /* navy text on light/cyan chips */
+  --c-muted: rgba(238, 241, 255, 0.60);
+  --c-faint: rgba(238, 241, 255, 0.40);
 
   /* — accents — */
-  --c-accent: #ff4d8d;      /* football-forward magenta — primary action / active */
-  --c-accent-2: #f03b7c;    /* deeper magenta for hover */
-  --c-blue: #5b7cfa;        /* interactive: filters, sort, vice */
-  --c-good: #57a877;        /* positive: owned / in squad */
-  --c-danger: #d9534f;      /* remove */
-  --c-gold: #e3b341;
+  --c-accent: #1fe0ff;      /* electric Champions-League cyan — primary action / active */
+  --c-accent-2: #16b8d6;    /* deeper cyan for hover */
+  --c-blue: #4d7cff;        /* interactive: filters, sort, vice */
+  --c-good: #35c08a;        /* positive: owned / in squad */
+  --c-danger: #ff5d6c;      /* remove */
+  --c-gold: #ffcf5c;
 
   /* Turf tone vars the PitchSurface SVG reads (scoped to .myteam elsewhere) */
   --turf-sheen: 0.08;
   --turf-line-width: 2.4;
 
   color: var(--c-ink);
-  background: radial-gradient(120% 90% at 50% 0%, #2b2926 0%, var(--c-bg) 46%, var(--c-bg-2) 100%);
+  background: radial-gradient(120% 90% at 50% 0%, #16204d 0%, var(--c-bg) 46%, var(--c-bg-2) 100%);
   border-radius: var(--radius-panel);
   padding: var(--space-14) var(--space-18) var(--space-24);
   box-shadow: var(--elevation-4);
@@ -129,6 +129,14 @@
 .t2-teamhead__name { font-size: var(--font-size-xl); letter-spacing: var(--tracking-tight); }
 .t2-teamhead__deadline { display: inline-flex; align-items: center; gap: var(--space-5); font-size: var(--font-size-sm); color: var(--c-muted); }
 .t2-teamhead__deadline svg { color: var(--c-accent); }
+
+.t2-emptyhint {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-12);
+  background: color-mix(in srgb, var(--c-accent) 12%, var(--c-surface));
+  border: 1px solid var(--c-line); border-radius: var(--radius-card);
+  padding: var(--space-10) var(--space-10) var(--space-10) var(--space-16); margin-bottom: var(--space-12);
+}
+.t2-emptyhint__text { font-size: var(--font-size-sm); color: var(--c-ink); }
 
 .t2-trhead { display: flex; align-items: center; gap: var(--space-12); margin-bottom: var(--space-12); }
 .t2-trhead .t2-teamhead__name { flex: 1; text-align: left; }
@@ -373,6 +381,9 @@
   .t2-bench { gap: var(--space-4); padding: var(--space-12) var(--space-6); }
   .t2-actions { flex-direction: column; }
   .t2-btn { width: 100%; }
+  .t2-emptyhint { flex-direction: column; align-items: stretch; text-align: center; }
+  .t2-lookup { align-items: stretch; }
+  .t2-lookup__field, .t2-lookup__input, .t2-lookup .select__trigger, .t2-lookup .t2-btn--go { width: 100%; }
 }
 
 /* ---------- Card action menu (portalled to <body>, so it uses the app's
